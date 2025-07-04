@@ -323,6 +323,43 @@ const SignUp = () => {
                     <div className="newspaper-line"></div>
                   </div>
                 </div>
+                <div className="vintage-calendar">
+                  <div className="calendar-header">
+                    <div className="calendar-month">MARCH</div>
+                    <div className="calendar-year">1920</div>
+                  </div>
+                  <div className="calendar-body">
+                    <div className="calendar-day">S</div>
+                    <div className="calendar-day">M</div>
+                    <div className="calendar-day">T</div>
+                    <div className="calendar-day">W</div>
+                    <div className="calendar-day">T</div>
+                    <div className="calendar-day">F</div>
+                    <div className="calendar-day">S</div>
+                    <div className="calendar-date"></div>
+                    <div className="calendar-date">1</div>
+                    <div className="calendar-date">2</div>
+                    <div className="calendar-date">3</div>
+                    <div className="calendar-date">4</div>
+                    <div className="calendar-date">5</div>
+                    <div className="calendar-date">6</div>
+                    <div className="calendar-date">7</div>
+                    <div className="calendar-date">8</div>
+                    <div className="calendar-date">9</div>
+                    <div className="calendar-date">10</div>
+                    <div className="calendar-date">11</div>
+                    <div className="calendar-date">12</div>
+                    <div className="calendar-date">13</div>
+                    <div className="calendar-date highlighted">14</div>
+                    <div className="calendar-date">15</div>
+                    <div className="calendar-date">16</div>
+                    <div className="calendar-date">17</div>
+                    <div className="calendar-date">18</div>
+                    <div className="calendar-date">19</div>
+                    <div className="calendar-date">20</div>
+                  </div>
+                  <div className="calendar-ring"></div>
+                </div>
               </div>
               <button className="ghost-button" onClick={handleSwitchToSignIn}>
                 Sign In

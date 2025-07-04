@@ -682,6 +682,128 @@
   animation-delay: 6s;
 }
 
+/* Vintage Calendar */
+.vintage-calendar {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 70px;
+  height: 85px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+  border-radius: 3px;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  font-family: 'Georgia', serif;
+  transform: rotate(-5deg);
+  z-index: 10;
+}
+
+.vintage-calendar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 20px,
+      rgba(139, 69, 19, 0.05) 20px,
+      rgba(139, 69, 19, 0.05) 21px
+    );
+  pointer-events: none;
+}
+
+.calendar-header {
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
+  color: white;
+  padding: 4px 0;
+  text-align: center;
+  position: relative;
+  border-bottom: 1px solid var(--primary-900);
+}
+
+.calendar-month {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.calendar-year {
+  font-size: 10px;
+  font-weight: 300;
+  opacity: 0.9;
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+  padding: 3px;
+  background: rgba(255, 248, 235, 0.5);
+}
+
+.calendar-day {
+  font-size: 5px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--primary-800);
+  padding: 1px 0;
+  text-transform: uppercase;
+}
+
+.calendar-date {
+  font-size: 6px;
+  text-align: center;
+  padding: 1px;
+  color: #1a1a1a;
+  height: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.calendar-date.highlighted {
+  background: var(--primary-600);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+.calendar-ring {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  border: 2px solid #8B4513;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #D2691E, #A0522D);
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.calendar-ring::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: #8B4513;
+  border-radius: 1px;
+}
+
 /* Archive Glow Effect */
 .illustration::before {
   content: '';
@@ -934,6 +1056,36 @@
     width: 45px;
     height: 18px;
     margin: 6px auto;
+  }
+
+  .vintage-calendar {
+    width: 50px;
+    height: 60px;
+    top: 10px;
+    left: 10px;
+  }
+
+  .calendar-month {
+    font-size: 6px;
+  }
+
+  .calendar-year {
+    font-size: 8px;
+  }
+
+  .calendar-day {
+    font-size: 4px;
+  }
+
+  .calendar-date {
+    font-size: 5px;
+    height: 6px;
+  }
+
+  .calendar-ring {
+    width: 8px;
+    height: 8px;
+    top: -6px;
   }
 }
 
