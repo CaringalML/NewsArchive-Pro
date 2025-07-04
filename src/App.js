@@ -58,14 +58,14 @@ function App() {
                   </AuthGuard>
                 } 
               />
+              
+              {/* Reset Password Route - Special handling for both authenticated and unauthenticated users */}
               <Route 
                 path="/reset-password" 
                 element={
-                  <AuthGuard requireAuth={false}>
-                    <div className="auth-page">
-                      <ResetPassword />
-                    </div>
-                  </AuthGuard>
+                  <div className="auth-page">
+                    <ResetPassword />
+                  </div>
                 } 
               />
               
@@ -103,7 +103,15 @@ function App() {
                 } 
               />
               
-              {/* Fallback Route */}
+              {/* Public Pages (could be added later) */}
+              <Route path="/features" element={<div className="page"><div className="container"><h1>Features - Coming Soon</h1></div></div>} />
+              <Route path="/pricing" element={<div className="page"><div className="container"><h1>Pricing - Coming Soon</h1></div></div>} />
+              <Route path="/about" element={<div className="page"><div className="container"><h1>About - Coming Soon</h1></div></div>} />
+              <Route path="/contact" element={<div className="page"><div className="container"><h1>Contact - Coming Soon</h1></div></div>} />
+              <Route path="/help" element={<div className="page"><div className="container"><h1>Help - Coming Soon</h1></div></div>} />
+              <Route path="/docs" element={<div className="page"><div className="container"><h1>Documentation - Coming Soon</h1></div></div>} />
+              
+              {/* Fallback Route - Redirect to home for any unknown routes */}
               <Route path="*" element={<Home />} />
             </Routes>
           </main>

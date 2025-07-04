@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { EyeIcon, EyeSlashIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { EyeIcon, EyeSlashIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { supabase } from '../../services/supabase'
 import LoadingSpinner from '../Common/LoadingSpinner'
 import './ResetPassword.css'
 
 const ResetPassword = () => {
-  const [searchParams] = useSearchParams()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -13,21 +13,96 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [isSuccess, setIsSuccess] = useState(false)
-  const [isValidToken, setIsValidToken] = useState(true)
+  const [canResetPassword, setCanResetPassword] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
+  const location = useLocation()
   const navigate = useNavigate()
 
-  // Get the access token from URL parameters
-  const accessToken = searchParams.get('access_token')
-  const refreshToken = searchParams.get('refresh_token')
-  const type = searchParams.get('type')
-
   useEffect(() => {
-    // Check if this is a valid password reset link
-    if (type !== 'recovery' || !accessToken || !refreshToken) {
-      setIsValidToken(false)
+    const handlePasswordReset = async () => {
+      setIsCheckingAuth(true)
+      
+      try {
+        // First check if we have hash parameters (fresh from email link)
+        const hashParams = new URLSearchParams(location.hash.substring(1))
+        const accessToken = hashParams.get('access_token')
+        const refreshToken = hashParams.get('refresh_token')
+        const tokenType = hashParams.get('type')
+        const error = hashParams.get('error')
+        const errorCode = hashParams.get('error_code')
+        const errorDescription = hashParams.get('error_description')
+
+        // Check for errors in URL
+        if (error) {
+          setCanResetPassword(false)
+          if (error === 'access_denied') {
+            if (errorCode === 'otp_expired' || errorDescription?.includes('expired')) {
+              setErrors({ general: 'This password reset link has expired. Please request a new one.' })
+            } else if (errorDescription?.includes('invalid')) {
+              setErrors({ general: 'This password reset link is invalid. Please request a new one.' })
+            } else {
+              setErrors({ general: 'This password reset link is no longer valid. Please request a new one.' })
+            }
+          } else {
+            setErrors({ general: 'There was an error with your password reset link. Please try again.' })
+          }
+          setIsCheckingAuth(false)
+          return
+        }
+
+        // If we have recovery tokens, set the session immediately
+        if (tokenType === 'recovery' && accessToken && refreshToken) {
+          console.log('Setting session with recovery tokens...')
+          
+          const { data, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          })
+
+          if (sessionError) {
+            console.error('Session error:', sessionError)
+            setCanResetPassword(false)
+            if (sessionError.message.includes('expired')) {
+              setErrors({ general: 'This password reset link has expired. Please request a new one.' })
+            } else if (sessionError.message.includes('invalid')) {
+              setErrors({ general: 'This password reset link is invalid. Please request a new one.' })
+            } else {
+              setErrors({ general: 'Unable to verify password reset link. Please request a new one.' })
+            }
+          } else if (data.session) {
+            console.log('Session set successfully')
+            setCanResetPassword(true)
+            // Clear the URL hash for cleaner URL
+            window.history.replaceState({}, document.title, window.location.pathname)
+          } else {
+            setCanResetPassword(false)
+            setErrors({ general: 'Unable to establish session. Please request a new reset link.' })
+          }
+        } else {
+          // No tokens in URL, check if user is already authenticated (from auth state change)
+          const { data: { session } } = await supabase.auth.getSession()
+          
+          if (session?.user) {
+            console.log('User already authenticated')
+            setCanResetPassword(true)
+          } else {
+            console.log('No valid session found')
+            setCanResetPassword(false)
+            setErrors({ general: 'Invalid or expired reset link. Please request a new one.' })
+          }
+        }
+      } catch (err) {
+        console.error('Password reset error:', err)
+        setCanResetPassword(false)
+        setErrors({ general: 'An error occurred while verifying your reset link. Please try again.' })
+      } finally {
+        setIsCheckingAuth(false)
+      }
     }
-  }, [accessToken, refreshToken, type])
+
+    handlePasswordReset()
+  }, [location.hash])
 
   const validateForm = () => {
     const newErrors = {}
@@ -46,7 +121,6 @@ const ResetPassword = () => {
       newErrors.confirmPassword = 'Passwords do not match'
     }
 
-    // Password strength checks
     const hasUpperCase = /[A-Z]/.test(password)
     const hasLowerCase = /[a-z]/.test(password)
     const hasNumbers = /\d/.test(password)
@@ -57,7 +131,7 @@ const ResetPassword = () => {
       }
     }
 
-    setErrors(newErrors)
+    setErrors(prev => ({ ...prev, ...newErrors }))
     return Object.keys(newErrors).length === 0
   }
 
@@ -69,66 +143,61 @@ const ResetPassword = () => {
     setLoading(true)
     
     try {
-      // Set the session with the tokens from the URL
-      if (accessToken && refreshToken) {
-        // Use Supabase to set session and update password
-        const { supabase } = await import('../../services/supabase')
-        
-        // Set the session
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken
-        })
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password
+      })
 
-        if (sessionError) {
-          setErrors({ general: 'Invalid or expired reset link' })
-          setLoading(false)
-          return
-        }
-
-        // Update the password
-        const { error: updateError } = await supabase.auth.updateUser({
-          password: password
-        })
-
-        if (updateError) {
-          setErrors({ general: updateError.message })
+      if (updateError) {
+        if (updateError.message.includes('expired')) {
+          setErrors({ general: 'Your session has expired. Please request a new password reset link.' })
         } else {
-          setIsSuccess(true)
-          // Sign out after password reset
-          await supabase.auth.signOut()
-          
-          // Redirect to login after 3 seconds
-          setTimeout(() => {
-            navigate('/login', { 
-              state: { 
-                message: 'Password updated successfully! Please sign in with your new password.' 
-              } 
-            })
-          }, 3000)
+          setErrors({ general: updateError.message })
         }
+      } else {
+        setIsSuccess(true)
+        // Sign out after password reset for security
+        await supabase.auth.signOut()
+        
+        setTimeout(() => {
+          navigate('/login', { 
+            state: { 
+              message: 'Password updated successfully! Please sign in with your new password.' 
+            } 
+          })
+        }, 3000)
       }
     } catch (error) {
-      setErrors({ general: 'An unexpected error occurred' })
+      console.error('Password update error:', error)
+      setErrors({ general: 'An unexpected error occurred. Please try again.' })
     } finally {
       setLoading(false)
     }
   }
 
-  // Invalid token view
-  if (!isValidToken) {
+  if (isCheckingAuth) {
+    return (
+      <div className="reset-password-container">
+        <div className="reset-password-card">
+          <div className="text-center">
+            <LoadingSpinner size="large" />
+            <p className="mt-4 text-gray-600">Verifying reset link...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!canResetPassword) {
     return (
       <div className="reset-password-container">
         <div className="reset-password-card">
           <div className="error-content">
             <div className="error-icon">
-              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833-.208 2.5 1.732 2.5z" />
-              </svg>
+              <ExclamationTriangleIcon className="w-12 h-12" />
             </div>
-            <h1 className="error-title">Invalid Reset Link</h1>
+            <h1 className="error-title">Reset Link Issue</h1>
             <p className="error-description">
-              This password reset link is invalid or has expired. Please request a new password reset.
+              {errors.general || 'This password reset link is invalid or has expired.'}
             </p>
             <div className="error-actions">
               <Link to="/forgot-password" className="btn btn-primary">
@@ -144,7 +213,6 @@ const ResetPassword = () => {
     )
   }
 
-  // Success view
   if (isSuccess) {
     return (
       <div className="reset-password-container">
@@ -168,7 +236,6 @@ const ResetPassword = () => {
     )
   }
 
-  // Reset password form
   return (
     <div className="reset-password-container">
       <div className="reset-password-card">
@@ -253,7 +320,6 @@ const ResetPassword = () => {
             )}
           </div>
 
-          {/* Password Requirements */}
           <div className="password-requirements">
             <h4 className="requirements-title">Password Requirements:</h4>
             <ul className="requirements-list">

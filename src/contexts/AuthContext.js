@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session)
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
@@ -43,6 +44,9 @@ export const AuthProvider = ({ children }) => {
           toast.success('Successfully signed in!')
         } else if (event === 'SIGNED_OUT') {
           toast.success('Successfully signed out!')
+        } else if (event === 'PASSWORD_RECOVERY') {
+          console.log('Password recovery event detected')
+          // Don't show toast here as it will be handled by the AuthHandler component
         }
       }
     )
@@ -116,7 +120,9 @@ export const AuthProvider = ({ children }) => {
 
   const resetPassword = async (email) => {
     try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email)
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      })
       if (error) {
         toast.error(error.message)
         return { data: null, error }
