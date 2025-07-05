@@ -33,7 +33,7 @@ resource "aws_s3_bucket_cors_configuration" "s3_cors" {
   cors_rule {
     allowed_headers = var.cors_allowed_headers
     allowed_methods = var.cors_allowed_methods
-    allowed_origins = ["https://${var.domain_name}", "https://${var.www_domain_name}"]
+    allowed_origins = ["*"]
     expose_headers  = ["ETag"]
     max_age_seconds = var.cors_max_age_seconds
   }
@@ -52,7 +52,6 @@ resource "aws_s3_object" "react_build" {
     }
   )
 }
-
 
 # Bucket Permissions​
 resource "aws_s3_bucket_policy" "allow_cloudfront_access" {

@@ -10,8 +10,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   enabled             = true
   is_ipv6_enabled     = true
   price_class         = var.cloudfront_price_class
-  aliases             = [var.domain_name, var.www_domain_name]
-  web_acl_id          = aws_wafv2_web_acl.cloudfront_waf.arn
   default_root_object = "index.html"
 
   origin {
@@ -62,9 +60,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate.cert.arn
-    minimum_protocol_version = var.tls_protocol_version
-    ssl_support_method       = "sni-only"
+    cloudfront_default_certificate = true
   }
 
   tags = merge(

@@ -1,5 +1,3 @@
-# variables.tf - Updated to support frontend-to-backend API requests
-
 # Basic infrastructure settings
 variable "aws_region" {
   description = "AWS region"
@@ -20,11 +18,6 @@ variable "s3_bucket_name" {
   default     = "caringalfrontend"
 }
 
-variable "waf_name" {
-  description = "Name for the WAF ACL"
-  default     = "cloudstruct-waf"
-}
-
 variable "oac_name" {
   description = "Name for the CloudFront Origin Access Control"
   default     = "cloudstruct-oac"
@@ -39,19 +32,6 @@ variable "distribution_name" {
   description = "Name for the CloudFront distribution tag"
   type        = string
   default     = "cloudstruct-distribution"
-}
-
-# Domain configuration
-variable "domain_name" {
-  description = "Root domain name"
-  type        = string
-  default     = "artisantiling.co.nz"
-}
-
-variable "www_domain_name" {
-  description = "WWW domain name"
-  type        = string
-  default     = "www.artisantiling.co.nz"
 }
 
 # S3 origin configuration
@@ -88,7 +68,6 @@ variable "cloudfront_ttl" {
   }
 }
 
-# Updated to support all HTTP methods needed for CRUD operations
 variable "cloudfront_allowed_methods" {
   description = "HTTP methods allowed by CloudFront"
   type        = list(string)
@@ -106,12 +85,6 @@ variable "forwarded_headers" {
   description = "Headers to be forwarded to origin"
   type        = list(string)
   default     = ["Origin", "Authorization", "Content-Type", "Accept"]
-}
-
-variable "tls_protocol_version" {
-  description = "Minimum TLS protocol version"
-  type        = string
-  default     = "TLSv1.2_2021"
 }
 
 # Error responses
@@ -134,19 +107,6 @@ variable "error_responses" {
       response_page_path = "/index.html"
     }
   ]
-}
-
-# WAF configuration
-variable "waf_rate_limit" {
-  description = "Rate limit for WAF rule"
-  type        = number
-  default     = 2000
-}
-
-variable "enable_waf" {
-  description = "Enable WAF for CloudFront"
-  type        = bool
-  default     = true
 }
 
 # S3 CORS configuration 
