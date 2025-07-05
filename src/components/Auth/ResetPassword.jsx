@@ -169,7 +169,7 @@ const ResetPassword = () => {
   if (isCheckingAuth) {
     return (
       <div className="auth-page">
-        <div className="auth-container">
+        <div className="reset-password-container">
           <div className="reset-password-card">
             <div className="verification-content">
               <div className="logo">
@@ -191,7 +191,7 @@ const ResetPassword = () => {
   if (!canResetPassword) {
     return (
       <div className="auth-page">
-        <div className="auth-container">
+        <div className="reset-password-container">
           <div className="reset-password-card">
             <div className="error-content">
               <div className="logo">
@@ -223,7 +223,7 @@ const ResetPassword = () => {
   if (isSuccess) {
     return (
       <div className="auth-page">
-        <div className="auth-container">
+        <div className="reset-password-container">
           <div className="reset-password-card">
             <div className="success-content">
               <div className="logo">
@@ -265,7 +265,7 @@ const ResetPassword = () => {
 
   return (
     <div className="auth-page">
-      <div className="auth-container">
+      <div className="reset-password-container">
         <div className="reset-password-card">
           <div className="reset-password-content">
             <div className="logo">
