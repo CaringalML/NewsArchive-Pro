@@ -148,3 +148,4 @@ jobs:
             echo "⏭️ Deployment skipped (not main branch or PR)"
           else
             echo "⚠️ Unknown deployment status"
+          fi
