@@ -710,3 +710,526 @@
     padding: 1.5rem;
   }
 }
+/* Fixed Navigation Styles */
+.fixed-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4rem;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.nav-logo {
+  width: 2rem;
+  height: 2rem;
+  color: #16a34a;
+}
+
+.nav-brand-text {
+  font-size: 1.25rem;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-link {
+  background: none;
+  border: none;
+  color: #4b5563;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #16a34a;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #16a34a;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+.mobile-nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.nav-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #374151;
+}
+
+.mobile-nav {
+  display: none;
+  position: fixed;
+  top: 4rem;
+  left: 0;
+  right: 0;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-nav.open {
+  transform: translateY(0);
+}
+
+.mobile-nav-link {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #374151;
+  font-weight: 500;
+  padding: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link.active {
+  background: #f3f4f6;
+  color: #16a34a;
+}
+
+/* Ensure sections have proper spacing for fixed nav */
+.hero,
+.features,
+.technology,
+.pricing,
+.compliance,
+.about,
+.cta {
+  scroll-margin-top: 4rem;
+}
+
+/* Pricing Section Styles */
+.pricing {
+  padding: 4rem 0;
+  background: #f9fafb;
+}
+
+.pricing-toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.savings-badge {
+  background: #16a34a;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 1rem;
+  margin-left: 0.5rem;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 3rem;
+  height: 1.5rem;
+  background: #d1d5db;
+  border: none;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0.125rem;
+  left: 0.125rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+.pricing-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border-color: #16a34a;
+}
+
+.pricing-card.popular {
+  border-color: #16a34a;
+  transform: scale(1.05);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3);
+}
+
+.pricing-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.plan-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.plan-description {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.plan-price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.currency {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.amount {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0.25rem;
+}
+
+.period {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.price-note {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.pricing-features {
+  flex: 1;
+  margin-bottom: 2rem;
+}
+
+.features-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.features-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.feature-check {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #16a34a;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.pricing-footer {
+  text-align: center;
+}
+
+.pricing-btn {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 2px solid;
+  margin-bottom: 0.75rem;
+}
+
+.pricing-btn.btn-primary {
+  background: #16a34a;
+  color: white;
+  border-color: #16a34a;
+}
+
+.pricing-btn.btn-primary:hover {
+  background: #15803d;
+  border-color: #15803d;
+  transform: translateY(-1px);
+}
+
+.pricing-btn.btn-outline {
+  background: transparent;
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+.pricing-btn.btn-outline:hover {
+  background: #16a34a;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.trial-note {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+/* Pricing FAQ */
+.pricing-faq {
+  background: white;
+  border-radius: 1rem;
+  padding: 3rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.faq-title {
+  text-align: center;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 2rem;
+}
+
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.faq-item {
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+
+.faq-question {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.faq-answer {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Responsive Design for Pricing */
+@media (max-width: 768px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .pricing-card.popular {
+    transform: none;
+  }
+
+  .pricing-card {
+    padding: 1.5rem;
+  }
+
+  .plan-price .amount {
+    font-size: 2.5rem;
+  }
+
+  .pricing-faq {
+    padding: 2rem;
+  }
+
+  .faq-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .faq-item {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pricing {
+    padding: 3rem 0;
+  }
+
+  .pricing-card {
+    padding: 1rem;
+  }
+
+  .plan-price .amount {
+    font-size: 2rem;
+  }
+
+  .pricing-faq {
+    padding: 1.5rem;
+  }
+
+  .toggle-container {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none;
+  }
+
+  .mobile-nav-toggle {
+    display: block;
+  }
+
+  .mobile-nav {
+    display: block;
+  }
+
+  .nav-container {
+    padding: 0 1rem;
+  }
+
+  .nav-brand-text {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-container {
+    height: 3.5rem;
+  }
+
+  .mobile-nav {
+    top: 3.5rem;
+  }
+
+  .hero,
+  .features,
+  .technology,
+  .pricing,
+  .compliance,
+  .about,
+  .cta {
+    scroll-margin-top: 3.5rem;
+  }
+}

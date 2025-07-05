@@ -1,10 +1,8 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
-import { 
-  NewspaperIcon, 
-  CloudArrowUpIcon, 
-  MagnifyingGlassIcon, 
+import React, { useState, useEffect, useMemo } from 'react'
+import {
+  NewspaperIcon,
+  CloudArrowUpIcon,
+  MagnifyingGlassIcon,
   ShareIcon,
   CheckCircleIcon,
   ArrowRightIcon,
@@ -12,12 +10,26 @@ import {
   DocumentCheckIcon,
   CpuChipIcon,
   EyeIcon,
-  LanguageIcon
+  LanguageIcon,
+  Bars3Icon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 import './Home.css'
 
 const Home = () => {
-  const { user } = useAuth()
+  const user = null // Mock user state for demo
+  const [activeSection, setActiveSection] = useState('hero')
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+
+  const sections = useMemo(() => [
+    { id: 'hero', label: 'Home' },
+    { id: 'features', label: 'Features' },
+    { id: 'technology', label: 'Technology' },
+    { id: 'compliance', label: 'Standards' },
+    { id: 'pricing', label: 'Pricing' },
+    { id: 'about', label: 'About' },
+    { id: 'contact', label: 'Get Started' }
+  ], [])
 
   const features = [
     {
@@ -96,10 +108,88 @@ const Home = () => {
     }
   ]
 
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+      setActiveSection(sectionId)
+      setIsMobileNavOpen(false)
+    }
+  }
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 100
+
+      for (const section of sections) {
+        const element = document.getElementById(section.id)
+        if (element) {
+          const offsetTop = element.offsetTop
+          const offsetHeight = element.offsetHeight
+
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveSection(section.id)
+            break
+          }
+        }
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [sections])
+
   return (
     <div className="home-page">
+      {/* Fixed Navigation */}
+      <nav className="fixed-nav">
+        <div className="nav-container">
+          <div className="nav-brand">
+            <NewspaperIcon className="nav-logo" />
+            <span className="nav-brand-text">NewsArchive Pro</span>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="nav-links desktop-nav">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => scrollToSection(section.id)}
+                className={`nav-link ${activeSection === section.id ? 'active' : ''}`}
+              >
+                {section.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Mobile Navigation Toggle */}
+          <button
+            className="mobile-nav-toggle"
+            onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+          >
+            {isMobileNavOpen ? <XMarkIcon className="nav-icon" /> : <Bars3Icon className="nav-icon" />}
+          </button>
+
+          {/* Mobile Navigation Menu */}
+          <div className={`mobile-nav ${isMobileNavOpen ? 'open' : ''}`}>
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => scrollToSection(section.id)}
+                className={`mobile-nav-link ${activeSection === section.id ? 'active' : ''}`}
+              >
+                {section.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <section className="hero">
+      <section id="hero" className="hero">
         <div className="container">
           <div className="hero-content">
             <div className="hero-text">
@@ -108,24 +198,24 @@ const Home = () => {
                 <span className="title-highlight"> NewsArchive Pro</span>
               </h1>
               <p className="hero-subtitle">
-                The world's leading AI-powered platform for digitizing, preserving, and sharing historical newspapers. 
+                The world's leading AI-powered platform for digitizing, preserving, and sharing historical newspapers.
                 Trusted by libraries, universities, and cultural institutions worldwide.
               </p>
               <div className="hero-actions">
                 {user ? (
-                  <Link to="/dashboard" className="btn btn-primary btn-lg">
+                  <a href="/dashboard" className="btn btn-primary btn-lg">
                     Go to Dashboard
                     <ArrowRightIcon className="w-5 h-5" />
-                  </Link>
+                  </a>
                 ) : (
                   <>
-                    <Link to="/register" className="btn btn-primary btn-lg">
+                    <a href="/register" className="btn btn-primary btn-lg">
                       Get Started Free
                       <ArrowRightIcon className="w-5 h-5" />
-                    </Link>
-                    <Link to="/login" className="btn btn-outline btn-lg">
+                    </a>
+                    <a href="/login" className="btn btn-outline btn-lg">
                       Sign In
-                    </Link>
+                    </a>
                   </>
                 )}
               </div>
@@ -152,7 +242,7 @@ const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="features">
+      <section id="features" className="features">
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">Why Choose NewsArchive Pro?</h2>
@@ -174,34 +264,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Compliance Standards Section */}
-      <section className="compliance">
-        <div className="container">
-          <div className="compliance-content">
-            <div className="compliance-text">
-              <h2 className="compliance-title">Industry Standard Compliance</h2>
-              <p className="compliance-subtitle">
-                Our platform adheres to international standards for digital preservation, 
-                ensuring your collections are future-proof and interoperable with other systems.
-              </p>
-            </div>
-            <div className="compliance-standards">
-              {complianceStandards.map((standard, index) => (
-                <div key={index} className="standard-card">
-                  <div className="standard-icon">
-                    <standard.icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="standard-name">{standard.name}</h3>
-                  <p className="standard-description">{standard.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* AI/ML Technology Section */}
-      <section className="technology">
+      <section id="technology" className="technology">
         <div className="container">
           <div className="technology-header">
             <h2 className="technology-title">Powered by Advanced AI & Machine Learning</h2>
@@ -228,21 +292,262 @@ const Home = () => {
           <div className="aws-powered">
             <div className="aws-logo">⚡ Powered by Amazon Web Services</div>
             <p className="aws-description">
-              Built on AWS infrastructure with enterprise-grade security, scalability, and reliability. 
+              Built on AWS infrastructure with enterprise-grade security, scalability, and reliability.
               Our AI-powered processing pipeline ensures the highest quality digitization results.
             </p>
           </div>
         </div>
       </section>
 
+      {/* Compliance Standards Section */}
+      <section id="compliance" className="compliance">
+        <div className="container">
+          <div className="compliance-content">
+            <div className="compliance-text">
+              <h2 className="compliance-title">Industry Standard Compliance</h2>
+              <p className="compliance-subtitle">
+                Our platform adheres to international standards for digital preservation,
+                ensuring your collections are future-proof and interoperable with other systems.
+              </p>
+            </div>
+            <div className="compliance-standards">
+              {complianceStandards.map((standard, index) => (
+                <div key={index} className="standard-card">
+                  <div className="standard-icon">
+                    <standard.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="standard-name">{standard.name}</h3>
+                  <p className="standard-description">{standard.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="pricing">
+        <div className="container">
+          <div className="section-header">
+            <h2 className="section-title">Choose Your Plan</h2>
+            <p className="section-subtitle">
+              Flexible pricing options designed for institutions of all sizes
+            </p>
+          </div>
+
+          <div className="pricing-toggle">
+            <div className="toggle-container">
+              <span className="toggle-label">Monthly</span>
+              <button className="toggle-switch">
+                <div className="toggle-slider"></div>
+              </button>
+              <span className="toggle-label">Annual <span className="savings-badge">Save 20%</span></span>
+            </div>
+          </div>
+
+          <div className="pricing-grid">
+            {/* Starter Plan */}
+            <div className="pricing-card">
+              <div className="pricing-header">
+                <h3 className="plan-name">Starter</h3>
+                <p className="plan-description">Perfect for small institutions getting started</p>
+                <div className="plan-price">
+                  <span className="currency">$</span>
+                  <span className="amount">299</span>
+                  <span className="period">/month</span>
+                </div>
+                <p className="price-note">Up to 10,000 pages/month</p>
+              </div>
+              <div className="pricing-features">
+                <h4 className="features-title">What's included:</h4>
+                <ul className="features-list">
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>AI-powered OCR processing</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>METS/ALTO metadata generation</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Basic search functionality</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>5GB cloud storage</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Email support</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Standard quality assurance</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="pricing-footer">
+                <button className="pricing-btn btn-outline">Start Free Trial</button>
+                <p className="trial-note">14-day free trial • No credit card required</p>
+              </div>
+            </div>
+
+            {/* Professional Plan - Popular */}
+            <div className="pricing-card popular">
+              <div className="popular-badge">Most Popular</div>
+              <div className="pricing-header">
+                <h3 className="plan-name">Professional</h3>
+                <p className="plan-description">Ideal for medium-sized libraries and archives</p>
+                <div className="plan-price">
+                  <span className="currency">$</span>
+                  <span className="amount">799</span>
+                  <span className="period">/month</span>
+                </div>
+                <p className="price-note">Up to 50,000 pages/month</p>
+              </div>
+              <div className="pricing-features">
+                <h4 className="features-title">Everything in Starter, plus:</h4>
+                <ul className="features-list">
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Advanced AI text analysis</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Custom metadata schemas</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>API access for integrations</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>50GB cloud storage</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Priority phone & email support</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Advanced analytics dashboard</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Batch processing tools</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Custom workflows</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="pricing-footer">
+                <button className="pricing-btn btn-primary">Start Free Trial</button>
+                <p className="trial-note">14-day free trial • No credit card required</p>
+              </div>
+            </div>
+
+            {/* Enterprise Plan */}
+            <div className="pricing-card">
+              <div className="pricing-header">
+                <h3 className="plan-name">Enterprise</h3>
+                <p className="plan-description">For large institutions with complex needs</p>
+                <div className="plan-price">
+                  <span className="amount">Custom</span>
+                </div>
+                <p className="price-note">Unlimited pages & custom solutions</p>
+              </div>
+              <div className="pricing-features">
+                <h4 className="features-title">Everything in Professional, plus:</h4>
+                <ul className="features-list">
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Unlimited processing capacity</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Dedicated AWS infrastructure</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Custom AI model training</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Unlimited cloud storage</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>24/7 dedicated support</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>Custom integrations</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>On-premise deployment option</span>
+                  </li>
+                  <li>
+                    <CheckCircleIcon className="feature-check" />
+                    <span>SLA guarantees</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="pricing-footer">
+                <button className="pricing-btn btn-outline">Contact Sales</button>
+                <p className="trial-note">Custom pricing • Volume discounts available</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing FAQ */}
+          <div className="pricing-faq">
+            <h3 className="faq-title">Frequently Asked Questions</h3>
+            <div className="faq-grid">
+              <div className="faq-item">
+                <h4 className="faq-question">What happens if I exceed my monthly page limit?</h4>
+                <p className="faq-answer">
+                  You'll receive notifications as you approach your limit. Additional pages are processed at $0.05 per page,
+                  or you can upgrade to a higher tier plan at any time.
+                </p>
+              </div>
+              <div className="faq-item">
+                <h4 className="faq-question">Can I cancel my subscription anytime?</h4>
+                <p className="faq-answer">
+                  Yes, you can cancel your subscription at any time. Your account will remain active until the end of your
+                  current billing period, and you'll retain access to your processed content.
+                </p>
+              </div>
+              <div className="faq-item">
+                <h4 className="faq-question">Do you offer educational discounts?</h4>
+                <p className="faq-answer">
+                  Yes! We offer special pricing for educational institutions, libraries, and non-profit organizations.
+                  Contact our sales team for more information about available discounts.
+                </p>
+              </div>
+              <div className="faq-item">
+                <h4 className="faq-question">What formats do you support?</h4>
+                <p className="faq-answer">
+                  We support TIFF, JPEG, PNG, and PDF files. Our AI can process both high-quality scans and
+                  lower-resolution images, with automatic quality enhancement where needed.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* About Section */}
-      <section className="about">
+      <section id="about" className="about">
         <div className="container">
           <div className="about-content">
             <div className="about-text">
               <h2 className="about-title">Preserving Cultural Heritage</h2>
               <p className="about-description">
-                For over two decades, NewsArchive Pro has been at the forefront of digital preservation technology, 
+                For over two decades, NewsArchive Pro has been at the forefront of digital preservation technology,
                 helping institutions worldwide safeguard their historical newspaper collections for future generations.
               </p>
               <div className="about-highlights">
@@ -286,7 +591,7 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="cta">
+      <section id="contact" className="cta">
         <div className="container">
           <div className="cta-content">
             <h2 className="cta-title">Ready to Preserve History?</h2>
@@ -295,19 +600,22 @@ const Home = () => {
             </p>
             <div className="cta-actions">
               {user ? (
-                <Link to="/dashboard" className="btn btn-outline btn-lg">
+                <a href="/dashboard" className="btn btn-outline btn-lg">
                   Go to Dashboard
                   <ArrowRightIcon className="w-5 h-5" />
-                </Link>
+                </a>
               ) : (
                 <>
-                  <Link to="/register" className="btn btn-outline btn-lg">
+                  <a href="/register" className="btn btn-outline btn-lg">
                     Start Free Trial
                     <ArrowRightIcon className="w-5 h-5" />
-                  </Link>
-                  <Link to="/contact" className="btn btn-outline btn-lg">
+                  </a>
+                  <button
+                    onClick={() => scrollToSection('contact')}
+                    className="btn btn-outline btn-lg"
+                  >
                     Contact Sales
-                  </Link>
+                  </button>
                 </>
               )}
             </div>
