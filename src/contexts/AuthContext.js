@@ -61,19 +61,14 @@ export const AuthProvider = ({ children }) => {
         email,
         password,
         options: {
-          data: userData
+          data: userData,
+          emailRedirectTo: `${window.location.origin}/email-verified`
         }
       })
 
-      if (error) {
-        toast.error(error.message)
-        return { data: null, error }
-      }
-
-      toast.success('Check your email for the confirmation link!')
-      return { data, error: null }
+      // Don't show any toasts here - let the component handle all messaging
+      return { data, error }
     } catch (error) {
-      toast.error('An unexpected error occurred')
       return { data: null, error }
     } finally {
       setLoading(false)

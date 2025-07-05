@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { EyeIcon, EyeSlashIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, EyeSlashIcon, CheckCircleIcon, ExclamationTriangleIcon, NewspaperIcon } from '@heroicons/react/24/outline'
 import { supabase } from '../../services/supabase'
 import LoadingSpinner from '../Common/LoadingSpinner'
 import './ResetPassword.css'
@@ -53,15 +53,12 @@ const ResetPassword = () => {
 
         // If we have recovery tokens, set the session immediately
         if (tokenType === 'recovery' && accessToken && refreshToken) {
-          console.log('Setting session with recovery tokens...')
-          
           const { data, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
           })
 
           if (sessionError) {
-            console.error('Session error:', sessionError)
             setCanResetPassword(false)
             if (sessionError.message.includes('expired')) {
               setErrors({ general: 'This password reset link has expired. Please request a new one.' })
@@ -71,7 +68,6 @@ const ResetPassword = () => {
               setErrors({ general: 'Unable to verify password reset link. Please request a new one.' })
             }
           } else if (data.session) {
-            console.log('Session set successfully')
             setCanResetPassword(true)
             // Clear the URL hash for cleaner URL
             window.history.replaceState({}, document.title, window.location.pathname)
@@ -84,16 +80,13 @@ const ResetPassword = () => {
           const { data: { session } } = await supabase.auth.getSession()
           
           if (session?.user) {
-            console.log('User already authenticated')
             setCanResetPassword(true)
           } else {
-            console.log('No valid session found')
             setCanResetPassword(false)
             setErrors({ general: 'Invalid or expired reset link. Please request a new one.' })
           }
         }
       } catch (err) {
-        console.error('Password reset error:', err)
         setCanResetPassword(false)
         setErrors({ general: 'An error occurred while verifying your reset link. Please try again.' })
       } finally {
@@ -167,7 +160,6 @@ const ResetPassword = () => {
         }, 3000)
       }
     } catch (error) {
-      console.error('Password update error:', error)
       setErrors({ general: 'An unexpected error occurred. Please try again.' })
     } finally {
       setLoading(false)
@@ -176,11 +168,20 @@ const ResetPassword = () => {
 
   if (isCheckingAuth) {
     return (
-      <div className="reset-password-container">
-        <div className="reset-password-card">
-          <div className="text-center">
-            <LoadingSpinner size="large" />
-            <p className="mt-4 text-gray-600">Verifying reset link...</p>
+      <div className="auth-page">
+        <div className="auth-container">
+          <div className="reset-password-card">
+            <div className="verification-content">
+              <div className="logo">
+                <NewspaperIcon className="logo-icon" />
+                <span className="logo-text">NewsArchive Pro</span>
+              </div>
+              <LoadingSpinner size="large" />
+              <h1 className="verification-title">Verifying Reset Link</h1>
+              <p className="verification-description">
+                Please wait while we verify your password reset link...
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -189,23 +190,29 @@ const ResetPassword = () => {
 
   if (!canResetPassword) {
     return (
-      <div className="reset-password-container">
-        <div className="reset-password-card">
-          <div className="error-content">
-            <div className="error-icon">
-              <ExclamationTriangleIcon className="w-12 h-12" />
-            </div>
-            <h1 className="error-title">Reset Link Issue</h1>
-            <p className="error-description">
-              {errors.general || 'This password reset link is invalid or has expired.'}
-            </p>
-            <div className="error-actions">
-              <Link to="/forgot-password" className="btn btn-primary">
-                Request New Reset Link
-              </Link>
-              <Link to="/login" className="btn btn-secondary">
-                Back to Sign In
-              </Link>
+      <div className="auth-page">
+        <div className="auth-container">
+          <div className="reset-password-card">
+            <div className="error-content">
+              <div className="logo">
+                <NewspaperIcon className="logo-icon" />
+                <span className="logo-text">NewsArchive Pro</span>
+              </div>
+              <div className="error-icon">
+                <ExclamationTriangleIcon className="w-16 h-16" />
+              </div>
+              <h1 className="error-title">Reset Link Issue</h1>
+              <p className="error-description">
+                {errors.general || 'This password reset link is invalid or has expired.'}
+              </p>
+              <div className="error-actions">
+                <Link to="/forgot-password" className="btn btn-primary">
+                  Request New Reset Link
+                </Link>
+                <Link to="/login" className="btn btn-secondary">
+                  Back to Sign In
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -215,20 +222,40 @@ const ResetPassword = () => {
 
   if (isSuccess) {
     return (
-      <div className="reset-password-container">
-        <div className="reset-password-card">
-          <div className="success-content">
-            <div className="success-icon">
-              <CheckCircleIcon className="w-12 h-12" />
-            </div>
-            <h1 className="success-title">Password Updated Successfully!</h1>
-            <p className="success-description">
-              Your password has been updated successfully. You will be redirected to the sign in page in a few seconds.
-            </p>
-            <div className="success-actions">
-              <Link to="/login" className="btn btn-primary">
-                Go to Sign In
-              </Link>
+      <div className="auth-page">
+        <div className="auth-container">
+          <div className="reset-password-card">
+            <div className="success-content">
+              <div className="logo">
+                <NewspaperIcon className="logo-icon" />
+                <span className="logo-text">NewsArchive Pro</span>
+              </div>
+              <div className="success-icon">
+                <CheckCircleIcon className="w-16 h-16" />
+              </div>
+              <h1 className="success-title">Password Updated Successfully! 🎉</h1>
+              <p className="success-description">
+                Your password has been updated successfully. You will be redirected to the sign in page in a few seconds.
+              </p>
+              <div className="success-features">
+                <div class="feature-item">
+                  <span class="feature-icon">🔒</span>
+                  <span>Your account is now secure</span>
+                </div>
+                <div class="feature-item">
+                  <span class="feature-icon">✅</span>
+                  <span>Password successfully updated</span>
+                </div>
+                <div class="feature-item">
+                  <span class="feature-icon">🚀</span>
+                  <span>Ready to continue your journey</span>
+                </div>
+              </div>
+              <div className="success-actions">
+                <Link to="/login" className="btn btn-primary">
+                  Go to Sign In
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -237,127 +264,134 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="reset-password-container">
-      <div className="reset-password-card">
-        <div className="reset-password-header">
-          <h1 className="reset-password-title">Set New Password</h1>
-          <p className="reset-password-subtitle">
-            Enter your new password below
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="reset-password-form">
-          {errors.general && (
-            <div className="error-alert">
-              {errors.general}
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="reset-password-card">
+          <div className="reset-password-content">
+            <div className="logo">
+              <NewspaperIcon className="logo-icon" />
+              <span className="logo-text">NewsArchive Pro</span>
             </div>
-          )}
+            
+            <h1 className="reset-password-title">Set New Password</h1>
+            <p className="reset-password-subtitle">
+              Enter your new password below to complete the reset process
+            </p>
 
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">
-              New Password
-            </label>
-            <div className="password-input-wrapper">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`form-input ${errors.password || errors.passwordStrength ? 'error' : ''}`}
-                placeholder="Enter your new password"
-                disabled={loading}
-              />
+            <form onSubmit={handleSubmit} className="reset-password-form">
+              {errors.general && (
+                <div className="error-alert">
+                  {errors.general}
+                </div>
+              )}
+
+              <div className="form-group">
+                <label htmlFor="password" className="form-label">
+                  New Password
+                </label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`form-input ${errors.password || errors.passwordStrength ? 'error' : ''}`}
+                    placeholder="Enter your new password"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <EyeSlashIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <span className="error-message">{errors.password}</span>
+                )}
+                {errors.passwordStrength && (
+                  <span className="warning-message">{errors.passwordStrength}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="confirmPassword" className="form-label">
+                  Confirm New Password
+                </label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
+                    placeholder="Confirm your new password"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={loading}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeSlashIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <span className="error-message">{errors.confirmPassword}</span>
+                )}
+              </div>
+
+              <div className="password-requirements">
+                <h4 className="requirements-title">Password Requirements:</h4>
+                <ul className="requirements-list">
+                  <li className={password.length >= 8 ? 'valid' : ''}>
+                    At least 8 characters
+                  </li>
+                  <li className={/[A-Z]/.test(password) ? 'valid' : ''}>
+                    One uppercase letter
+                  </li>
+                  <li className={/[a-z]/.test(password) ? 'valid' : ''}>
+                    One lowercase letter
+                  </li>
+                  <li className={/\d/.test(password) ? 'valid' : ''}>
+                    One number
+                  </li>
+                </ul>
+              </div>
+
               <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
+                type="submit"
+                className="reset-password-button"
                 disabled={loading}
               >
-                {showPassword ? (
-                  <EyeSlashIcon className="w-5 h-5" />
+                {loading ? (
+                  <LoadingSpinner size="small" color="white" />
                 ) : (
-                  <EyeIcon className="w-5 h-5" />
+                  'Update Password'
                 )}
               </button>
+            </form>
+
+            <div className="reset-password-footer">
+              <p className="back-to-login">
+                Remember your password?{' '}
+                <Link to="/login" className="login-link">
+                  Back to Sign In
+                </Link>
+              </p>
             </div>
-            {errors.password && (
-              <span className="error-message">{errors.password}</span>
-            )}
-            {errors.passwordStrength && (
-              <span className="warning-message">{errors.passwordStrength}</span>
-            )}
           </div>
-
-          <div className="form-group">
-            <label htmlFor="confirmPassword" className="form-label">
-              Confirm New Password
-            </label>
-            <div className="password-input-wrapper">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
-                placeholder="Confirm your new password"
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                disabled={loading}
-              >
-                {showConfirmPassword ? (
-                  <EyeSlashIcon className="w-5 h-5" />
-                ) : (
-                  <EyeIcon className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <span className="error-message">{errors.confirmPassword}</span>
-            )}
-          </div>
-
-          <div className="password-requirements">
-            <h4 className="requirements-title">Password Requirements:</h4>
-            <ul className="requirements-list">
-              <li className={password.length >= 8 ? 'valid' : ''}>
-                At least 8 characters
-              </li>
-              <li className={/[A-Z]/.test(password) ? 'valid' : ''}>
-                One uppercase letter
-              </li>
-              <li className={/[a-z]/.test(password) ? 'valid' : ''}>
-                One lowercase letter
-              </li>
-              <li className={/\d/.test(password) ? 'valid' : ''}>
-                One number
-              </li>
-            </ul>
-          </div>
-
-          <button
-            type="submit"
-            className="reset-password-button"
-            disabled={loading}
-          >
-            {loading ? (
-              <LoadingSpinner size="small" color="white" />
-            ) : (
-              'Update Password'
-            )}
-          </button>
-        </form>
-
-        <div className="reset-password-footer">
-          <p className="back-to-login">
-            Remember your password?{' '}
-            <Link to="/login" className="login-link">
-              Back to Sign In
-            </Link>
-          </p>
         </div>
       </div>
     </div>

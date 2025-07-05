@@ -152,6 +152,98 @@
   display: block;
 }
 
+/* Account Already Exists Alert */
+.account-exists-alert {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid #f59e0b;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.1);
+}
+
+.alert-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.alert-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.alert-text h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+.alert-text p {
+  font-size: 0.875rem;
+  color: #b45309;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.alert-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-alert-primary {
+  background: #d97706;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-alert-primary:hover {
+  background: #b45309;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(217, 119, 6, 0.3);
+}
+
+.btn-alert-secondary {
+  background: rgba(255, 255, 255, 0.8);
+  color: #92400e;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid #d97706;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-alert-secondary:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: #b45309;
+  color: #b45309;
+  transform: translateY(-1px);
+}
+
 /* Form Layout */
 .form-row {
   display: grid;
@@ -185,11 +277,13 @@
 }
 
 .auth-input.error {
-  border-color: var(--red-500);
+  border-color: #f59e0b;
+  background: #fef3c7;
 }
 
 .auth-input.error:focus {
-  box-shadow: 0 0 0 3px var(--red-100);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+  border-color: #d97706;
 }
 
 .auth-input:disabled {
@@ -980,6 +1074,36 @@
     border-radius: 20px;
   }
 
+  /* Account exists alert responsive */
+  .account-exists-alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .alert-content {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .alert-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .btn-alert-primary,
+  .btn-alert-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .alert-text h4 {
+    font-size: 0.9375rem;
+  }
+
+  .alert-text p {
+    font-size: 0.8125rem;
+  }
+
   /* Hide animations on mobile for better performance */
   .floating-pages {
     display: none;
@@ -1137,6 +1261,34 @@
     width: 3px;
     height: 3px;
     right: 6px;
+  }
+
+  /* Account exists alert mobile */
+  .account-exists-alert {
+    padding: 0.75rem;
+  }
+
+  .alert-content {
+    gap: 0.5rem;
+  }
+
+  .alert-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .alert-text h4 {
+    font-size: 0.875rem;
+  }
+
+  .alert-text p {
+    font-size: 0.75rem;
+  }
+
+  .btn-alert-primary,
+  .btn-alert-secondary {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
   }
 }
 

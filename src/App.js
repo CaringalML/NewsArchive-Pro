@@ -10,6 +10,7 @@ import SignIn from './components/Auth/SignIn'
 import SignUp from './components/Auth/SignUp'
 import ForgotPassword from './components/Auth/ForgotPassword'
 import ResetPassword from './components/Auth/ResetPassword'
+import EmailVerified from './components/Auth/EmailVerified'
 import Dashboard from './components/Dashboard/Dashboard'
 import CollectionList from './components/Collections/CollectionList'
 import UploadForm from './components/NewspaperProcessing/UploadForm'
@@ -57,6 +58,12 @@ function App() {
                     </div>
                   </AuthGuard>
                 } 
+              />
+              
+              {/* Email Verification Route - Accessible to all users */}
+              <Route 
+                path="/email-verified" 
+                element={<EmailVerified />} 
               />
               
               {/* Reset Password Route - Special handling for both authenticated and unauthenticated users */}

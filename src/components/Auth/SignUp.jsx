@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { EyeIcon, EyeSlashIcon, NewspaperIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, EyeSlashIcon, NewspaperIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import LoadingSpinner from '../Common/LoadingSpinner'
+import toast from 'react-hot-toast'
 import './SignUp.css'
 
 const SignUp = () => {
@@ -18,6 +19,7 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [isSignIn, setIsSignIn] = useState(false)
+  const [accountExistsError, setAccountExistsError] = useState(false)
 
   const { signUp } = useAuth()
   const navigate = useNavigate()
@@ -34,6 +36,10 @@ const SignUp = () => {
         ...prev,
         [name]: ''
       }))
+    }
+    // Clear account exists error when user changes email
+    if (name === 'email' && accountExistsError) {
+      setAccountExistsError(false)
     }
   }
 
@@ -76,6 +82,7 @@ const SignUp = () => {
     if (!validateForm()) return
 
     setLoading(true)
+    setAccountExistsError(false)
 
     const userData = {
       first_name: formData.firstName,
@@ -85,12 +92,34 @@ const SignUp = () => {
 
     const { data, error } = await signUp(formData.email, formData.password, userData)
 
-    if (!error && data) {
-      navigate('/login', { 
-        state: { 
-          message: 'Account created successfully! Please check your email to verify your account.' 
-        } 
-      })
+    if (error) {
+      // Handle actual errors (network, validation, etc.)
+      toast.error(error.message)
+      setErrors({ general: error.message })
+    } else if (data?.user) {
+      // Check if this might be an existing user based on user creation time
+      const now = new Date()
+      const userCreated = new Date(data.user.created_at)
+      const timeDiff = now - userCreated
+      
+      // If user was created more than 1 minute ago, it's likely an existing account
+      if (timeDiff > 60000) {
+        setAccountExistsError(true)
+        toast.error('An account with this email address already exists')
+      } else {
+        // It's a new signup
+        toast.success('Account created successfully! Please check your email to verify your account.')
+        navigate('/login', { 
+          state: { 
+            message: 'Account created successfully! Please check your email to verify your account.',
+            email: formData.email
+          } 
+        })
+      }
+    } else {
+      // Fallback case
+      toast.error('Something went wrong. Please try again.')
+      setErrors({ general: 'Something went wrong. Please try again.' })
     }
     
     setLoading(false)
@@ -161,6 +190,27 @@ const SignUp = () => {
             
             <span className="social-divider">or use your email for registration</span>
             
+            {/* Account Already Exists Error */}
+            {accountExistsError && (
+              <div className="account-exists-alert">
+                <div className="alert-content">
+                  <ExclamationTriangleIcon className="alert-icon" />
+                  <div className="alert-text">
+                    <h4>Account Already Exists</h4>
+                    <p>An account with this email address already exists. Would you like to sign in instead?</p>
+                  </div>
+                </div>
+                <div className="alert-actions">
+                  <Link to="/login" state={{ email: formData.email }} className="btn-alert-primary">
+                    Sign In
+                  </Link>
+                  <Link to="/forgot-password" state={{ email: formData.email }} className="btn-alert-secondary">
+                    Forgot Password?
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {errors.general && (
               <div className="error-alert">
                 {errors.general}
@@ -205,7 +255,7 @@ const SignUp = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`auth-input ${errors.email ? 'error' : ''}`}
+                className={`auth-input ${errors.email || accountExistsError ? 'error' : ''}`}
                 placeholder="Email"
                 disabled={loading}
               />
