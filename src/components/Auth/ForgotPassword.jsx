@@ -50,7 +50,7 @@ const ForgotPassword = () => {
             <div className="success-content">
               <div className="logo">
                 <NewspaperIcon className="logo-icon" />
-                <span className="logo-text">NewsArchive Pro</span>
+                <Link to="/home" className="logo-text">NewsArchive Pro</Link>
               </div>
               
               <div className="success-icon">
@@ -118,7 +118,7 @@ const ForgotPassword = () => {
           <div className="forgot-password-content">
             <div className="logo">
               <NewspaperIcon className="logo-icon" />
-              <span className="logo-text">NewsArchive Pro</span>
+              <Link to="/home" className="logo-text">NewsArchive Pro</Link>
             </div>
 
             <div className="forgot-password-header">

@@ -74,7 +74,7 @@ const SignIn = () => {
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="logo">
               <NewspaperIcon className="logo-icon" />
-              <span className="logo-text">NewsArchive Pro</span>
+              <Link to="/home" className="logo-text">NewsArchive Pro</Link>
             </div>
             
             <h1>Welcome Back</h1>
@@ -175,7 +175,7 @@ const SignIn = () => {
             <div className="overlay-panel overlay-right">
               <div className="logo">
                 <NewspaperIcon className="logo-icon" />
-                <span className="logo-text">NewsArchive Pro</span>
+                <Link to="/home" className="logo-text">NewsArchive Pro</Link>
               </div>
               <h1>Join Our Mission!</h1>
               <p>Start your journey with us and help preserve historical newspapers using cutting-edge digitization technology</p>

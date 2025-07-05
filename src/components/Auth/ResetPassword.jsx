@@ -174,7 +174,7 @@ const ResetPassword = () => {
             <div className="verification-content">
               <div className="logo">
                 <NewspaperIcon className="logo-icon" />
-                <span className="logo-text">NewsArchive Pro</span>
+                <Link to="/home" className="logo-text">NewsArchive Pro</Link>
               </div>
               <LoadingSpinner size="large" />
               <h1 className="verification-title">Verifying Reset Link</h1>
@@ -196,7 +196,7 @@ const ResetPassword = () => {
             <div className="error-content">
               <div className="logo">
                 <NewspaperIcon className="logo-icon" />
-                <span className="logo-text">NewsArchive Pro</span>
+                <Link to="/home" className="logo-text">NewsArchive Pro</Link>
               </div>
               <div className="error-icon">
                 <ExclamationTriangleIcon className="w-16 h-16" />
@@ -228,7 +228,7 @@ const ResetPassword = () => {
             <div className="success-content">
               <div className="logo">
                 <NewspaperIcon className="logo-icon" />
-                <span className="logo-text">NewsArchive Pro</span>
+                <Link to="/home" className="logo-text">NewsArchive Pro</Link>
               </div>
               <div className="success-icon">
                 <CheckCircleIcon className="w-16 h-16" />
@@ -270,7 +270,7 @@ const ResetPassword = () => {
           <div className="reset-password-content">
             <div className="logo">
               <NewspaperIcon className="logo-icon" />
-              <span className="logo-text">NewsArchive Pro</span>
+              <Link to="/home" className="logo-text">NewsArchive Pro</Link>
             </div>
             
             <h1 className="reset-password-title">Set New Password</h1>

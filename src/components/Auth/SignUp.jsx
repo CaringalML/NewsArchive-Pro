@@ -146,7 +146,7 @@ const SignUp = () => {
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="logo">
               <NewspaperIcon className="logo-icon" />
-              <span className="logo-text">NewsArchive Pro</span>
+              <Link to="/home" className="logo-text">NewsArchive Pro</Link>
             </div>
             
             <h1>Create Account</h1>
@@ -327,7 +327,7 @@ const SignUp = () => {
             <div className="overlay-panel overlay-left">
               <div className="logo">
                 <NewspaperIcon className="logo-icon" />
-                <span className="logo-text">NewsArchive Pro</span>
+                <Link to="/home" className="logo-text">NewsArchive Pro</Link>
               </div>
               <h1>Welcome Back!</h1>
               <p>Connect with us and continue your journey in preserving historical newspapers for future generations</p>

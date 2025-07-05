@@ -164,7 +164,7 @@ const EmailVerified = () => {
                 <ArrowRightIcon className="w-5 h-5" />
                 Go to Sign In
               </Link>
-              <Link to="/" className="btn btn-secondary">
+              <Link to="/home" className="btn btn-secondary">
                 Back to Home
               </Link>
             </div>
