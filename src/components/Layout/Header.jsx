@@ -22,7 +22,7 @@ const Header = () => {
     await signOut();
     setIsMobileMenuOpen(false);
     setIsProfileMenuOpen(false);
-    navigate('/');
+    navigate('/home');
   };
 
   // Toggle mobile menu
