@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
         password,
         options: {
           data: userData,
-          emailRedirectTo: `${window.location.origin}/email-verified`
+          emailRedirectTo: `${process.env.REACT_APP_SITE_URL || window.location.origin}/email-verified`
         }
       })
 
@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }) => {
   const resetPassword = async (email) => {
     try {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: `${process.env.REACT_APP_SITE_URL || window.location.origin}/reset-password`
       })
       if (error) {
         toast.error(error.message)

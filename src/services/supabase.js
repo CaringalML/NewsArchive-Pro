@@ -16,7 +16,8 @@ export const auth = {
       email,
       password,
       options: {
-        data: userData
+        data: userData,
+        emailRedirectTo: `${process.env.REACT_APP_SITE_URL || window.location.origin}/email-verified`
       }
     })
     return { data, error }
@@ -44,7 +45,9 @@ export const auth = {
   },
 
   resetPassword: async (email) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email)
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.REACT_APP_SITE_URL || window.location.origin}/reset-password`
+    })
     return { data, error }
   },
 
