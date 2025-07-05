@@ -92,34 +92,72 @@
 .social-container {
   margin: 20px 0;
   display: flex;
-  gap: 10px;
+  justify-content: center;
+  width: 100%;
 }
 
 .social {
   border: 1px solid var(--gray-200);
-  border-radius: 50%;
+  border-radius: 8px;
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  height: 40px;
-  width: 40px;
+  gap: 12px;
+  padding: 12px 24px;
   text-decoration: none;
-  color: var(--gray-600);
+  color: var(--gray-700);
   transition: all 0.3s ease;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 240px;
+  border: none;
 }
 
 .social:hover {
   background: var(--gray-50);
-  border-color: #16a34a;
-  color: #16a34a;
+  border-color: #4285f4;
+  color: #4285f4;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.2);
+}
+
+.google-button {
+  border: 1px solid #dadce0;
+}
+
+.google-button:hover {
+  border-color: #4285f4;
+  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.15);
+}
+
+.google-button svg {
+  width: 18px;
+  height: 18px;
 }
 
 .social-divider {
+  margin: 3px 0 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+.divider-or {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-bottom: 4px;
+}
+
+.divider-text {
   font-size: 12px;
-  color: var(--gray-500);
-  margin: 20px 0;
-  display: block;
+  font-weight: 400;
+  color: var(--gray-600);
+  letter-spacing: 0.5px;
 }
 
 /* Input Styles */
@@ -212,6 +250,9 @@
   text-decoration: none;
   margin: 15px 0;
   transition: color 0.2s ease;
+  text-align: right;
+  width: 100%;
+  display: block;
 }
 
 .forgot-password-link:hover {
@@ -232,7 +273,7 @@
   text-transform: uppercase;
   transition: all 0.3s ease;
   cursor: pointer;
-  margin-top: 10px;
+  margin: 10px auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -908,6 +949,14 @@
     margin: 15px 0;
   }
 
+  .social {
+    min-width: auto;
+    width: 100%;
+    max-width: 280px;
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+
   .social-divider {
     margin: 15px 0;
   }
@@ -1032,8 +1081,8 @@
   }
 
   .social {
-    width: 35px;
-    height: 35px;
+    padding: 9px 16px;
+    font-size: 12px;
   }
 
   .social svg {
