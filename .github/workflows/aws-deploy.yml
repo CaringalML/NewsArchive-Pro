@@ -1,0 +1,115 @@
+name: React CI/CD
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  TREAT_WARNINGS_AS_ERRORS: true  # Set to false if you want warnings to not fail the build
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: npm ci
+
+      # Check for warnings and errors
+      - name: Check for npm warnings
+        run: |
+          echo "Checking for potential issues..."
+          npm audit --audit-level moderate || true
+          echo "Checking outdated packages..."
+          npm outdated || true
+
+      # Build the app with warning detection
+      - name: Build
+        run: |
+          echo "Building React application..."
+          npm run build 2>&1 | tee build.log
+          
+          # Check for warnings in build output
+          if grep -i "warning" build.log; then
+            echo "⚠️ Warnings found during build:"
+            grep -i "warning" build.log
+            
+            if [ "$TREAT_WARNINGS_AS_ERRORS" = "true" ]; then
+              echo "❌ Build failed due to warnings - treating warnings as errors"
+              exit 1
+            else
+              echo "⚠️ Warnings detected but continuing build (TREAT_WARNINGS_AS_ERRORS=false)"
+            fi
+          else
+            echo "✅ Build completed without warnings"
+          fi
+          
+          # Check if build was successful
+          if [ ! -d "./build" ]; then
+            echo "❌ Build directory not found - build failed"
+            exit 1
+          fi
+          
+          echo "✅ Build completed successfully"
+
+      # Configure AWS Credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Deploy to S3 (updated path to match Terraform configuration)
+      - name: Deploy to S3
+        run: |
+          echo "🚀 Starting deployment to S3..."
+          echo "Bucket: caringalfrontend"
+          echo "Path: frontend-build"
+          echo "Region: ${{ secrets.AWS_REGION }}"
+          
+          # List files to be uploaded
+          echo "Files to be uploaded:"
+          find ./build -type f | head -10
+          
+          # Sync to S3 with verbose output
+          aws s3 sync ./build s3://caringalfrontend/frontend-build --delete --debug
+          
+          echo "✅ S3 deployment completed"
+
+      # Invalidate CloudFront
+      - name: Invalidate CloudFront
+        run: |
+          echo "🔄 Starting CloudFront invalidation..."
+          echo "Distribution ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}"
+          
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*" \
+            --output text \
+            --query 'Invalidation.Id')
+          
+          echo "Invalidation created with ID: $INVALIDATION_ID"
+          echo "✅ CloudFront invalidation initiated"
+          
+          # Optional: Wait for invalidation to complete (uncomment if needed)
+          # echo "Waiting for invalidation to complete..."
+          # aws cloudfront wait invalidation-completed \
+          #   --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+          #   --id $INVALIDATION_ID
+          # echo "✅ CloudFront invalidation completed"
