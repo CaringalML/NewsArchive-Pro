@@ -1,0 +1,27 @@
+{
+  "name": "newsarchive-pro-backend",
+  "version": "1.0.0",
+  "description": "NewsArchive Pro Backend Lambda Functions",
+  "scripts": {
+    "build": "node build.js",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.460.0",
+    "@aws-sdk/client-textract": "^3.460.0",
+    "@aws-sdk/client-comprehend": "^3.460.0",
+    "@aws-sdk/client-sqs": "^3.460.0",
+    "@aws-sdk/s3-request-presigner": "^3.460.0",
+    "@supabase/supabase-js": "^2.38.5",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "archiver": "^6.0.1",
+    "eslint": "^8.55.0",
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

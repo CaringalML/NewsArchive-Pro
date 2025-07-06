@@ -1,0 +1,3450 @@
+{
+  "version": 4,
+  "terraform_version": "1.10.2",
+  "serial": 119,
+  "lineage": "21015514-a9d3-2dd5-9f13-24e2c51ebfa0",
+  "outputs": {
+    "api_gateway_id": {
+      "value": "xf4qnc9d5j",
+      "type": "string"
+    },
+    "api_gateway_url": {
+      "value": "https://xf4qnc9d5j.execute-api.ap-southeast-2.amazonaws.com/production",
+      "type": "string"
+    },
+    "cloudfront_distribution_id": {
+      "value": "E2852XBFVZ3DAZ",
+      "type": "string"
+    },
+    "cloudfront_domain_name": {
+      "value": "d1gnn36zhrv38g.cloudfront.net",
+      "type": "string"
+    },
+    "lambda_execution_role_arn": {
+      "value": "arn:aws:iam::939737198590:role/production-newsarchive-lambda-role",
+      "type": "string"
+    },
+    "lambda_function_names": {
+      "value": {
+        "get_processing_status": "production-newsarchive-get-processing-status",
+        "get_upload_url": "production-newsarchive-get-upload-url",
+        "ocr_processor": "production-newsarchive-ocr-processor",
+        "process_document": "production-newsarchive-process-document"
+      },
+      "type": [
+        "object",
+        {
+          "get_processing_status": "string",
+          "get_upload_url": "string",
+          "ocr_processor": "string",
+          "process_document": "string"
+        }
+      ]
+    },
+    "processing_queue_arn": {
+      "value": "arn:aws:sqs:ap-southeast-2:939737198590:dev-newsarchive-processing-queue",
+      "type": "string"
+    },
+    "processing_queue_url": {
+      "value": "https://sqs.ap-southeast-2.amazonaws.com/939737198590/dev-newsarchive-processing-queue",
+      "type": "string"
+    },
+    "s3_bucket_name": {
+      "value": "caringalfrontend",
+      "type": "string"
+    },
+    "website_url": {
+      "value": "https://d1gnn36zhrv38g.cloudfront.net",
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_deployment",
+      "name": "newsarchive_api_deployment",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "canary_settings": [],
+            "created_date": "2025-07-06T10:43:16Z",
+            "description": "",
+            "execution_arn": "arn:aws:execute-api:ap-southeast-2:939737198590:xf4qnc9d5j/",
+            "id": "vqckjq",
+            "invoke_url": "https://xf4qnc9d5j.execute-api.ap-southeast-2.amazonaws.com/",
+            "rest_api_id": "xf4qnc9d5j",
+            "stage_description": null,
+            "stage_name": null,
+            "triggers": {
+              "redeployment": "94b8e64da82e8e4442bb74e709847ef15148421f"
+            },
+            "variables": null
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_integration.get_processing_status_integration",
+            "aws_api_gateway_integration.get_upload_url_integration",
+            "aws_api_gateway_integration.process_document_integration",
+            "aws_api_gateway_method.get_processing_status_get",
+            "aws_api_gateway_method.get_upload_url_post",
+            "aws_api_gateway_method.options_process_document",
+            "aws_api_gateway_method.options_processing_status",
+            "aws_api_gateway_method.options_upload_url",
+            "aws_api_gateway_method.process_document_post",
+            "aws_api_gateway_resource.process_document",
+            "aws_api_gateway_resource.processing_status",
+            "aws_api_gateway_resource.processing_status_job_id",
+            "aws_api_gateway_resource.upload_url",
+            "aws_api_gateway_rest_api.newsarchive_api",
+            "aws_cloudwatch_log_group.get_processing_status_logs",
+            "aws_cloudwatch_log_group.get_upload_url_logs",
+            "aws_cloudwatch_log_group.process_document_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution",
+            "aws_lambda_function.get_processing_status",
+            "aws_lambda_function.get_upload_url",
+            "aws_lambda_function.process_document",
+            "aws_s3_bucket.storage_bucket",
+            "aws_sqs_queue.processing_dlq",
+            "aws_sqs_queue.processing_queue"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_integration",
+      "name": "get_processing_status_integration",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "cache_key_parameters": [],
+            "cache_namespace": "40j668",
+            "connection_id": "",
+            "connection_type": "INTERNET",
+            "content_handling": "",
+            "credentials": "",
+            "http_method": "GET",
+            "id": "agi-xf4qnc9d5j-40j668-GET",
+            "integration_http_method": "POST",
+            "passthrough_behavior": "WHEN_NO_MATCH",
+            "request_parameters": {},
+            "request_templates": {},
+            "resource_id": "40j668",
+            "rest_api_id": "xf4qnc9d5j",
+            "timeout_milliseconds": 29000,
+            "tls_config": [],
+            "type": "AWS_PROXY",
+            "uri": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-get-processing-status/invocations"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.get_processing_status_get",
+            "aws_api_gateway_resource.processing_status",
+            "aws_api_gateway_resource.processing_status_job_id",
+            "aws_api_gateway_rest_api.newsarchive_api",
+            "aws_cloudwatch_log_group.get_processing_status_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution",
+            "aws_lambda_function.get_processing_status"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_integration",
+      "name": "get_upload_url_integration",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "cache_key_parameters": [],
+            "cache_namespace": "4e775t",
+            "connection_id": "",
+            "connection_type": "INTERNET",
+            "content_handling": "",
+            "credentials": "",
+            "http_method": "POST",
+            "id": "agi-xf4qnc9d5j-4e775t-POST",
+            "integration_http_method": "POST",
+            "passthrough_behavior": "WHEN_NO_MATCH",
+            "request_parameters": {},
+            "request_templates": {},
+            "resource_id": "4e775t",
+            "rest_api_id": "xf4qnc9d5j",
+            "timeout_milliseconds": 29000,
+            "tls_config": [],
+            "type": "AWS_PROXY",
+            "uri": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-get-upload-url/invocations"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.get_upload_url_post",
+            "aws_api_gateway_resource.upload_url",
+            "aws_api_gateway_rest_api.newsarchive_api",
+            "aws_cloudwatch_log_group.get_upload_url_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution",
+            "aws_lambda_function.get_upload_url",
+            "aws_s3_bucket.storage_bucket"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_integration",
+      "name": "options_process_document_integration",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "cache_key_parameters": [],
+            "cache_namespace": "qtt2e9",
+            "connection_id": "",
+            "connection_type": "INTERNET",
+            "content_handling": "",
+            "credentials": "",
+            "http_method": "OPTIONS",
+            "id": "agi-xf4qnc9d5j-qtt2e9-OPTIONS",
+            "integration_http_method": "",
+            "passthrough_behavior": "WHEN_NO_MATCH",
+            "request_parameters": {},
+            "request_templates": {
+              "application/json": "{\"statusCode\": 200}"
+            },
+            "resource_id": "qtt2e9",
+            "rest_api_id": "xf4qnc9d5j",
+            "timeout_milliseconds": 29000,
+            "tls_config": [],
+            "type": "MOCK",
+            "uri": ""
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.options_process_document",
+            "aws_api_gateway_resource.process_document",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_integration",
+      "name": "options_processing_status_integration",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "cache_key_parameters": [],
+            "cache_namespace": "40j668",
+            "connection_id": "",
+            "connection_type": "INTERNET",
+            "content_handling": "",
+            "credentials": "",
+            "http_method": "OPTIONS",
+            "id": "agi-xf4qnc9d5j-40j668-OPTIONS",
+            "integration_http_method": "",
+            "passthrough_behavior": "WHEN_NO_MATCH",
+            "request_parameters": {},
+            "request_templates": {
+              "application/json": "{\"statusCode\": 200}"
+            },
+            "resource_id": "40j668",
+            "rest_api_id": "xf4qnc9d5j",
+            "timeout_milliseconds": 29000,
+            "tls_config": [],
+            "type": "MOCK",
+            "uri": ""
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.options_processing_status",
+            "aws_api_gateway_resource.processing_status",
+            "aws_api_gateway_resource.processing_status_job_id",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_integration",
+      "name": "options_upload_url_integration",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "cache_key_parameters": [],
+            "cache_namespace": "4e775t",
+            "connection_id": "",
+            "connection_type": "INTERNET",
+            "content_handling": "",
+            "credentials": "",
+            "http_method": "OPTIONS",
+            "id": "agi-xf4qnc9d5j-4e775t-OPTIONS",
+            "integration_http_method": "",
+            "passthrough_behavior": "WHEN_NO_MATCH",
+            "request_parameters": {},
+            "request_templates": {
+              "application/json": "{\"statusCode\": 200}"
+            },
+            "resource_id": "4e775t",
+            "rest_api_id": "xf4qnc9d5j",
+            "timeout_milliseconds": 29000,
+            "tls_config": [],
+            "type": "MOCK",
+            "uri": ""
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.options_upload_url",
+            "aws_api_gateway_resource.upload_url",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_integration",
+      "name": "process_document_integration",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "cache_key_parameters": [],
+            "cache_namespace": "qtt2e9",
+            "connection_id": "",
+            "connection_type": "INTERNET",
+            "content_handling": "",
+            "credentials": "",
+            "http_method": "POST",
+            "id": "agi-xf4qnc9d5j-qtt2e9-POST",
+            "integration_http_method": "POST",
+            "passthrough_behavior": "WHEN_NO_MATCH",
+            "request_parameters": {},
+            "request_templates": {},
+            "resource_id": "qtt2e9",
+            "rest_api_id": "xf4qnc9d5j",
+            "timeout_milliseconds": 29000,
+            "tls_config": [],
+            "type": "AWS_PROXY",
+            "uri": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-process-document/invocations"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.process_document_post",
+            "aws_api_gateway_resource.process_document",
+            "aws_api_gateway_rest_api.newsarchive_api",
+            "aws_cloudwatch_log_group.process_document_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution",
+            "aws_lambda_function.process_document",
+            "aws_s3_bucket.storage_bucket",
+            "aws_sqs_queue.processing_dlq",
+            "aws_sqs_queue.processing_queue"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_integration_response",
+      "name": "options_process_document_integration_response",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "content_handling": "",
+            "http_method": "OPTIONS",
+            "id": "agir-xf4qnc9d5j-qtt2e9-OPTIONS-200",
+            "resource_id": "qtt2e9",
+            "response_parameters": {
+              "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+              "method.response.header.Access-Control-Allow-Methods": "'GET,POST,OPTIONS'",
+              "method.response.header.Access-Control-Allow-Origin": "'*'"
+            },
+            "response_templates": {},
+            "rest_api_id": "xf4qnc9d5j",
+            "selection_pattern": "",
+            "status_code": "200"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_integration.options_process_document_integration",
+            "aws_api_gateway_method.options_process_document",
+            "aws_api_gateway_method_response.options_process_document_response_200",
+            "aws_api_gateway_resource.process_document",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_integration_response",
+      "name": "options_processing_status_integration_response",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "content_handling": "",
+            "http_method": "OPTIONS",
+            "id": "agir-xf4qnc9d5j-40j668-OPTIONS-200",
+            "resource_id": "40j668",
+            "response_parameters": {
+              "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+              "method.response.header.Access-Control-Allow-Methods": "'GET,POST,OPTIONS'",
+              "method.response.header.Access-Control-Allow-Origin": "'*'"
+            },
+            "response_templates": {},
+            "rest_api_id": "xf4qnc9d5j",
+            "selection_pattern": "",
+            "status_code": "200"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_integration.options_processing_status_integration",
+            "aws_api_gateway_method.options_processing_status",
+            "aws_api_gateway_method_response.options_processing_status_response_200",
+            "aws_api_gateway_resource.processing_status",
+            "aws_api_gateway_resource.processing_status_job_id",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_integration_response",
+      "name": "options_upload_url_integration_response",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "content_handling": "",
+            "http_method": "OPTIONS",
+            "id": "agir-xf4qnc9d5j-4e775t-OPTIONS-200",
+            "resource_id": "4e775t",
+            "response_parameters": {
+              "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+              "method.response.header.Access-Control-Allow-Methods": "'GET,POST,OPTIONS'",
+              "method.response.header.Access-Control-Allow-Origin": "'*'"
+            },
+            "response_templates": {},
+            "rest_api_id": "xf4qnc9d5j",
+            "selection_pattern": "",
+            "status_code": "200"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_integration.options_upload_url_integration",
+            "aws_api_gateway_method.options_upload_url",
+            "aws_api_gateway_method_response.options_upload_url_response_200",
+            "aws_api_gateway_resource.upload_url",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method",
+      "name": "get_processing_status_get",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "api_key_required": false,
+            "authorization": "NONE",
+            "authorization_scopes": [],
+            "authorizer_id": "",
+            "http_method": "GET",
+            "id": "agm-xf4qnc9d5j-40j668-GET",
+            "operation_name": "",
+            "request_models": {},
+            "request_parameters": {
+              "method.request.header.Authorization": false,
+              "method.request.path.jobId": true
+            },
+            "request_validator_id": "",
+            "resource_id": "40j668",
+            "rest_api_id": "xf4qnc9d5j"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_resource.processing_status",
+            "aws_api_gateway_resource.processing_status_job_id",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method",
+      "name": "get_upload_url_post",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "api_key_required": false,
+            "authorization": "NONE",
+            "authorization_scopes": [],
+            "authorizer_id": "",
+            "http_method": "POST",
+            "id": "agm-xf4qnc9d5j-4e775t-POST",
+            "operation_name": "",
+            "request_models": {},
+            "request_parameters": {
+              "method.request.header.Authorization": false
+            },
+            "request_validator_id": "",
+            "resource_id": "4e775t",
+            "rest_api_id": "xf4qnc9d5j"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_resource.upload_url",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method",
+      "name": "options_process_document",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "api_key_required": false,
+            "authorization": "NONE",
+            "authorization_scopes": [],
+            "authorizer_id": "",
+            "http_method": "OPTIONS",
+            "id": "agm-xf4qnc9d5j-qtt2e9-OPTIONS",
+            "operation_name": "",
+            "request_models": {},
+            "request_parameters": {},
+            "request_validator_id": "",
+            "resource_id": "qtt2e9",
+            "rest_api_id": "xf4qnc9d5j"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_resource.process_document",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method",
+      "name": "options_processing_status",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "api_key_required": false,
+            "authorization": "NONE",
+            "authorization_scopes": [],
+            "authorizer_id": "",
+            "http_method": "OPTIONS",
+            "id": "agm-xf4qnc9d5j-40j668-OPTIONS",
+            "operation_name": "",
+            "request_models": {},
+            "request_parameters": {},
+            "request_validator_id": "",
+            "resource_id": "40j668",
+            "rest_api_id": "xf4qnc9d5j"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_resource.processing_status",
+            "aws_api_gateway_resource.processing_status_job_id",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method",
+      "name": "options_upload_url",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "api_key_required": false,
+            "authorization": "NONE",
+            "authorization_scopes": [],
+            "authorizer_id": "",
+            "http_method": "OPTIONS",
+            "id": "agm-xf4qnc9d5j-4e775t-OPTIONS",
+            "operation_name": "",
+            "request_models": {},
+            "request_parameters": {},
+            "request_validator_id": "",
+            "resource_id": "4e775t",
+            "rest_api_id": "xf4qnc9d5j"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_resource.upload_url",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method",
+      "name": "process_document_post",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "api_key_required": false,
+            "authorization": "NONE",
+            "authorization_scopes": [],
+            "authorizer_id": "",
+            "http_method": "POST",
+            "id": "agm-xf4qnc9d5j-qtt2e9-POST",
+            "operation_name": "",
+            "request_models": {},
+            "request_parameters": {
+              "method.request.header.Authorization": false
+            },
+            "request_validator_id": "",
+            "resource_id": "qtt2e9",
+            "rest_api_id": "xf4qnc9d5j"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_resource.process_document",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method_response",
+      "name": "get_processing_status_response_200",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "http_method": "GET",
+            "id": "agmr-xf4qnc9d5j-40j668-GET-200",
+            "resource_id": "40j668",
+            "response_models": {},
+            "response_parameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "rest_api_id": "xf4qnc9d5j",
+            "status_code": "200"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.get_processing_status_get",
+            "aws_api_gateway_resource.processing_status",
+            "aws_api_gateway_resource.processing_status_job_id",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method_response",
+      "name": "get_upload_url_response_200",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "http_method": "POST",
+            "id": "agmr-xf4qnc9d5j-4e775t-POST-200",
+            "resource_id": "4e775t",
+            "response_models": {},
+            "response_parameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "rest_api_id": "xf4qnc9d5j",
+            "status_code": "200"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.get_upload_url_post",
+            "aws_api_gateway_resource.upload_url",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method_response",
+      "name": "options_process_document_response_200",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "http_method": "OPTIONS",
+            "id": "agmr-xf4qnc9d5j-qtt2e9-OPTIONS-200",
+            "resource_id": "qtt2e9",
+            "response_models": {},
+            "response_parameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "rest_api_id": "xf4qnc9d5j",
+            "status_code": "200"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.options_process_document",
+            "aws_api_gateway_resource.process_document",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method_response",
+      "name": "options_processing_status_response_200",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "http_method": "OPTIONS",
+            "id": "agmr-xf4qnc9d5j-40j668-OPTIONS-200",
+            "resource_id": "40j668",
+            "response_models": {},
+            "response_parameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "rest_api_id": "xf4qnc9d5j",
+            "status_code": "200"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.options_processing_status",
+            "aws_api_gateway_resource.processing_status",
+            "aws_api_gateway_resource.processing_status_job_id",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method_response",
+      "name": "options_upload_url_response_200",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "http_method": "OPTIONS",
+            "id": "agmr-xf4qnc9d5j-4e775t-OPTIONS-200",
+            "resource_id": "4e775t",
+            "response_models": {},
+            "response_parameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "rest_api_id": "xf4qnc9d5j",
+            "status_code": "200"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.options_upload_url",
+            "aws_api_gateway_resource.upload_url",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_method_response",
+      "name": "process_document_response_200",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "http_method": "POST",
+            "id": "agmr-xf4qnc9d5j-qtt2e9-POST-200",
+            "resource_id": "qtt2e9",
+            "response_models": {},
+            "response_parameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "rest_api_id": "xf4qnc9d5j",
+            "status_code": "200"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_method.process_document_post",
+            "aws_api_gateway_resource.process_document",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_resource",
+      "name": "process_document",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "qtt2e9",
+            "parent_id": "nu4s2b6jnb",
+            "path": "/process-document",
+            "path_part": "process-document",
+            "rest_api_id": "xf4qnc9d5j"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_resource",
+      "name": "processing_status",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "sh8032",
+            "parent_id": "nu4s2b6jnb",
+            "path": "/processing-status",
+            "path_part": "processing-status",
+            "rest_api_id": "xf4qnc9d5j"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_resource",
+      "name": "processing_status_job_id",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "40j668",
+            "parent_id": "sh8032",
+            "path": "/processing-status/{jobId}",
+            "path_part": "{jobId}",
+            "rest_api_id": "xf4qnc9d5j"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_resource.processing_status",
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_resource",
+      "name": "upload_url",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "4e775t",
+            "parent_id": "nu4s2b6jnb",
+            "path": "/upload-url",
+            "path_part": "upload-url",
+            "rest_api_id": "xf4qnc9d5j"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_rest_api.newsarchive_api"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_api_gateway_rest_api",
+      "name": "newsarchive_api",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "api_key_source": "HEADER",
+            "arn": "arn:aws:apigateway:ap-southeast-2::/restapis/xf4qnc9d5j",
+            "binary_media_types": [],
+            "body": null,
+            "created_date": "2025-07-06T10:38:51Z",
+            "description": "NewsArchive Pro Backend API",
+            "disable_execute_api_endpoint": false,
+            "endpoint_configuration": [
+              {
+                "ip_address_type": "ipv4",
+                "types": [
+                  "REGIONAL"
+                ],
+                "vpc_endpoint_ids": []
+              }
+            ],
+            "execution_arn": "arn:aws:execute-api:ap-southeast-2:939737198590:xf4qnc9d5j",
+            "fail_on_warnings": null,
+            "id": "xf4qnc9d5j",
+            "minimum_compression_size": "",
+            "name": "production-newsarchive-api",
+            "parameters": null,
+            "policy": "",
+            "put_rest_api_mode": null,
+            "root_resource_id": "nu4s2b6jnb",
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-api",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-api",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            }
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_cloudfront_distribution",
+      "name": "s3_distribution",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "aliases": [],
+            "arn": "arn:aws:cloudfront::939737198590:distribution/E2852XBFVZ3DAZ",
+            "caller_reference": "terraform-20250705215825676100000001",
+            "comment": null,
+            "continuous_deployment_policy_id": "",
+            "custom_error_response": [
+              {
+                "error_caching_min_ttl": 0,
+                "error_code": 403,
+                "response_code": 200,
+                "response_page_path": "/index.html"
+              },
+              {
+                "error_caching_min_ttl": 0,
+                "error_code": 404,
+                "response_code": 200,
+                "response_page_path": "/index.html"
+              }
+            ],
+            "default_cache_behavior": [
+              {
+                "allowed_methods": [
+                  "DELETE",
+                  "GET",
+                  "HEAD",
+                  "OPTIONS",
+                  "PATCH",
+                  "POST",
+                  "PUT"
+                ],
+                "cache_policy_id": "",
+                "cached_methods": [
+                  "GET",
+                  "HEAD"
+                ],
+                "compress": true,
+                "default_ttl": 3600,
+                "field_level_encryption_id": "",
+                "forwarded_values": [
+                  {
+                    "cookies": [
+                      {
+                        "forward": "none",
+                        "whitelisted_names": []
+                      }
+                    ],
+                    "headers": [
+                      "Accept",
+                      "Authorization",
+                      "Content-Type",
+                      "Origin"
+                    ],
+                    "query_string": true,
+                    "query_string_cache_keys": []
+                  }
+                ],
+                "function_association": [
+                  {
+                    "event_type": "viewer-request",
+                    "function_arn": "arn:aws:cloudfront::939737198590:function/cloudstruct-function-production"
+                  }
+                ],
+                "grpc_config": [
+                  {
+                    "enabled": false
+                  }
+                ],
+                "lambda_function_association": [],
+                "max_ttl": 86400,
+                "min_ttl": 0,
+                "origin_request_policy_id": "",
+                "realtime_log_config_arn": "",
+                "response_headers_policy_id": "",
+                "smooth_streaming": false,
+                "target_origin_id": "S3-Frontend-App",
+                "trusted_key_groups": [],
+                "trusted_signers": [],
+                "viewer_protocol_policy": "redirect-to-https"
+              }
+            ],
+            "default_root_object": "index.html",
+            "domain_name": "d1gnn36zhrv38g.cloudfront.net",
+            "enabled": true,
+            "etag": "E2FGDZYGKY5D0Y",
+            "hosted_zone_id": "Z2FDTNDATAQYW2",
+            "http_version": "http2",
+            "id": "E2852XBFVZ3DAZ",
+            "in_progress_validation_batches": 0,
+            "is_ipv6_enabled": true,
+            "last_modified_time": "2025-07-06 08:11:48.19 +0000 UTC",
+            "logging_config": [],
+            "ordered_cache_behavior": [
+              {
+                "allowed_methods": [
+                  "DELETE",
+                  "GET",
+                  "HEAD",
+                  "OPTIONS",
+                  "PATCH",
+                  "POST",
+                  "PUT"
+                ],
+                "cache_policy_id": "",
+                "cached_methods": [
+                  "GET",
+                  "HEAD"
+                ],
+                "compress": true,
+                "default_ttl": 86400,
+                "field_level_encryption_id": "",
+                "forwarded_values": [
+                  {
+                    "cookies": [
+                      {
+                        "forward": "none",
+                        "whitelisted_names": []
+                      }
+                    ],
+                    "headers": [
+                      "Access-Control-Request-Headers",
+                      "Access-Control-Request-Method",
+                      "Authorization",
+                      "Content-Type",
+                      "Origin"
+                    ],
+                    "query_string": true,
+                    "query_string_cache_keys": []
+                  }
+                ],
+                "function_association": [],
+                "grpc_config": [
+                  {
+                    "enabled": false
+                  }
+                ],
+                "lambda_function_association": [],
+                "max_ttl": 31536000,
+                "min_ttl": 0,
+                "origin_request_policy_id": "",
+                "path_pattern": "/newspapers/*",
+                "realtime_log_config_arn": "",
+                "response_headers_policy_id": "",
+                "smooth_streaming": false,
+                "target_origin_id": "S3-Newspapers",
+                "trusted_key_groups": [],
+                "trusted_signers": [],
+                "viewer_protocol_policy": "redirect-to-https"
+              }
+            ],
+            "origin": [
+              {
+                "connection_attempts": 3,
+                "connection_timeout": 10,
+                "custom_header": [],
+                "custom_origin_config": [],
+                "domain_name": "caringalfrontend.s3.ap-southeast-2.amazonaws.com",
+                "origin_access_control_id": "E15Y8424WH8429",
+                "origin_id": "S3-Frontend-App",
+                "origin_path": "/frontend-build",
+                "origin_shield": [],
+                "s3_origin_config": [],
+                "vpc_origin_config": []
+              },
+              {
+                "connection_attempts": 3,
+                "connection_timeout": 10,
+                "custom_header": [],
+                "custom_origin_config": [],
+                "domain_name": "caringalfrontend.s3.ap-southeast-2.amazonaws.com",
+                "origin_access_control_id": "E15Y8424WH8429",
+                "origin_id": "S3-Newspapers",
+                "origin_path": "/newspapers",
+                "origin_shield": [],
+                "s3_origin_config": [],
+                "vpc_origin_config": []
+              }
+            ],
+            "origin_group": [],
+            "price_class": "PriceClass_100",
+            "restrictions": [
+              {
+                "geo_restriction": [
+                  {
+                    "locations": [],
+                    "restriction_type": "none"
+                  }
+                ]
+              }
+            ],
+            "retain_on_delete": false,
+            "staging": false,
+            "status": "Deployed",
+            "tags": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-distribution",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-distribution",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "trusted_key_groups": [
+              {
+                "enabled": false,
+                "items": []
+              }
+            ],
+            "trusted_signers": [
+              {
+                "enabled": false,
+                "items": []
+              }
+            ],
+            "viewer_certificate": [
+              {
+                "acm_certificate_arn": "",
+                "cloudfront_default_certificate": true,
+                "iam_certificate_id": "",
+                "minimum_protocol_version": "TLSv1",
+                "ssl_support_method": ""
+              }
+            ],
+            "wait_for_deployment": true,
+            "web_acl_id": ""
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ==",
+          "dependencies": [
+            "aws_cloudfront_function.rewrite_uri",
+            "aws_cloudfront_origin_access_control.s3_oac",
+            "aws_s3_bucket.storage_bucket"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_cloudfront_function",
+      "name": "rewrite_uri",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:cloudfront::939737198590:function/cloudstruct-function-production",
+            "code": "function handler(event) {\n    var request = event.request;\n    var uri = request.uri;\n    \n    // Check whether the URI is missing a file extension\n    if (!uri.includes('.')) {\n        request.uri = '/index.html';\n    }\n    \n    return request;\n}\n",
+            "comment": "Rewrite URI for React Router",
+            "etag": "ETVPDKIKX0DER",
+            "id": "cloudstruct-function-production",
+            "key_value_store_associations": [],
+            "live_stage_etag": "ETVPDKIKX0DER",
+            "name": "cloudstruct-function-production",
+            "publish": true,
+            "runtime": "cloudfront-js-1.0",
+            "status": "DEPLOYED"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_cloudfront_origin_access_control",
+      "name": "s3_oac",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:cloudfront::939737198590:origin-access-control/E15Y8424WH8429",
+            "description": "OAC for S3 bucket",
+            "etag": "E1PA6795UKMFR9",
+            "id": "E15Y8424WH8429",
+            "name": "newsarchive-oac-production",
+            "origin_access_control_origin_type": "s3",
+            "signing_behavior": "always",
+            "signing_protocol": "sigv4"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "api_gateway_logs",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:logs:ap-southeast-2:939737198590:log-group:/aws/apigateway/production-newsarchive-api",
+            "id": "/aws/apigateway/production-newsarchive-api",
+            "kms_key_id": "",
+            "log_group_class": "STANDARD",
+            "name": "/aws/apigateway/production-newsarchive-api",
+            "name_prefix": "",
+            "retention_in_days": 14,
+            "skip_destroy": false,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-api-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-api-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            }
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "get_processing_status_logs",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:logs:ap-southeast-2:939737198590:log-group:/aws/lambda/production-newsarchive-get-processing-status",
+            "id": "/aws/lambda/production-newsarchive-get-processing-status",
+            "kms_key_id": "",
+            "log_group_class": "STANDARD",
+            "name": "/aws/lambda/production-newsarchive-get-processing-status",
+            "name_prefix": "",
+            "retention_in_days": 14,
+            "skip_destroy": false,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-get-processing-status-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-get-processing-status-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            }
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "create_before_destroy": true
+        },
+        {
+          "deposed": "1487d4aa",
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:logs:ap-southeast-2:939737198590:log-group:/aws/lambda/dev-newsarchive-get-processing-status",
+            "id": "/aws/lambda/dev-newsarchive-get-processing-status",
+            "kms_key_id": "",
+            "log_group_class": "STANDARD",
+            "name": "/aws/lambda/dev-newsarchive-get-processing-status",
+            "name_prefix": "",
+            "retention_in_days": 14,
+            "skip_destroy": false,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-get-processing-status-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-get-processing-status-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            }
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "get_upload_url_logs",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:logs:ap-southeast-2:939737198590:log-group:/aws/lambda/production-newsarchive-get-upload-url",
+            "id": "/aws/lambda/production-newsarchive-get-upload-url",
+            "kms_key_id": "",
+            "log_group_class": "STANDARD",
+            "name": "/aws/lambda/production-newsarchive-get-upload-url",
+            "name_prefix": "",
+            "retention_in_days": 14,
+            "skip_destroy": false,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-get-upload-url-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-get-upload-url-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            }
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "create_before_destroy": true
+        },
+        {
+          "deposed": "df55b570",
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:logs:ap-southeast-2:939737198590:log-group:/aws/lambda/dev-newsarchive-get-upload-url",
+            "id": "/aws/lambda/dev-newsarchive-get-upload-url",
+            "kms_key_id": "",
+            "log_group_class": "STANDARD",
+            "name": "/aws/lambda/dev-newsarchive-get-upload-url",
+            "name_prefix": "",
+            "retention_in_days": 14,
+            "skip_destroy": false,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-get-upload-url-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-get-upload-url-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            }
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "ocr_processor_logs",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:logs:ap-southeast-2:939737198590:log-group:/aws/lambda/production-newsarchive-ocr-processor",
+            "id": "/aws/lambda/production-newsarchive-ocr-processor",
+            "kms_key_id": "",
+            "log_group_class": "STANDARD",
+            "name": "/aws/lambda/production-newsarchive-ocr-processor",
+            "name_prefix": "",
+            "retention_in_days": 14,
+            "skip_destroy": false,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-ocr-processor-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-ocr-processor-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            }
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "process_document_logs",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:logs:ap-southeast-2:939737198590:log-group:/aws/lambda/production-newsarchive-process-document",
+            "id": "/aws/lambda/production-newsarchive-process-document",
+            "kms_key_id": "",
+            "log_group_class": "STANDARD",
+            "name": "/aws/lambda/production-newsarchive-process-document",
+            "name_prefix": "",
+            "retention_in_days": 14,
+            "skip_destroy": false,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-process-document-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-process-document-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            }
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "create_before_destroy": true
+        },
+        {
+          "deposed": "ca8cfdbc",
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:logs:ap-southeast-2:939737198590:log-group:/aws/lambda/dev-newsarchive-process-document",
+            "id": "/aws/lambda/dev-newsarchive-process-document",
+            "kms_key_id": "",
+            "log_group_class": "STANDARD",
+            "name": "/aws/lambda/dev-newsarchive-process-document",
+            "name_prefix": "",
+            "retention_in_days": 14,
+            "skip_destroy": false,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-process-document-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-process-document-logs",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            }
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_cloudwatch_metric_alarm",
+      "name": "processing_queue_dlq_alarm",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "actions_enabled": true,
+            "alarm_actions": [],
+            "alarm_description": "This metric monitors dead letter queue messages",
+            "alarm_name": "production-newsarchive-processing-dlq-messages",
+            "arn": "arn:aws:cloudwatch:ap-southeast-2:939737198590:alarm:production-newsarchive-processing-dlq-messages",
+            "comparison_operator": "GreaterThanThreshold",
+            "datapoints_to_alarm": 0,
+            "dimensions": {
+              "QueueName": "production-newsarchive-processing-dlq"
+            },
+            "evaluate_low_sample_count_percentiles": "",
+            "evaluation_periods": 2,
+            "extended_statistic": "",
+            "id": "production-newsarchive-processing-dlq-messages",
+            "insufficient_data_actions": [],
+            "metric_name": "ApproximateNumberOfVisibleMessages",
+            "metric_query": [],
+            "namespace": "AWS/SQS",
+            "ok_actions": [],
+            "period": 300,
+            "statistic": "Average",
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-processing-dlq-alarm",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-processing-dlq-alarm",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "threshold": 0,
+            "threshold_metric_id": "",
+            "treat_missing_data": "missing",
+            "unit": ""
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ==",
+          "dependencies": [
+            "aws_sqs_queue.processing_dlq"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "lambda_execution_role",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:iam::939737198590:role/production-newsarchive-lambda-role",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2025-07-06T11:33:54Z",
+            "description": "",
+            "force_detach_policies": false,
+            "id": "production-newsarchive-lambda-role",
+            "inline_policy": [],
+            "managed_policy_arns": [
+              "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+            ],
+            "max_session_duration": 3600,
+            "name": "production-newsarchive-lambda-role",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-lambda-role",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-lambda-role",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "unique_id": "AROA5VTFTV77IX6HK4EDS"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "create_before_destroy": true
+        },
+        {
+          "deposed": "ae66c303",
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:iam::939737198590:role/dev-newsarchive-lambda-role",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2025-07-06T10:38:51Z",
+            "description": "",
+            "force_detach_policies": false,
+            "id": "dev-newsarchive-lambda-role",
+            "inline_policy": [],
+            "managed_policy_arns": [
+              "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+            ],
+            "max_session_duration": 3600,
+            "name": "dev-newsarchive-lambda-role",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-lambda-role",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-lambda-role",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "unique_id": "AROA5VTFTV77DNSW6HBCJ"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_iam_role_policy_attachment",
+      "name": "lambda_basic_execution",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "production-newsarchive-lambda-role-20250706113357283200000001",
+            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+            "role": "production-newsarchive-lambda-role"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_iam_role.lambda_execution_role"
+          ],
+          "create_before_destroy": true
+        },
+        {
+          "deposed": "1a3ef697",
+          "schema_version": 0,
+          "attributes": {
+            "id": "dev-newsarchive-lambda-role-20250706103854099800000001",
+            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+            "role": "dev-newsarchive-lambda-role"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_iam_role.lambda_execution_role"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "get_processing_status",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "architectures": [
+              "x86_64"
+            ],
+            "arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-get-processing-status",
+            "code_sha256": "DvgDqS8jKmn9cGt2jAhktRcbkKkmIBJ0MMh+6+FiOnc=",
+            "code_signing_config_arn": "",
+            "dead_letter_config": [],
+            "description": "",
+            "environment": [
+              {
+                "variables": {
+                  "ENVIRONMENT": "production",
+                  "SUPABASE_SERVICE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9menJ0em1jbndqbmpsZWVoa2N4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTU4NjEwOSwiZXhwIjoyMDY3MTYyMTA5fQ.aMqWQ-y3vX7UHutfcnPTV-RF8AN-V047zME0c1DeigA",
+                  "SUPABASE_URL": "https://ofzrtzmcnwjnjleehkcx.supabase.co"
+                }
+              }
+            ],
+            "ephemeral_storage": [
+              {
+                "size": 512
+              }
+            ],
+            "file_system_config": [],
+            "filename": "../backend/dist/get-processing-status.zip",
+            "function_name": "production-newsarchive-get-processing-status",
+            "handler": "index.handler",
+            "id": "production-newsarchive-get-processing-status",
+            "image_config": [],
+            "image_uri": "",
+            "invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-get-processing-status/invocations",
+            "kms_key_arn": "",
+            "last_modified": "2025-07-06T11:46:33.646+0000",
+            "layers": [],
+            "logging_config": [
+              {
+                "application_log_level": "",
+                "log_format": "Text",
+                "log_group": "/aws/lambda/production-newsarchive-get-processing-status",
+                "system_log_level": ""
+              }
+            ],
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "qualified_arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-get-processing-status:$LATEST",
+            "qualified_invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-get-processing-status:$LATEST/invocations",
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "role": "arn:aws:iam::939737198590:role/production-newsarchive-lambda-role",
+            "runtime": "nodejs18.x",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "signing_job_arn": "",
+            "signing_profile_version_arn": "",
+            "skip_destroy": false,
+            "snap_start": [],
+            "source_code_hash": "DvgDqS8jKmn9cGt2jAhktRcbkKkmIBJ0MMh+6+FiOnc=",
+            "source_code_size": 15886222,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-get-processing-status",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-get-processing-status",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "timeout": 30,
+            "timeouts": null,
+            "tracing_config": [
+              {
+                "mode": "PassThrough"
+              }
+            ],
+            "version": "$LATEST",
+            "vpc_config": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_SERVICE_KEY",
+                  "type": "string"
+                }
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_URL",
+                  "type": "string"
+                }
+              }
+            ]
+          ],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "aws_cloudwatch_log_group.get_processing_status_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution"
+          ],
+          "create_before_destroy": true
+        },
+        {
+          "deposed": "aa75dcbf",
+          "schema_version": 0,
+          "attributes": {
+            "architectures": [
+              "x86_64"
+            ],
+            "arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-get-processing-status",
+            "code_sha256": "SetS2+uEKwqv+nMY7cbCOHPVs9xS4xrX4PiMq5VHsAc=",
+            "code_signing_config_arn": "",
+            "dead_letter_config": [],
+            "description": "",
+            "environment": [
+              {
+                "variables": {
+                  "ENVIRONMENT": "dev",
+                  "SUPABASE_SERVICE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9menJ0em1jbndqbmpsZWVoa2N4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTU4NjEwOSwiZXhwIjoyMDY3MTYyMTA5fQ.aMqWQ-y3vX7UHutfcnPTV-RF8AN-V047zME0c1DeigA",
+                  "SUPABASE_URL": "https://ofzrtzmcnwjnjleehkcx.supabase.co"
+                }
+              }
+            ],
+            "ephemeral_storage": [
+              {
+                "size": 512
+              }
+            ],
+            "file_system_config": [],
+            "filename": "../backend/dist/get-processing-status.zip",
+            "function_name": "dev-newsarchive-get-processing-status",
+            "handler": "index.handler",
+            "id": "dev-newsarchive-get-processing-status",
+            "image_config": [],
+            "image_uri": "",
+            "invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-get-processing-status/invocations",
+            "kms_key_arn": "",
+            "last_modified": "2025-07-06T11:04:45.000+0000",
+            "layers": [],
+            "logging_config": [
+              {
+                "application_log_level": "",
+                "log_format": "Text",
+                "log_group": "/aws/lambda/dev-newsarchive-get-processing-status",
+                "system_log_level": ""
+              }
+            ],
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "qualified_arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-get-processing-status:$LATEST",
+            "qualified_invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-get-processing-status:$LATEST/invocations",
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "role": "arn:aws:iam::939737198590:role/dev-newsarchive-lambda-role",
+            "runtime": "nodejs18.x",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "signing_job_arn": "",
+            "signing_profile_version_arn": "",
+            "skip_destroy": false,
+            "snap_start": [],
+            "source_code_hash": "SetS2+uEKwqv+nMY7cbCOHPVs9xS4xrX4PiMq5VHsAc=",
+            "source_code_size": 15886222,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-get-processing-status",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-get-processing-status",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "timeout": 30,
+            "timeouts": null,
+            "tracing_config": [
+              {
+                "mode": "PassThrough"
+              }
+            ],
+            "version": "$LATEST",
+            "vpc_config": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_SERVICE_KEY",
+                  "type": "string"
+                }
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_URL",
+                  "type": "string"
+                }
+              }
+            ]
+          ],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "aws_cloudwatch_log_group.get_processing_status_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "get_upload_url",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "architectures": [
+              "x86_64"
+            ],
+            "arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-get-upload-url",
+            "code_sha256": "beejNZVwQg5+ZlF7QTx6t2UhtI05Gg5rY36lCNFmJLE=",
+            "code_signing_config_arn": "",
+            "dead_letter_config": [],
+            "description": "",
+            "environment": [
+              {
+                "variables": {
+                  "ENVIRONMENT": "production",
+                  "S3_BUCKET": "caringalfrontend",
+                  "SUPABASE_SERVICE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9menJ0em1jbndqbmpsZWVoa2N4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTU4NjEwOSwiZXhwIjoyMDY3MTYyMTA5fQ.aMqWQ-y3vX7UHutfcnPTV-RF8AN-V047zME0c1DeigA",
+                  "SUPABASE_URL": "https://ofzrtzmcnwjnjleehkcx.supabase.co"
+                }
+              }
+            ],
+            "ephemeral_storage": [
+              {
+                "size": 512
+              }
+            ],
+            "file_system_config": [],
+            "filename": "../backend/dist/get-upload-url.zip",
+            "function_name": "production-newsarchive-get-upload-url",
+            "handler": "index.handler",
+            "id": "production-newsarchive-get-upload-url",
+            "image_config": [],
+            "image_uri": "",
+            "invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-get-upload-url/invocations",
+            "kms_key_arn": "",
+            "last_modified": "2025-07-06T11:46:58.455+0000",
+            "layers": [],
+            "logging_config": [
+              {
+                "application_log_level": "",
+                "log_format": "Text",
+                "log_group": "/aws/lambda/production-newsarchive-get-upload-url",
+                "system_log_level": ""
+              }
+            ],
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "qualified_arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-get-upload-url:$LATEST",
+            "qualified_invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-get-upload-url:$LATEST/invocations",
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "role": "arn:aws:iam::939737198590:role/production-newsarchive-lambda-role",
+            "runtime": "nodejs18.x",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "signing_job_arn": "",
+            "signing_profile_version_arn": "",
+            "skip_destroy": false,
+            "snap_start": [],
+            "source_code_hash": "beejNZVwQg5+ZlF7QTx6t2UhtI05Gg5rY36lCNFmJLE=",
+            "source_code_size": 15886311,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-get-upload-url",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-get-upload-url",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "timeout": 30,
+            "timeouts": null,
+            "tracing_config": [
+              {
+                "mode": "PassThrough"
+              }
+            ],
+            "version": "$LATEST",
+            "vpc_config": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_SERVICE_KEY",
+                  "type": "string"
+                }
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_URL",
+                  "type": "string"
+                }
+              }
+            ]
+          ],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "aws_cloudwatch_log_group.get_upload_url_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution",
+            "aws_s3_bucket.storage_bucket"
+          ],
+          "create_before_destroy": true
+        },
+        {
+          "deposed": "21ab5cb0",
+          "schema_version": 0,
+          "attributes": {
+            "architectures": [
+              "x86_64"
+            ],
+            "arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-get-upload-url",
+            "code_sha256": "BhjpbwXvvvs6Hj2UpiA7FMtROiDWV2soCy9pSX+l27Q=",
+            "code_signing_config_arn": "",
+            "dead_letter_config": [],
+            "description": "",
+            "environment": [
+              {
+                "variables": {
+                  "ENVIRONMENT": "dev",
+                  "S3_BUCKET": "caringalfrontend",
+                  "SUPABASE_SERVICE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9menJ0em1jbndqbmpsZWVoa2N4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTU4NjEwOSwiZXhwIjoyMDY3MTYyMTA5fQ.aMqWQ-y3vX7UHutfcnPTV-RF8AN-V047zME0c1DeigA",
+                  "SUPABASE_URL": "https://ofzrtzmcnwjnjleehkcx.supabase.co"
+                }
+              }
+            ],
+            "ephemeral_storage": [
+              {
+                "size": 512
+              }
+            ],
+            "file_system_config": [],
+            "filename": "../backend/dist/get-upload-url.zip",
+            "function_name": "dev-newsarchive-get-upload-url",
+            "handler": "index.handler",
+            "id": "dev-newsarchive-get-upload-url",
+            "image_config": [],
+            "image_uri": "",
+            "invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-get-upload-url/invocations",
+            "kms_key_arn": "",
+            "last_modified": "2025-07-06T11:05:53.000+0000",
+            "layers": [],
+            "logging_config": [
+              {
+                "application_log_level": "",
+                "log_format": "Text",
+                "log_group": "/aws/lambda/dev-newsarchive-get-upload-url",
+                "system_log_level": ""
+              }
+            ],
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "qualified_arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-get-upload-url:$LATEST",
+            "qualified_invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-get-upload-url:$LATEST/invocations",
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "role": "arn:aws:iam::939737198590:role/dev-newsarchive-lambda-role",
+            "runtime": "nodejs18.x",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "signing_job_arn": "",
+            "signing_profile_version_arn": "",
+            "skip_destroy": false,
+            "snap_start": [],
+            "source_code_hash": "BhjpbwXvvvs6Hj2UpiA7FMtROiDWV2soCy9pSX+l27Q=",
+            "source_code_size": 15886311,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-get-upload-url",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-get-upload-url",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "timeout": 30,
+            "timeouts": null,
+            "tracing_config": [
+              {
+                "mode": "PassThrough"
+              }
+            ],
+            "version": "$LATEST",
+            "vpc_config": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_SERVICE_KEY",
+                  "type": "string"
+                }
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_URL",
+                  "type": "string"
+                }
+              }
+            ]
+          ],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "aws_cloudwatch_log_group.get_upload_url_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution",
+            "aws_s3_bucket.storage_bucket"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "ocr_processor",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "architectures": [
+              "x86_64"
+            ],
+            "arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-ocr-processor",
+            "code_sha256": "ppCbJHsP48Vw+EfXC1KQcA1A2LV2Jo62GehJMj6z27s=",
+            "code_signing_config_arn": "",
+            "dead_letter_config": [],
+            "description": "",
+            "environment": [
+              {
+                "variables": {
+                  "ENVIRONMENT": "production",
+                  "S3_BUCKET": "caringalfrontend",
+                  "SUPABASE_SERVICE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9menJ0em1jbndqbmpsZWVoa2N4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTU4NjEwOSwiZXhwIjoyMDY3MTYyMTA5fQ.aMqWQ-y3vX7UHutfcnPTV-RF8AN-V047zME0c1DeigA",
+                  "SUPABASE_URL": "https://ofzrtzmcnwjnjleehkcx.supabase.co"
+                }
+              }
+            ],
+            "ephemeral_storage": [
+              {
+                "size": 512
+              }
+            ],
+            "file_system_config": [],
+            "filename": "../backend/dist/ocr-processor.zip",
+            "function_name": "production-newsarchive-ocr-processor",
+            "handler": "index.handler",
+            "id": "production-newsarchive-ocr-processor",
+            "image_config": [],
+            "image_uri": "",
+            "invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-ocr-processor/invocations",
+            "kms_key_arn": "",
+            "last_modified": "2025-07-06T11:46:07.545+0000",
+            "layers": [],
+            "logging_config": [
+              {
+                "application_log_level": "",
+                "log_format": "Text",
+                "log_group": "/aws/lambda/production-newsarchive-ocr-processor",
+                "system_log_level": ""
+              }
+            ],
+            "memory_size": 512,
+            "package_type": "Zip",
+            "publish": false,
+            "qualified_arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-ocr-processor:$LATEST",
+            "qualified_invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:production-newsarchive-ocr-processor:$LATEST/invocations",
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "role": "arn:aws:iam::939737198590:role/production-newsarchive-lambda-role",
+            "runtime": "nodejs18.x",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "signing_job_arn": "",
+            "signing_profile_version_arn": "",
+            "skip_destroy": false,
+            "snap_start": [],
+            "source_code_hash": "ppCbJHsP48Vw+EfXC1KQcA1A2LV2Jo62GehJMj6z27s=",
+            "source_code_size": 15887248,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-ocr-processor",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-ocr-processor",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "timeout": 900,
+            "timeouts": null,
+            "tracing_config": [
+              {
+                "mode": "PassThrough"
+              }
+            ],
+            "version": "$LATEST",
+            "vpc_config": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_SERVICE_KEY",
+                  "type": "string"
+                }
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_URL",
+                  "type": "string"
+                }
+              }
+            ]
+          ],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "aws_cloudwatch_log_group.ocr_processor_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution",
+            "aws_s3_bucket.storage_bucket"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "process_document",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "architectures": [
+              "x86_64"
+            ],
+            "arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-process-document",
+            "code_sha256": "j2d/BtiFCzOQ1ukdSDnaULlHyExMqHIEuIXNgdfcIEw=",
+            "code_signing_config_arn": "",
+            "dead_letter_config": [],
+            "description": "",
+            "environment": [
+              {
+                "variables": {
+                  "ENVIRONMENT": "dev",
+                  "PROCESSING_QUEUE_URL": "https://sqs.ap-southeast-2.amazonaws.com/939737198590/dev-newsarchive-processing-queue",
+                  "S3_BUCKET": "caringalfrontend",
+                  "SUPABASE_SERVICE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9menJ0em1jbndqbmpsZWVoa2N4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTU4NjEwOSwiZXhwIjoyMDY3MTYyMTA5fQ.aMqWQ-y3vX7UHutfcnPTV-RF8AN-V047zME0c1DeigA",
+                  "SUPABASE_URL": "https://ofzrtzmcnwjnjleehkcx.supabase.co"
+                }
+              }
+            ],
+            "ephemeral_storage": [
+              {
+                "size": 512
+              }
+            ],
+            "file_system_config": [],
+            "filename": "../backend/dist/process-document.zip",
+            "function_name": "dev-newsarchive-process-document",
+            "handler": "index.handler",
+            "id": "dev-newsarchive-process-document",
+            "image_config": [],
+            "image_uri": "",
+            "invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-process-document/invocations",
+            "kms_key_arn": "",
+            "last_modified": "2025-07-06T11:03:39.000+0000",
+            "layers": [],
+            "logging_config": [
+              {
+                "application_log_level": "",
+                "log_format": "Text",
+                "log_group": "/aws/lambda/dev-newsarchive-process-document",
+                "system_log_level": ""
+              }
+            ],
+            "memory_size": 256,
+            "package_type": "Zip",
+            "publish": false,
+            "qualified_arn": "arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-process-document:$LATEST",
+            "qualified_invoke_arn": "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:939737198590:function:dev-newsarchive-process-document:$LATEST/invocations",
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "role": "arn:aws:iam::939737198590:role/dev-newsarchive-lambda-role",
+            "runtime": "nodejs18.x",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "signing_job_arn": "",
+            "signing_profile_version_arn": "",
+            "skip_destroy": false,
+            "snap_start": [],
+            "source_code_hash": "j2d/BtiFCzOQ1ukdSDnaULlHyExMqHIEuIXNgdfcIEw=",
+            "source_code_size": 15886421,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-process-document",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-process-document",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "timeout": 300,
+            "timeouts": null,
+            "tracing_config": [
+              {
+                "mode": "PassThrough"
+              }
+            ],
+            "version": "$LATEST",
+            "vpc_config": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_SERVICE_KEY",
+                  "type": "string"
+                }
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "environment"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "variables"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": "SUPABASE_URL",
+                  "type": "string"
+                }
+              }
+            ]
+          ],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "aws_cloudwatch_log_group.process_document_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution",
+            "aws_s3_bucket.storage_bucket",
+            "aws_sqs_queue.processing_dlq",
+            "aws_sqs_queue.processing_queue"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_lambda_permission",
+      "name": "get_processing_status_api_gateway",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "action": "lambda:InvokeFunction",
+            "event_source_token": null,
+            "function_name": "production-newsarchive-get-processing-status",
+            "function_url_auth_type": null,
+            "id": "AllowExecutionFromAPIGateway",
+            "principal": "apigateway.amazonaws.com",
+            "principal_org_id": null,
+            "qualifier": "",
+            "source_account": null,
+            "source_arn": "arn:aws:execute-api:ap-southeast-2:939737198590:xf4qnc9d5j/*/*",
+            "statement_id": "AllowExecutionFromAPIGateway",
+            "statement_id_prefix": ""
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_rest_api.newsarchive_api",
+            "aws_cloudwatch_log_group.get_processing_status_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution",
+            "aws_lambda_function.get_processing_status"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_lambda_permission",
+      "name": "get_upload_url_api_gateway",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "action": "lambda:InvokeFunction",
+            "event_source_token": null,
+            "function_name": "production-newsarchive-get-upload-url",
+            "function_url_auth_type": null,
+            "id": "AllowExecutionFromAPIGateway",
+            "principal": "apigateway.amazonaws.com",
+            "principal_org_id": null,
+            "qualifier": "",
+            "source_account": null,
+            "source_arn": "arn:aws:execute-api:ap-southeast-2:939737198590:xf4qnc9d5j/*/*",
+            "statement_id": "AllowExecutionFromAPIGateway",
+            "statement_id_prefix": ""
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_api_gateway_rest_api.newsarchive_api",
+            "aws_cloudwatch_log_group.get_upload_url_logs",
+            "aws_iam_role.lambda_execution_role",
+            "aws_iam_role_policy_attachment.lambda_basic_execution",
+            "aws_lambda_function.get_upload_url",
+            "aws_s3_bucket.storage_bucket"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "storage_bucket",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acceleration_status": "",
+            "acl": null,
+            "arn": "arn:aws:s3:::caringalfrontend",
+            "bucket": "caringalfrontend",
+            "bucket_domain_name": "caringalfrontend.s3.amazonaws.com",
+            "bucket_prefix": "",
+            "bucket_regional_domain_name": "caringalfrontend.s3.ap-southeast-2.amazonaws.com",
+            "cors_rule": [
+              {
+                "allowed_headers": [
+                  "*"
+                ],
+                "allowed_methods": [
+                  "POST",
+                  "GET",
+                  "HEAD",
+                  "PUT",
+                  "DELETE"
+                ],
+                "allowed_origins": [
+                  "*"
+                ],
+                "expose_headers": [
+                  "ETag"
+                ],
+                "max_age_seconds": 3600
+              }
+            ],
+            "force_destroy": true,
+            "grant": [
+              {
+                "id": "3649b76bced445b9eb804638cf5c143c97eb9e1de5ac0fec8d3e863644c8d114",
+                "permissions": [
+                  "FULL_CONTROL"
+                ],
+                "type": "CanonicalUser",
+                "uri": ""
+              }
+            ],
+            "hosted_zone_id": "Z1WCIGYICN2BYD",
+            "id": "caringalfrontend",
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": false,
+            "policy": "{\"Statement\":[{\"Action\":[\"s3:GetObject\",\"s3:ListBucket\"],\"Condition\":{\"StringEquals\":{\"AWS:SourceArn\":\"arn:aws:cloudfront::939737198590:distribution/E2852XBFVZ3DAZ\"}},\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"cloudfront.amazonaws.com\"},\"Resource\":[\"arn:aws:s3:::caringalfrontend/*\",\"arn:aws:s3:::caringalfrontend\"],\"Sid\":\"AllowCloudFrontServicePrincipal\"}],\"Version\":\"2012-10-17\"}",
+            "region": "ap-southeast-2",
+            "replication_configuration": [],
+            "request_payer": "BucketOwner",
+            "server_side_encryption_configuration": [
+              {
+                "rule": [
+                  {
+                    "apply_server_side_encryption_by_default": [
+                      {
+                        "kms_master_key_id": "",
+                        "sse_algorithm": "AES256"
+                      }
+                    ],
+                    "bucket_key_enabled": false
+                  }
+                ]
+              }
+            ],
+            "tags": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Name": "production-caringalfrontend",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Name": "production-caringalfrontend",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "timeouts": null,
+            "versioning": [
+              {
+                "enabled": false,
+                "mfa_delete": false
+              }
+            ],
+            "website": [],
+            "website_domain": null,
+            "website_endpoint": null
+          },
+          "sensitive_attributes": [],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjM2MDAwMDAwMDAwMDAsInJlYWQiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_s3_bucket_cors_configuration",
+      "name": "s3_cors",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "bucket": "caringalfrontend",
+            "cors_rule": [
+              {
+                "allowed_headers": [
+                  "*"
+                ],
+                "allowed_methods": [
+                  "DELETE",
+                  "GET",
+                  "HEAD",
+                  "POST",
+                  "PUT"
+                ],
+                "allowed_origins": [
+                  "*"
+                ],
+                "expose_headers": [
+                  "ETag"
+                ],
+                "id": "",
+                "max_age_seconds": 3600
+              }
+            ],
+            "expected_bucket_owner": "",
+            "id": "caringalfrontend"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_s3_bucket.storage_bucket"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_s3_bucket_policy",
+      "name": "allow_cloudfront_access",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "bucket": "caringalfrontend",
+            "id": "caringalfrontend",
+            "policy": "{\"Statement\":[{\"Action\":[\"s3:GetObject\",\"s3:ListBucket\"],\"Condition\":{\"StringEquals\":{\"AWS:SourceArn\":\"arn:aws:cloudfront::939737198590:distribution/E2852XBFVZ3DAZ\"}},\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"cloudfront.amazonaws.com\"},\"Resource\":[\"arn:aws:s3:::caringalfrontend/*\",\"arn:aws:s3:::caringalfrontend\"],\"Sid\":\"AllowCloudFrontServicePrincipal\"}],\"Version\":\"2012-10-17\"}"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_cloudfront_distribution.s3_distribution",
+            "aws_cloudfront_function.rewrite_uri",
+            "aws_cloudfront_origin_access_control.s3_oac",
+            "aws_s3_bucket.storage_bucket"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_s3_bucket_public_access_block",
+      "name": "storage_bucket",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "block_public_acls": true,
+            "block_public_policy": true,
+            "bucket": "caringalfrontend",
+            "id": "caringalfrontend",
+            "ignore_public_acls": true,
+            "restrict_public_buckets": true
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_s3_bucket.storage_bucket"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_s3_bucket_versioning",
+      "name": "storage_bucket",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "bucket": "caringalfrontend",
+            "expected_bucket_owner": "",
+            "id": "caringalfrontend",
+            "mfa": null,
+            "versioning_configuration": [
+              {
+                "mfa_delete": "",
+                "status": "Suspended"
+              }
+            ]
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_s3_bucket.storage_bucket"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_s3_object",
+      "name": "newspapers",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acl": null,
+            "arn": "arn:aws:s3:::caringalfrontend/newspapers/",
+            "bucket": "caringalfrontend",
+            "bucket_key_enabled": false,
+            "cache_control": "",
+            "checksum_algorithm": null,
+            "checksum_crc32": "",
+            "checksum_crc32c": "",
+            "checksum_crc64nvme": "",
+            "checksum_sha1": "",
+            "checksum_sha256": "",
+            "content": "",
+            "content_base64": null,
+            "content_disposition": "",
+            "content_encoding": "",
+            "content_language": "",
+            "content_type": "application/octet-stream",
+            "etag": "d41d8cd98f00b204e9800998ecf8427e",
+            "force_destroy": false,
+            "id": "newspapers/",
+            "key": "newspapers/",
+            "kms_key_id": null,
+            "metadata": {},
+            "object_lock_legal_hold_status": "",
+            "object_lock_mode": "",
+            "object_lock_retain_until_date": "",
+            "override_provider": [],
+            "server_side_encryption": "AES256",
+            "source": null,
+            "source_hash": null,
+            "storage_class": "STANDARD",
+            "tags": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Purpose": "NewspaperImages"
+            },
+            "tags_all": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Purpose": "NewspaperImages"
+            },
+            "version_id": "null",
+            "website_redirect": ""
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_s3_bucket.storage_bucket"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_s3_object",
+      "name": "newspapers_processed",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acl": null,
+            "arn": "arn:aws:s3:::caringalfrontend/newspapers/processed/",
+            "bucket": "caringalfrontend",
+            "bucket_key_enabled": false,
+            "cache_control": "",
+            "checksum_algorithm": null,
+            "checksum_crc32": "",
+            "checksum_crc32c": "",
+            "checksum_crc64nvme": "",
+            "checksum_sha1": "",
+            "checksum_sha256": "",
+            "content": "",
+            "content_base64": null,
+            "content_disposition": "",
+            "content_encoding": "",
+            "content_language": "",
+            "content_type": "application/octet-stream",
+            "etag": "d41d8cd98f00b204e9800998ecf8427e",
+            "force_destroy": false,
+            "id": "newspapers/processed/",
+            "key": "newspapers/processed/",
+            "kms_key_id": null,
+            "metadata": {},
+            "object_lock_legal_hold_status": "",
+            "object_lock_mode": "",
+            "object_lock_retain_until_date": "",
+            "override_provider": [],
+            "server_side_encryption": "AES256",
+            "source": null,
+            "source_hash": null,
+            "storage_class": "STANDARD",
+            "tags": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Purpose": "NewspaperProcessedData"
+            },
+            "tags_all": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Purpose": "NewspaperProcessedData"
+            },
+            "version_id": "null",
+            "website_redirect": ""
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_s3_bucket.storage_bucket"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_s3_object",
+      "name": "newspapers_thumbnails",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acl": null,
+            "arn": "arn:aws:s3:::caringalfrontend/newspapers/thumbnails/",
+            "bucket": "caringalfrontend",
+            "bucket_key_enabled": false,
+            "cache_control": "",
+            "checksum_algorithm": null,
+            "checksum_crc32": "",
+            "checksum_crc32c": "",
+            "checksum_crc64nvme": "",
+            "checksum_sha1": "",
+            "checksum_sha256": "",
+            "content": "",
+            "content_base64": null,
+            "content_disposition": "",
+            "content_encoding": "",
+            "content_language": "",
+            "content_type": "application/octet-stream",
+            "etag": "d41d8cd98f00b204e9800998ecf8427e",
+            "force_destroy": false,
+            "id": "newspapers/thumbnails/",
+            "key": "newspapers/thumbnails/",
+            "kms_key_id": null,
+            "metadata": {},
+            "object_lock_legal_hold_status": "",
+            "object_lock_mode": "",
+            "object_lock_retain_until_date": "",
+            "override_provider": [],
+            "server_side_encryption": "AES256",
+            "source": null,
+            "source_hash": null,
+            "storage_class": "STANDARD",
+            "tags": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Purpose": "NewspaperThumbnails"
+            },
+            "tags_all": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Purpose": "NewspaperThumbnails"
+            },
+            "version_id": "null",
+            "website_redirect": ""
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_s3_bucket.storage_bucket"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_s3_object",
+      "name": "react_build",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "acl": null,
+            "arn": "arn:aws:s3:::caringalfrontend/frontend-build/",
+            "bucket": "caringalfrontend",
+            "bucket_key_enabled": false,
+            "cache_control": "",
+            "checksum_algorithm": null,
+            "checksum_crc32": "",
+            "checksum_crc32c": "",
+            "checksum_crc64nvme": "",
+            "checksum_sha1": "",
+            "checksum_sha256": "",
+            "content": "",
+            "content_base64": null,
+            "content_disposition": "",
+            "content_encoding": "",
+            "content_language": "",
+            "content_type": "application/octet-stream",
+            "etag": "d41d8cd98f00b204e9800998ecf8427e",
+            "force_destroy": false,
+            "id": "frontend-build/",
+            "key": "frontend-build/",
+            "kms_key_id": null,
+            "metadata": {},
+            "object_lock_legal_hold_status": "",
+            "object_lock_mode": "",
+            "object_lock_retain_until_date": "",
+            "override_provider": [],
+            "server_side_encryption": "AES256",
+            "source": null,
+            "source_hash": null,
+            "storage_class": "STANDARD",
+            "tags": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "tags_all": {
+              "Environment": "production",
+              "ManagedBy": "Terraform",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro"
+            },
+            "version_id": "null",
+            "website_redirect": ""
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_s3_bucket.storage_bucket"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_sqs_queue",
+      "name": "processing_dlq",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sqs:ap-southeast-2:939737198590:production-newsarchive-processing-dlq",
+            "content_based_deduplication": false,
+            "deduplication_scope": "",
+            "delay_seconds": 0,
+            "fifo_queue": false,
+            "fifo_throughput_limit": "",
+            "id": "https://sqs.ap-southeast-2.amazonaws.com/939737198590/production-newsarchive-processing-dlq",
+            "kms_data_key_reuse_period_seconds": 300,
+            "kms_master_key_id": "",
+            "max_message_size": 262144,
+            "message_retention_seconds": 1209600,
+            "name": "production-newsarchive-processing-dlq",
+            "name_prefix": "",
+            "policy": "",
+            "receive_wait_time_seconds": 0,
+            "redrive_allow_policy": "",
+            "redrive_policy": "",
+            "sqs_managed_sse_enabled": true,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-processing-dlq",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Type": "DeadLetterQueue"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-processing-dlq",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Type": "DeadLetterQueue"
+            },
+            "timeouts": null,
+            "url": "https://sqs.ap-southeast-2.amazonaws.com/939737198590/production-newsarchive-processing-dlq",
+            "visibility_timeout_seconds": 30
+          },
+          "sensitive_attributes": [],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxODAwMDAwMDAwMDAsImRlbGV0ZSI6MTgwMDAwMDAwMDAwLCJ1cGRhdGUiOjE4MDAwMDAwMDAwMH19",
+          "create_before_destroy": true
+        },
+        {
+          "deposed": "74370e16",
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sqs:ap-southeast-2:939737198590:dev-newsarchive-processing-dlq",
+            "content_based_deduplication": false,
+            "deduplication_scope": "",
+            "delay_seconds": 0,
+            "fifo_queue": false,
+            "fifo_throughput_limit": "",
+            "id": "https://sqs.ap-southeast-2.amazonaws.com/939737198590/dev-newsarchive-processing-dlq",
+            "kms_data_key_reuse_period_seconds": 300,
+            "kms_master_key_id": "",
+            "max_message_size": 262144,
+            "message_retention_seconds": 1209600,
+            "name": "dev-newsarchive-processing-dlq",
+            "name_prefix": "",
+            "policy": "",
+            "receive_wait_time_seconds": 0,
+            "redrive_allow_policy": "",
+            "redrive_policy": "",
+            "sqs_managed_sse_enabled": true,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-processing-dlq",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Type": "DeadLetterQueue"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-processing-dlq",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Type": "DeadLetterQueue"
+            },
+            "timeouts": null,
+            "url": "https://sqs.ap-southeast-2.amazonaws.com/939737198590/dev-newsarchive-processing-dlq",
+            "visibility_timeout_seconds": 30
+          },
+          "sensitive_attributes": [],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxODAwMDAwMDAwMDAsImRlbGV0ZSI6MTgwMDAwMDAwMDAwLCJ1cGRhdGUiOjE4MDAwMDAwMDAwMH19",
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_sqs_queue",
+      "name": "processing_queue",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "status": "tainted",
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sqs:ap-southeast-2:939737198590:production-newsarchive-processing-queue",
+            "content_based_deduplication": false,
+            "deduplication_scope": "",
+            "delay_seconds": 0,
+            "fifo_queue": false,
+            "fifo_throughput_limit": "",
+            "id": "https://sqs.ap-southeast-2.amazonaws.com/939737198590/production-newsarchive-processing-queue",
+            "kms_data_key_reuse_period_seconds": 300,
+            "kms_master_key_id": "",
+            "max_message_size": 262144,
+            "message_retention_seconds": 1209600,
+            "name": "production-newsarchive-processing-queue",
+            "name_prefix": "",
+            "policy": "",
+            "receive_wait_time_seconds": 10,
+            "redrive_allow_policy": "",
+            "redrive_policy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:ap-southeast-2:939737198590:production-newsarchive-processing-dlq\",\"maxReceiveCount\":3}",
+            "sqs_managed_sse_enabled": true,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-processing-queue",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Type": "ProcessingQueue"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "production-newsarchive-processing-queue",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Type": "ProcessingQueue"
+            },
+            "timeouts": null,
+            "url": "https://sqs.ap-southeast-2.amazonaws.com/939737198590/production-newsarchive-processing-queue",
+            "visibility_timeout_seconds": 900
+          },
+          "sensitive_attributes": [],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxODAwMDAwMDAwMDAsImRlbGV0ZSI6MTgwMDAwMDAwMDAwLCJ1cGRhdGUiOjE4MDAwMDAwMDAwMH19",
+          "dependencies": [
+            "aws_sqs_queue.processing_dlq"
+          ],
+          "create_before_destroy": true
+        },
+        {
+          "deposed": "0eeab57a",
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sqs:ap-southeast-2:939737198590:dev-newsarchive-processing-queue",
+            "content_based_deduplication": false,
+            "deduplication_scope": "",
+            "delay_seconds": 0,
+            "fifo_queue": false,
+            "fifo_throughput_limit": "",
+            "id": "https://sqs.ap-southeast-2.amazonaws.com/939737198590/dev-newsarchive-processing-queue",
+            "kms_data_key_reuse_period_seconds": 300,
+            "kms_master_key_id": "",
+            "max_message_size": 262144,
+            "message_retention_seconds": 1209600,
+            "name": "dev-newsarchive-processing-queue",
+            "name_prefix": "",
+            "policy": "",
+            "receive_wait_time_seconds": 10,
+            "redrive_allow_policy": "",
+            "redrive_policy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:ap-southeast-2:939737198590:dev-newsarchive-processing-dlq\",\"maxReceiveCount\":3}",
+            "sqs_managed_sse_enabled": true,
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-processing-queue",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Type": "ProcessingQueue"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "Terraform",
+              "Name": "dev-newsarchive-processing-queue",
+              "Owner": "Martin Caringal",
+              "Project": "NewsArchive Pro",
+              "Type": "ProcessingQueue"
+            },
+            "timeouts": null,
+            "url": "https://sqs.ap-southeast-2.amazonaws.com/939737198590/dev-newsarchive-processing-queue",
+            "visibility_timeout_seconds": 900
+          },
+          "sensitive_attributes": [],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxODAwMDAwMDAwMDAsImRlbGV0ZSI6MTgwMDAwMDAwMDAwLCJ1cGRhdGUiOjE4MDAwMDAwMDAwMH19",
+          "dependencies": [
+            "aws_sqs_queue.processing_dlq"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

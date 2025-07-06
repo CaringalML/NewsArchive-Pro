@@ -53,6 +53,51 @@ resource "aws_s3_object" "react_build" {
   )
 }
 
+# Create newspapers folder for uploaded images
+resource "aws_s3_object" "newspapers" {
+  bucket  = aws_s3_bucket.storage_bucket.id
+  key     = "newspapers/"
+  content = ""
+
+  tags = merge(
+    var.tags,
+    {
+      Environment = var.environment
+      Purpose     = "NewspaperImages"
+    }
+  )
+}
+
+# Create newspapers/thumbnails folder for processed thumbnails
+resource "aws_s3_object" "newspapers_thumbnails" {
+  bucket  = aws_s3_bucket.storage_bucket.id
+  key     = "newspapers/thumbnails/"
+  content = ""
+
+  tags = merge(
+    var.tags,
+    {
+      Environment = var.environment
+      Purpose     = "NewspaperThumbnails"
+    }
+  )
+}
+
+# Create newspapers/processed folder for processed documents
+resource "aws_s3_object" "newspapers_processed" {
+  bucket  = aws_s3_bucket.storage_bucket.id
+  key     = "newspapers/processed/"
+  content = ""
+
+  tags = merge(
+    var.tags,
+    {
+      Environment = var.environment
+      Purpose     = "NewspaperProcessedData"
+    }
+  )
+}
+
 # Bucket Permissions​
 resource "aws_s3_bucket_policy" "allow_cloudfront_access" {
   bucket = aws_s3_bucket.storage_bucket.id

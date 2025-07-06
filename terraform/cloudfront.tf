@@ -19,6 +19,36 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     origin_path              = var.react_app_path
   }
 
+  # Additional origin for newspaper images
+  origin {
+    domain_name              = aws_s3_bucket.storage_bucket.bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac.id
+    origin_id                = "S3-Newspapers"
+    origin_path              = "/newspapers"
+  }
+
+  # Cache behavior for newspaper images
+  ordered_cache_behavior {
+    path_pattern           = "/newspapers/*"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "S3-Newspapers"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    forwarded_values {
+      query_string = true
+      headers      = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method", "Authorization", "Content-Type"]
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl     = 0
+    default_ttl = 86400      # 24 hours for images
+    max_ttl     = 31536000   # 1 year for images
+  }
+
   default_cache_behavior {
     allowed_methods        = var.cloudfront_allowed_methods
     cached_methods         = var.cloudfront_cached_methods
@@ -90,4 +120,8 @@ function handler(event) {
     return request;
 }
 EOF
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }

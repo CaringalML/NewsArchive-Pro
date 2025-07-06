@@ -119,7 +119,7 @@ variable "cors_allowed_headers" {
 variable "cors_allowed_methods" {
   description = "List of allowed methods for CORS"
   type        = list(string)
-  default     = ["GET", "HEAD"]
+  default     = ["GET", "HEAD", "PUT", "POST", "DELETE"]
 }
 
 variable "cors_max_age_seconds" {
@@ -157,4 +157,71 @@ variable "cloudfront_function_runtime" {
   description = "Runtime for CloudFront functions"
   type        = string
   default     = "cloudfront-js-1.0"
+}
+
+# Backend Infrastructure Variables
+
+# Supabase Configuration
+variable "supabase_url" {
+  description = "Supabase project URL"
+  type        = string
+  sensitive   = true
+}
+
+variable "supabase_service_key" {
+  description = "Supabase service role key"
+  type        = string
+  sensitive   = true
+}
+
+# Lambda Configuration
+variable "lambda_runtime" {
+  description = "Lambda runtime version"
+  type        = string
+  default     = "nodejs18.x"
+}
+
+variable "lambda_memory_size" {
+  description = "Default Lambda memory size"
+  type        = number
+  default     = 128
+}
+
+variable "lambda_timeout" {
+  description = "Default Lambda timeout"
+  type        = number
+  default     = 30
+}
+
+# API Gateway Configuration
+variable "api_gateway_stage_name" {
+  description = "API Gateway stage name"
+  type        = string
+  default     = "api"
+}
+
+variable "api_gateway_log_retention" {
+  description = "API Gateway log retention in days"
+  type        = number
+  default     = 14
+}
+
+# CloudWatch Configuration
+variable "cloudwatch_log_retention" {
+  description = "CloudWatch log retention in days"
+  type        = number
+  default     = 14
+}
+
+# Processing Configuration
+variable "processing_queue_visibility_timeout" {
+  description = "SQS processing queue visibility timeout in seconds"
+  type        = number
+  default     = 900
+}
+
+variable "processing_queue_max_receive_count" {
+  description = "Maximum number of receives before message goes to DLQ"
+  type        = number
+  default     = 3
 }
