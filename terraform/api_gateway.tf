@@ -38,6 +38,9 @@ resource "aws_api_gateway_deployment" "newsarchive_api_deployment" {
       aws_api_gateway_integration.get_upload_url_integration.id,
       aws_api_gateway_integration.process_document_integration.id,
       aws_api_gateway_integration.get_processing_status_integration.id,
+      aws_api_gateway_integration_response.get_upload_url_integration_response.id,
+      aws_api_gateway_integration_response.process_document_integration_response.id,
+      aws_api_gateway_integration_response.get_processing_status_integration_response.id,
     ]))
   }
 
@@ -347,6 +350,52 @@ resource "aws_api_gateway_method_response" "options_processing_status_response_2
 }
 
 # Integration Responses
+
+# Integration responses for main methods (add CORS headers)
+resource "aws_api_gateway_integration_response" "get_upload_url_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.newsarchive_api.id
+  resource_id = aws_api_gateway_resource.upload_url.id
+  http_method = aws_api_gateway_method.get_upload_url_post.http_method
+  status_code = aws_api_gateway_method_response.get_upload_url_response_200.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
+  }
+
+  depends_on = [aws_api_gateway_integration.get_upload_url_integration]
+}
+
+resource "aws_api_gateway_integration_response" "process_document_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.newsarchive_api.id
+  resource_id = aws_api_gateway_resource.process_document.id
+  http_method = aws_api_gateway_method.process_document_post.http_method
+  status_code = aws_api_gateway_method_response.process_document_response_200.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
+  }
+
+  depends_on = [aws_api_gateway_integration.process_document_integration]
+}
+
+resource "aws_api_gateway_integration_response" "get_processing_status_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.newsarchive_api.id
+  resource_id = aws_api_gateway_resource.processing_status_job_id.id
+  http_method = aws_api_gateway_method.get_processing_status_get.http_method
+  status_code = aws_api_gateway_method_response.get_processing_status_response_200.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
+  }
+
+  depends_on = [aws_api_gateway_integration.get_processing_status_integration]
+}
 
 # OPTIONS integration responses
 resource "aws_api_gateway_integration_response" "options_upload_url_integration_response" {
