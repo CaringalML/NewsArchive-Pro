@@ -25,8 +25,13 @@ const AppLayout = ({ children }) => {
   
   // Routes where header should be hidden
   const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/email-verified', '/verify-email']
-  const noHeaderRoutes = ['/', ...authRoutes] // Add root to routes without header
+  const dashboardRoutes = ['/dashboard'] // Hide header for the new dashboard
+  const noHeaderRoutes = ['/', ...authRoutes, ...dashboardRoutes]
   const hideHeader = noHeaderRoutes.includes(location.pathname)
+  
+  // Routes where footer should be hidden
+  const noFooterRoutes = [...dashboardRoutes]
+  const hideFooter = noFooterRoutes.includes(location.pathname)
   
   return (
     <div className="App">
@@ -34,7 +39,7 @@ const AppLayout = ({ children }) => {
       <main className="main-content">
         {children}
       </main>
-      <Footer />
+      {!hideFooter && <Footer />}
     </div>
   )
 }
@@ -104,6 +109,7 @@ function App() {
             />
             
             {/* Protected Routes - Only accessible when authenticated */}
+            {/* Updated Dashboard Route - Full Control Panel */}
             <Route 
               path="/dashboard" 
               element={
