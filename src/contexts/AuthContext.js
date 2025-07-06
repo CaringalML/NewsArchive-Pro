@@ -41,7 +41,12 @@ export const AuthProvider = ({ children }) => {
         setLoading(false)
 
         if (event === 'SIGNED_IN') {
-          toast.success('Successfully signed in!')
+          const provider = session?.user?.app_metadata?.provider
+          if (provider === 'google') {
+            toast.success('Successfully signed in with Google!')
+          } else {
+            toast.success('Successfully signed in!')
+          }
         } else if (event === 'SIGNED_OUT') {
           toast.success('Successfully signed out!')
         } else if (event === 'PASSWORD_RECOVERY') {
@@ -88,6 +93,35 @@ export const AuthProvider = ({ children }) => {
         return { data: null, error }
       }
 
+      return { data, error: null }
+    } catch (error) {
+      toast.error('An unexpected error occurred')
+      return { data: null, error }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const signInWithGoogle = async () => {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${process.env.REACT_APP_SITE_URL || window.location.origin}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      })
+
+      if (error) {
+        toast.error(error.message)
+        return { data: null, error }
+      }
+
+      // Don't show toast here as the redirect will handle the success message
       return { data, error: null }
     } catch (error) {
       toast.error('An unexpected error occurred')
@@ -168,6 +202,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     resetPassword,
     updatePassword,

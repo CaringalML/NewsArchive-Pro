@@ -31,6 +31,20 @@ export const auth = {
     return { data, error }
   },
 
+  signInWithGoogle: async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${process.env.REACT_APP_SITE_URL || window.location.origin}/dashboard`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
+      }
+    })
+    return { data, error }
+  },
+
   signOut: async () => {
     const { error } = await supabase.auth.signOut()
     return { error }
