@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   FileUp, 
   Search, 
@@ -244,7 +243,7 @@ const BatchManager = ({ setActiveView }) => {
 
 // QA Editor Component
 const QAEditor = () => {
-    const [page, setPage] = useState(mockPageDetail);
+    const [page] = useState(mockPageDetail); // Removed setPage since it's not used
     const [activeTab, setActiveTab] = useState('ocr');
     const [editedText, setEditedText] = useState(page.extractedText);
     const [editedMeta, setEditedMeta] = useState(page.metadata);
@@ -359,7 +358,7 @@ const ArchiveSearch = () => {
     const [results, setResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
 
-    const performSearch = () => {
+    const performSearch = useCallback(() => {
         if (!query) return;
         setIsSearching(true);
         setTimeout(() => {
@@ -370,11 +369,11 @@ const ArchiveSearch = () => {
             ]);
             setIsSearching(false);
         }, 1000);
-    };
+    }, [query]); // Added query as dependency
     
     useEffect(() => {
-      performSearch();
-    }, []);
+        performSearch();
+    }, [performSearch]); // Now depends on performSearch which includes query
 
     return (
         <div className="dashboard-content">
@@ -425,7 +424,7 @@ const ArchiveSearch = () => {
 
 // Main Dashboard Component
 const Dashboard = () => {
-    const { user } = useAuth();
+    // Removed unused user variable
     const [activeView, setActiveView] = useState('dashboard');
 
     const renderView = () => {
