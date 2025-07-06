@@ -36,7 +36,7 @@ jobs:
           echo "REACT_APP_SITE_URL=${{ secrets.REACT_APP_SITE_URL }}" >> $GITHUB_ENV
           echo "REACT_APP_APP_NAME=${{ secrets.REACT_APP_APP_NAME }}" >> $GITHUB_ENV
           echo "REACT_APP_VERSION=${{ secrets.REACT_APP_VERSION }}" >> $GITHUB_ENV
-          echo "REACT_APP_AWS_REGION=${{ secrets.REACT_APP_AWS_REGION }}" >> $GITHUB_ENV
+          echo "REACT_APP_AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
           echo "REACT_APP_AWS_S3_BUCKET=${{ secrets.REACT_APP_AWS_S3_BUCKET }}" >> $GITHUB_ENV
           echo "REACT_APP_AWS_CLOUDFRONT_DOMAIN=${{ secrets.REACT_APP_AWS_CLOUDFRONT_DOMAIN }}" >> $GITHUB_ENV
           echo "REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL }}" >> $GITHUB_ENV
