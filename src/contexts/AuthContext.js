@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState(null)
+  const [initialLoad, setInitialLoad] = useState(true)
 
   useEffect(() => {
     // Get initial session
@@ -28,6 +29,7 @@ export const AuthProvider = ({ children }) => {
         setUser(session?.user ?? null)
       }
       setLoading(false)
+      setInitialLoad(false)
     }
 
     getSession()
@@ -40,7 +42,9 @@ export const AuthProvider = ({ children }) => {
         setUser(session?.user ?? null)
         setLoading(false)
 
-        if (event === 'SIGNED_IN') {
+        // Only show sign-in toast for actual user-initiated sign-ins
+        // Skip initial session load and token refreshes
+        if (event === 'SIGNED_IN' && !initialLoad) {
           const provider = session?.user?.app_metadata?.provider
           if (provider === 'google') {
             toast.success('Successfully signed in with Google!')
@@ -57,7 +61,7 @@ export const AuthProvider = ({ children }) => {
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [initialLoad])
 
   const signUp = async (email, password, userData = {}) => {
     try {
