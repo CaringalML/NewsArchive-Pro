@@ -27,15 +27,18 @@ exports.handler = async (event) => {
         throw new Error(`Textract processing failed: ${textractResult.error}`);
       }
 
-      // Update page with OCR results
+      // Insert OCR results into ocr_results table
       const { error: ocrError } = await supabase
-        .from('pages')
-        .update({
-          ocr_text: textractResult.text,
-          ocr_confidence: textractResult.confidence,
+        .from('ocr_results')
+        .upsert({
+          page_id: pageId,
+          user_id: userId,
+          formatted_text: textractResult.text,
+          confidence_score: textractResult.confidence,
+          raw_text: { blocks: textractResult.blocks || [] },
+          aws_job_id: jobId,
           updated_at: new Date().toISOString()
-        })
-        .eq('id', pageId);
+        });
 
       if (ocrError) {
         console.error('OCR update error:', ocrError);
@@ -52,6 +55,7 @@ exports.handler = async (event) => {
             .from('page_metadata')
             .upsert({
               page_id: pageId,
+              user_id: userId,
               language: comprehendResult.language,
               entities: comprehendResult.entities,
               key_phrases: comprehendResult.keyPhrases,
@@ -164,7 +168,8 @@ async function processWithTextract(s3Key) {
       success: true,
       text,
       confidence,
-      blockCount
+      blockCount,
+      blocks: getResponse.Blocks || []
     };
 
   } catch (error) {
