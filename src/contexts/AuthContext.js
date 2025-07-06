@@ -71,7 +71,8 @@ export const AuthProvider = ({ children }) => {
         }
       })
 
-      // Don't show any toasts here - let the component handle all messaging
+      // Return the data and error without showing toasts
+      // Let the component handle the UI feedback
       return { data, error }
     } catch (error) {
       return { data: null, error }
@@ -196,6 +197,30 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Add resend verification email function
+  const resendVerificationEmail = async (email) => {
+    try {
+      const { data, error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${process.env.REACT_APP_SITE_URL || window.location.origin}/email-verified`
+        }
+      })
+      
+      if (error) {
+        toast.error(error.message)
+        return { data: null, error }
+      }
+      
+      toast.success('Verification email sent!')
+      return { data, error: null }
+    } catch (error) {
+      toast.error('An unexpected error occurred')
+      return { data: null, error }
+    }
+  }
+
   const value = {
     user,
     session,
@@ -206,7 +231,8 @@ export const AuthProvider = ({ children }) => {
     signOut,
     resetPassword,
     updatePassword,
-    updateProfile
+    updateProfile,
+    resendVerificationEmail
   }
 
   return (

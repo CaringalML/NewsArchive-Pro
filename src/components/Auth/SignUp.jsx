@@ -95,8 +95,13 @@ const SignUp = () => {
 
     if (error) {
       // Handle actual errors (network, validation, etc.)
-      toast.error(error.message)
-      setErrors({ general: error.message })
+      if (error.message.includes('already registered')) {
+        setAccountExistsError(true)
+        toast.error('An account with this email address already exists')
+      } else {
+        toast.error(error.message)
+        setErrors({ general: error.message })
+      }
     } else if (data?.user) {
       // Check if this might be an existing user based on user creation time
       const now = new Date()
@@ -108,11 +113,9 @@ const SignUp = () => {
         setAccountExistsError(true)
         toast.error('An account with this email address already exists')
       } else {
-        // It's a new signup
-        toast.success('Account created successfully! Please check your email to verify your account.')
-        navigate('/login', { 
+        // It's a new signup - redirect to verification pending page
+        navigate('/verify-email', { 
           state: { 
-            message: 'Account created successfully! Please check your email to verify your account.',
             email: formData.email
           } 
         })

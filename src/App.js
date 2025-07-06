@@ -12,6 +12,7 @@ import SignUp from './components/Auth/SignUp'
 import ForgotPassword from './components/Auth/ForgotPassword'
 import ResetPassword from './components/Auth/ResetPassword'
 import EmailVerified from './components/Auth/EmailVerified'
+import EmailVerificationPending from './components/Auth/EmailVerificationPending'
 import Dashboard from './components/Dashboard/Dashboard'
 import CollectionList from './components/Collections/CollectionList'
 import UploadForm from './components/NewspaperProcessing/UploadForm'
@@ -23,7 +24,7 @@ const AppLayout = ({ children }) => {
   const location = useLocation()
   
   // Routes where header should be hidden
-  const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/email-verified']
+  const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/email-verified', '/verify-email']
   const noHeaderRoutes = ['/', ...authRoutes] // Add root to routes without header
   const hideHeader = noHeaderRoutes.includes(location.pathname)
   
@@ -82,10 +83,14 @@ function App() {
               } 
             />
             
-            {/* Email Verification Route - Accessible to all users */}
+            {/* Email Verification Routes - Accessible to all users */}
             <Route 
               path="/email-verified" 
               element={<EmailVerified />} 
+            />
+            <Route 
+              path="/verify-email" 
+              element={<EmailVerificationPending />} 
             />
             
             {/* Reset Password Route - Special handling for both authenticated and unauthenticated users */}
