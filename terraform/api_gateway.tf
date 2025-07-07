@@ -91,7 +91,7 @@ resource "aws_cloudwatch_log_group" "api_gateway_logs" {
 # CORS Configuration
 locals {
   cors_headers = {
-    "Access-Control-Allow-Origin"  = "*"
+    "Access-Control-Allow-Origin"  = var.frontend_cloudfront_domain
     "Access-Control-Allow-Headers" = "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token"
     "Access-Control-Allow-Methods" = "GET,POST,OPTIONS"
   }
@@ -359,7 +359,7 @@ resource "aws_api_gateway_integration_response" "get_upload_url_integration_resp
   status_code = aws_api_gateway_method_response.get_upload_url_response_200.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.frontend_cloudfront_domain}'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
   }
@@ -374,7 +374,7 @@ resource "aws_api_gateway_integration_response" "process_document_integration_re
   status_code = aws_api_gateway_method_response.process_document_response_200.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.frontend_cloudfront_domain}'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
   }
@@ -389,7 +389,7 @@ resource "aws_api_gateway_integration_response" "get_processing_status_integrati
   status_code = aws_api_gateway_method_response.get_processing_status_response_200.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.frontend_cloudfront_domain}'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
   }
@@ -405,7 +405,7 @@ resource "aws_api_gateway_integration_response" "options_upload_url_integration_
   status_code = aws_api_gateway_method_response.options_upload_url_response_200.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.frontend_cloudfront_domain}'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
   }
@@ -420,7 +420,7 @@ resource "aws_api_gateway_integration_response" "options_process_document_integr
   status_code = aws_api_gateway_method_response.options_process_document_response_200.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.frontend_cloudfront_domain}'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
   }
@@ -435,7 +435,7 @@ resource "aws_api_gateway_integration_response" "options_processing_status_integ
   status_code = aws_api_gateway_method_response.options_processing_status_response_200.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.frontend_cloudfront_domain}'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
   }

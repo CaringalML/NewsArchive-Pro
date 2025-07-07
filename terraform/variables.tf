@@ -161,6 +161,13 @@ variable "cloudfront_function_runtime" {
 
 # Backend Infrastructure Variables
 
+# Frontend Configuration
+variable "frontend_cloudfront_domain" {
+  description = "Frontend CloudFront domain for CORS configuration"
+  type        = string
+  default     = "https://d1gnn36zhrv38g.cloudfront.net"
+}
+
 # Supabase Configuration
 variable "supabase_url" {
   description = "Supabase project URL"
