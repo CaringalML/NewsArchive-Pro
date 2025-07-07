@@ -876,12 +876,33 @@ const QAEditor = () => {
                     <div className="tab-content">
                         {activeTab === 'ocr' && (
                             <CardContent>
-                                <label htmlFor="ocrText" className="form-label">Extracted Text (Editable)</label>
+                                <div className="ocr-header">
+                                    <div>
+                                        <label htmlFor="ocrText" className="form-label">Extracted Text (Editable)</label>
+                                        {currentPage && (
+                                            <div className="ocr-status">
+                                                Status: <span className={`status-badge status-${currentPage.status}`}>
+                                                    {getDisplayStatus(currentPage.status)}
+                                                </span>
+                                                {editedText && <span className="text-count">({editedText.length} characters)</span>}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button 
+                                        onClick={refreshPages}
+                                        className="btn-secondary btn-small"
+                                        disabled={loading}
+                                    >
+                                        <RefreshCw size={16} />
+                                        {loading ? 'Refreshing...' : 'Refresh'}
+                                    </button>
+                                </div>
                                 <textarea
                                     id="ocrText"
                                     value={editedText}
                                     onChange={(e) => setEditedText(e.target.value)}
                                     className="ocr-textarea"
+                                    placeholder={editedText ? "" : "OCR text will appear here once processing is complete. Click 'Refresh' to check for updates."}
                                 />
                             </CardContent>
                         )}

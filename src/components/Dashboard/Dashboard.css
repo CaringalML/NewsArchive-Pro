@@ -1054,6 +1054,38 @@
   box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
 }
 
+.ocr-textarea::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.ocr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ocr-status {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.text-count {
+  margin-left: 0.5rem;
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
 .articles-section {
   border-top: 1px solid #e5e7eb;
   padding-top: 1rem;
