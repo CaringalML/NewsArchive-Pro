@@ -30,14 +30,9 @@ output "api_gateway_id" {
   value       = aws_api_gateway_rest_api.newsarchive_api.id
 }
 
-output "lambda_function_names" {
-  description = "Names of all Lambda functions"
-  value = {
-    get_upload_url        = aws_lambda_function.get_upload_url.function_name
-    process_document      = aws_lambda_function.process_document.function_name
-    ocr_processor         = aws_lambda_function.ocr_processor.function_name
-    get_processing_status = aws_lambda_function.get_processing_status.function_name
-  }
+output "lambda_function_name" {
+  description = "Name of the single Lambda function"
+  value       = aws_lambda_function.newsarchive.function_name
 }
 
 output "processing_queue_url" {
