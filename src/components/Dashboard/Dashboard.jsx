@@ -434,18 +434,27 @@ const QAEditor = () => {
                             page: firstPage.page_number?.toString() || '',
                             section: firstPage.section || ''
                         });
+                        
+                        // Debug: Log page data to see what we're getting
+                        console.log('Loaded page for QA:', {
+                            id: firstPage.id,
+                            status: firstPage.status,
+                            hasFormattedText: !!firstPage.formatted_text,
+                            textLength: firstPage.formatted_text?.length || 0,
+                            fullPage: firstPage
+                        });
                         toast.success('Pages refreshed successfully');
                     } else {
                         setBatchPages([]);
                         setCurrentPage(null);
                         setCurrentPageIndex(0);
-                        toast.info('No pages available for review');
+                        toast('No pages available for review');
                     }
                 } else {
                     setBatchPages([]);
                     setCurrentPage(null);
                     setCurrentPageIndex(0);
-                    toast.info('No batches ready for QA review');
+                    toast('No batches ready for QA review');
                 }
             }
         } catch (error) {

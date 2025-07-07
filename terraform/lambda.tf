@@ -97,11 +97,11 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 
 # API Gateway Lambda - Get Signed Upload URL
 resource "aws_lambda_function" "get_upload_url" {
-  filename         = "../backend/dist/get-upload-url.zip"
+  filename         = "../backend/dist/newsarchive-lambda.zip"
   function_name    = "${var.environment}-newsarchive-get-upload-url"
   role            = aws_iam_role.lambda_execution_role.arn
   handler         = "index.handler"
-  source_code_hash = filebase64sha256("../backend/dist/get-upload-url.zip")
+  source_code_hash = filebase64sha256("../backend/dist/newsarchive-lambda.zip")
   runtime         = var.lambda_runtime
   timeout         = 30
   memory_size     = 128
@@ -113,6 +113,7 @@ resource "aws_lambda_function" "get_upload_url" {
       SUPABASE_SERVICE_KEY = var.supabase_service_key
       ENVIRONMENT         = var.environment
       CLOUDFRONT_DOMAIN   = aws_cloudfront_distribution.s3_distribution.domain_name
+      FRONTEND_DOMAIN     = var.frontend_cloudfront_domain
     }
   }
 
@@ -128,11 +129,11 @@ resource "aws_lambda_function" "get_upload_url" {
 
 # Process Document Lambda - Start Processing Pipeline
 resource "aws_lambda_function" "process_document" {
-  filename         = "../backend/dist/process-document.zip"
+  filename         = "../backend/dist/newsarchive-lambda.zip"
   function_name    = "${var.environment}-newsarchive-process-document"
   role            = aws_iam_role.lambda_execution_role.arn
   handler         = "index.handler"
-  source_code_hash = filebase64sha256("../backend/dist/process-document.zip")
+  source_code_hash = filebase64sha256("../backend/dist/newsarchive-lambda.zip")
   runtime         = var.lambda_runtime
   timeout         = 300
   memory_size     = 256
@@ -144,6 +145,7 @@ resource "aws_lambda_function" "process_document" {
       SUPABASE_SERVICE_KEY = var.supabase_service_key
       PROCESSING_QUEUE_URL = aws_sqs_queue.processing_queue.url
       ENVIRONMENT         = var.environment
+      FRONTEND_DOMAIN     = var.frontend_cloudfront_domain
     }
   }
 
@@ -159,11 +161,11 @@ resource "aws_lambda_function" "process_document" {
 
 # OCR Processor Lambda - Handle Textract Jobs
 resource "aws_lambda_function" "ocr_processor" {
-  filename         = "../backend/dist/ocr-processor.zip"
+  filename         = "../backend/dist/newsarchive-lambda.zip"
   function_name    = "${var.environment}-newsarchive-ocr-processor"
   role            = aws_iam_role.lambda_execution_role.arn
   handler         = "index.handler"
-  source_code_hash = filebase64sha256("../backend/dist/ocr-processor.zip")
+  source_code_hash = filebase64sha256("../backend/dist/newsarchive-lambda.zip")
   runtime         = var.lambda_runtime
   timeout         = 900
   memory_size     = 512
@@ -175,6 +177,7 @@ resource "aws_lambda_function" "ocr_processor" {
       SUPABASE_SERVICE_KEY = var.supabase_service_key
       ENVIRONMENT         = var.environment
       CLOUDFRONT_DOMAIN   = aws_cloudfront_distribution.s3_distribution.domain_name
+      FRONTEND_DOMAIN     = var.frontend_cloudfront_domain
     }
   }
 
@@ -198,11 +201,11 @@ resource "aws_lambda_event_source_mapping" "ocr_processor_sqs" {
 
 # Processing Status Lambda - Get Processing Job Status
 resource "aws_lambda_function" "get_processing_status" {
-  filename         = "../backend/dist/get-processing-status.zip"
+  filename         = "../backend/dist/newsarchive-lambda.zip"
   function_name    = "${var.environment}-newsarchive-get-processing-status"
   role            = aws_iam_role.lambda_execution_role.arn
   handler         = "index.handler"
-  source_code_hash = filebase64sha256("../backend/dist/get-processing-status.zip")
+  source_code_hash = filebase64sha256("../backend/dist/newsarchive-lambda.zip")
   runtime         = var.lambda_runtime
   timeout         = 30
   memory_size     = 128
@@ -212,6 +215,7 @@ resource "aws_lambda_function" "get_processing_status" {
       SUPABASE_URL        = var.supabase_url
       SUPABASE_SERVICE_KEY = var.supabase_service_key
       ENVIRONMENT         = var.environment
+      FRONTEND_DOMAIN     = var.frontend_cloudfront_domain
     }
   }
 

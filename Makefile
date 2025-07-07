@@ -89,12 +89,12 @@ terraform-reinit: ## Force reinitialize Terraform
 	cd $(TERRAFORM_DIR) && terraform init
 	@echo "$(GREEN)Terraform reinitialized$(NC)"
 
-terraform-plan: terraform-init ## Plan Terraform deployment
+terraform-plan: ## Plan Terraform deployment (run 'make terraform-init' first if needed)
 	@echo "$(YELLOW)Planning Terraform deployment...$(NC)"
 	cd $(TERRAFORM_DIR) && terraform plan
 	@echo "$(GREEN)Terraform plan completed$(NC)"
 
-terraform-apply: terraform-init ## Apply Terraform configuration
+terraform-apply: ## Apply Terraform configuration (run 'make terraform-init' first if needed)
 	@echo "$(YELLOW)Applying Terraform configuration...$(NC)"
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve
 	@echo "$(GREEN)Terraform applied$(NC)"
