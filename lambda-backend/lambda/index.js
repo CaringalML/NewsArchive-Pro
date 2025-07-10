@@ -1,5 +1,7 @@
 const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, QueryCommand } = require('@aws-sdk/lib-dynamodb');
 const { v4: uuidv4 } = require('uuid');
 const Busboy = require('busboy');
 
@@ -19,12 +21,20 @@ const {
 const region = process.env.AWS_REGION || 'ap-southeast-2';
 const sqsClient = new SQSClient({ region });
 const s3Client = new S3Client({ region });
+const dynamoDbClient = new DynamoDBClient({ region });
+const dynamoDb = DynamoDBDocumentClient.from(dynamoDbClient);
 
 // Environment variables
 const S3_BUCKET = process.env.S3_BUCKET || 'newsarchivepro-images-1747a635';
 const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN || 'dnit1caol1xgt.cloudfront.net';
 const OCR_QUEUE_URL = process.env.OCR_QUEUE_URL;
 const NOTIFICATION_QUEUE_URL = process.env.NOTIFICATION_QUEUE_URL;
+
+// DynamoDB Tables
+const TABLES = {
+    USERS: process.env.USERS_TABLE || 'newsarchivepro-users',
+    OCR_JOBS: process.env.OCR_JOBS_TABLE || 'newsarchivepro-ocr-jobs'
+};
 
 // Helper function to parse multipart form data
 function parseMultipartForm(event) {
@@ -401,13 +411,35 @@ exports.handler = async (event) => {
                 console.log('Uploading to S3:', { bucket: S3_BUCKET, key: s3Key });
                 await uploadFileToS3(file.buffer, s3Key, file.mimeType);
                 
-                // Create OCR job record
+                // Parse OCR settings if provided
+                let ocrSettings = {};
+                if (fields.ocrSettings) {
+                    try {
+                        ocrSettings = JSON.parse(fields.ocrSettings);
+                    } catch (e) {
+                        console.log('Failed to parse ocrSettings:', e);
+                    }
+                }
+                
+                // Create OCR job record with multi-page document support
                 const jobData = {
                     user_id: userId,
                     filename: file.filename,
                     s3_key: s3Key,
                     status: 'pending'
                 };
+                
+                // Add multi-page document fields if present
+                if (ocrSettings.groupId) {
+                    jobData.group_id = ocrSettings.groupId;
+                    jobData.page_number = ocrSettings.pageNumber || 1;
+                    jobData.is_multi_page = true;
+                }
+                
+                // Add other OCR settings
+                if (ocrSettings.collectionName) {
+                    jobData.collection_name = ocrSettings.collectionName;
+                }
                 
                 const ocrJob = await createOCRJob(jobData);
                 
@@ -419,7 +451,10 @@ exports.handler = async (event) => {
                         s3_bucket: S3_BUCKET,
                         s3_key: s3Key,
                         user_id: userId,
-                        filename: file.filename
+                        filename: file.filename,
+                        group_id: jobData.group_id || null,
+                        page_number: jobData.page_number || null,
+                        is_multi_page: jobData.is_multi_page || false
                     };
                     
                     const sqsCommand = new SendMessageCommand({
@@ -589,6 +624,61 @@ exports.handler = async (event) => {
             }
         }
 
+        // Route: GET /document/:groupId - Get all pages of a multi-page document
+        if (requestPath.match(/^\/document\/[^\/]+$/) && httpMethod === 'GET') {
+            const groupId = requestPath.split('/')[2];
+            
+            try {
+                const params = {
+                    TableName: TABLES.OCR_JOBS,
+                    IndexName: 'group-index',
+                    KeyConditionExpression: 'group_id = :groupId',
+                    ExpressionAttributeValues: {
+                        ':groupId': groupId
+                    },
+                    ScanIndexForward: true // Sort by page number ascending
+                };
+                
+                const result = await dynamoDb.send(new QueryCommand(params));
+                const pages = result.Items || [];
+                
+                // Sort pages by page_number
+                pages.sort((a, b) => (a.page_number || 0) - (b.page_number || 0));
+                
+                // Combine text from all pages
+                const combinedText = pages
+                    .filter(page => page.corrected_text || page.extracted_text)
+                    .map(page => page.corrected_text || page.extracted_text)
+                    .join('\n\n--- Page Break ---\n\n');
+                
+                return {
+                    statusCode: 200,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        message: 'Multi-page document retrieved successfully',
+                        data: {
+                            group_id: groupId,
+                            total_pages: pages.length,
+                            pages: pages,
+                            combined_text: combinedText
+                        },
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            } catch (error) {
+                console.error('Error retrieving multi-page document:', error);
+                return {
+                    statusCode: 500,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        error: 'Database Error',
+                        message: error.message,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            }
+        }
+
         // Route not found
         return {
             statusCode: 404,
@@ -604,7 +694,8 @@ exports.handler = async (event) => {
                     'GET /users/email/:email',
                     'POST /images',
                     'GET /ocr-jobs/:userId',
-                    'GET /ocr-job/:jobId/:createdAt'
+                    'GET /ocr-job/:jobId/:createdAt',
+                    'GET /document/:groupId'
                 ]
             })
         };

@@ -208,10 +208,22 @@ class ApiService {
    */
   async uploadImage(file, userId, ocrSettings = {}) {
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('image', file.file || file);
     formData.append('user_id', userId);
-    if (Object.keys(ocrSettings).length > 0) {
-      formData.append('ocrSettings', JSON.stringify(ocrSettings));
+    
+    // Create a copy of settings to avoid mutating the original
+    const settingsToSend = { ...ocrSettings };
+    
+    // Extract multi-page document info if present
+    if (file.groupId) {
+      settingsToSend.groupId = file.groupId;
+      settingsToSend.pageNumber = file.pageNumber;
+    }
+    
+    // Document groups information is already included in settingsToSend if present
+    
+    if (Object.keys(settingsToSend).length > 0) {
+      formData.append('ocrSettings', JSON.stringify(settingsToSend));
     }
 
     return this.uploadFile('/images', formData);
@@ -276,7 +288,7 @@ class ApiService {
     const processChunk = async (chunk) => {
       const promises = chunk.map(async (fileInfo) => {
         try {
-          const result = await this.uploadImage(fileInfo.file, userId, batchSettings);
+          const result = await this.uploadImage(fileInfo, userId, batchSettings);
           const success = {
             file: fileInfo.file.name,
             fileId: fileInfo.id,
@@ -319,6 +331,23 @@ class ApiService {
     }
     
     return results;
+  }
+
+  /**
+   * Combine multiple processed pages into a single document
+   * @param {string} groupId - Document group ID
+   * @param {Array} pageJobIds - Array of OCR job IDs for each page
+   * @param {string} userId - User ID
+   * @param {Object} settings - Document combination settings
+   * @returns {Promise} - Combined document result
+   */
+  async combineMultiPageDocument(groupId, pageJobIds, userId, settings = {}) {
+    return this.post('/combine-document', {
+      groupId,
+      pageJobIds,
+      userId,
+      ...settings
+    });
   }
 
   /**

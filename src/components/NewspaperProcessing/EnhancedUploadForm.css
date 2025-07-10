@@ -291,6 +291,7 @@
 }
 
 .file-thumbnail {
+  position: relative;
   width: 60px;
   height: 60px;
   margin-right: 16px;
@@ -511,4 +512,132 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Multi-page Document Styles */
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.group-mode-btn,
+.create-group-btn,
+.cancel-group-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.group-mode-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.group-mode-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.create-group-btn {
+  background: #16a34a;
+  color: white;
+}
+
+.create-group-btn:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.create-group-btn:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.cancel-group-btn {
+  background: #6b7280;
+  color: white;
+}
+
+.cancel-group-btn:hover {
+  background: #4b5563;
+}
+
+/* File Item Grouping Styles */
+.file-checkbox {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.file-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.file-item.selected {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.file-item.grouped {
+  background: #f0fdf4;
+  border-color: #16a34a;
+}
+
+.page-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: #16a34a;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.group-info {
+  margin-top: 4px;
+}
+
+.group-label {
+  display: inline-block;
+  background: #16a34a;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ungroup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ungroup-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.ungroup-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
