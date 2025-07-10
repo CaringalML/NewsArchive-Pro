@@ -14,7 +14,10 @@ export const useOCRJobs = (userId) => {
 
   // Fetch OCR jobs for user
   const fetchJobs = useCallback(async () => {
-    if (!userId) return
+    if (!userId) {
+      setJobs([])
+      return
+    }
 
     setLoading(true)
     setError(null)
@@ -33,8 +36,16 @@ export const useOCRJobs = (userId) => {
       console.error('Failed to fetch OCR jobs:', error)
       setError(error.message)
       
-      // Don't show error toast if it's a network issue or 404
-      if (!error.message.includes('404') && !error.message.includes('Network')) {
+      // Clear jobs on auth errors
+      if (error.message.includes('session') || error.message.includes('auth')) {
+        setJobs([])
+      }
+      
+      // Don't show error toast if it's a network issue, 404, or auth issue
+      if (!error.message.includes('404') && 
+          !error.message.includes('Network') && 
+          !error.message.includes('session') && 
+          !error.message.includes('auth')) {
         toast.error('Failed to fetch OCR jobs')
       }
     } finally {
@@ -194,21 +205,28 @@ export const useOCRJobs = (userId) => {
     }
   }, [jobs, refreshInterval, startAutoRefresh, stopAutoRefresh])
 
-  // Set up background refresh for cross-device sync (every 30 seconds)
+  // Set up background refresh for cross-device sync (every 2 minutes when idle)
   useEffect(() => {
     if (!userId) return
 
     const interval = setInterval(() => {
-      console.log('Background refresh: Fetching latest OCR jobs...')
-      fetchJobs()
-    }, 30000) // Refresh every 30 seconds
+      // Only refresh if no processing jobs (to avoid interrupting active work)
+      const hasActiveJobs = jobs.some(job => 
+        job.status === 'pending' || job.status === 'processing'
+      )
+      
+      if (!hasActiveJobs) {
+        console.log('Background refresh: Fetching latest OCR jobs...')
+        fetchJobs()
+      }
+    }, 120000) // Refresh every 2 minutes
 
     setBackgroundRefreshInterval(interval)
 
     return () => {
       clearInterval(interval)
     }
-  }, [userId, fetchJobs])
+  }, [userId, fetchJobs, jobs])
 
   // Cleanup intervals on unmount
   useEffect(() => {

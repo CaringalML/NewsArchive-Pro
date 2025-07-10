@@ -139,13 +139,24 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     try {
       setLoading(true)
+      
+      // Clear local state immediately
+      setUser(null)
+      setSession(null)
+      
+      // Clear any cached user data
+      localStorage.removeItem('newsarchive_user')
+      localStorage.removeItem('newsarchive_default_location')
+      
       const { error } = await supabase.auth.signOut()
       if (error) {
+        console.error('Sign out error:', error)
         toast.error(error.message)
       }
       return { error }
     } catch (error) {
-      toast.error('An unexpected error occurred')
+      console.error('Sign out exception:', error)
+      toast.error('An unexpected error occurred during sign out')
       return { error }
     } finally {
       setLoading(false)
