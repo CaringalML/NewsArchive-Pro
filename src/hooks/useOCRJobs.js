@@ -10,6 +10,7 @@ export const useOCRJobs = (userId) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [refreshInterval, setRefreshInterval] = useState(null)
+  const [backgroundRefreshInterval, setBackgroundRefreshInterval] = useState(null)
 
   // Fetch OCR jobs for user
   const fetchJobs = useCallback(async () => {
@@ -157,6 +158,29 @@ export const useOCRJobs = (userId) => {
     fetchJobs()
   }, [fetchJobs])
 
+  // Refresh data when window/tab regains focus (for cross-device sync)
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('Window focused, refreshing OCR jobs...')
+      fetchJobs()
+    }
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('Tab became visible, refreshing OCR jobs...')
+        fetchJobs()
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [fetchJobs])
+
   // Start auto-refresh when there are pending jobs
   useEffect(() => {
     const pendingJobs = jobs.filter(job => 
@@ -170,14 +194,33 @@ export const useOCRJobs = (userId) => {
     }
   }, [jobs, refreshInterval, startAutoRefresh, stopAutoRefresh])
 
-  // Cleanup interval on unmount
+  // Set up background refresh for cross-device sync (every 30 seconds)
+  useEffect(() => {
+    if (!userId) return
+
+    const interval = setInterval(() => {
+      console.log('Background refresh: Fetching latest OCR jobs...')
+      fetchJobs()
+    }, 30000) // Refresh every 30 seconds
+
+    setBackgroundRefreshInterval(interval)
+
+    return () => {
+      clearInterval(interval)
+    }
+  }, [userId, fetchJobs])
+
+  // Cleanup intervals on unmount
   useEffect(() => {
     return () => {
       if (refreshInterval) {
         clearInterval(refreshInterval)
       }
+      if (backgroundRefreshInterval) {
+        clearInterval(backgroundRefreshInterval)
+      }
     }
-  }, [refreshInterval])
+  }, [refreshInterval, backgroundRefreshInterval])
 
   return {
     jobs,
