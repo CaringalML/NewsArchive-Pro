@@ -19,6 +19,14 @@ export const useOCRJobs = (userId) => {
       return
     }
 
+    // Handle temporary users - they won't have OCR jobs in database
+    if (userId.startsWith('temp-') || userId.startsWith('fallback-') || userId.startsWith('offline-')) {
+      console.log('Temporary user detected, no OCR jobs available')
+      setJobs([])
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -46,7 +54,8 @@ export const useOCRJobs = (userId) => {
           !error.message.includes('Network') && 
           !error.message.includes('session') && 
           !error.message.includes('auth')) {
-        toast.error('Failed to fetch OCR jobs')
+        // Just log errors, don't show toasts
+        console.error('Failed to fetch OCR jobs for user:', userId)
       }
     } finally {
       setLoading(false)

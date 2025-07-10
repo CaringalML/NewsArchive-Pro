@@ -13,7 +13,7 @@ import {
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import { apiService } from '../../services/api'
-import { useUserManagement, useLocationManagement } from '../../hooks/useUserManagement'
+import { useUserManagement } from '../../hooks/useUserManagement'
 import './EnhancedUploadForm.css'
 
 const EnhancedUploadForm = () => {
@@ -28,9 +28,8 @@ const EnhancedUploadForm = () => {
   const [description, setDescription] = useState('')
   const [dragActive, setDragActive] = useState(false)
   
-  // User and location management
+  // User management
   const { currentUser } = useUserManagement()
-  const { currentLocation, initializeDefaultLocation } = useLocationManagement()
   const [processingOptions, setProcessingOptions] = useState({
     enableOCR: true,
     generateMETSALTO: true,
@@ -41,16 +40,7 @@ const EnhancedUploadForm = () => {
   const fileInputRef = useRef(null)
   const abortControllerRef = useRef(null)
 
-  // Initialize user and location on mount
-  useEffect(() => {
-    const initializeUserAndLocation = async () => {
-      if (currentUser && !currentLocation) {
-        await initializeDefaultLocation(currentUser.user_id)
-      }
-    }
-
-    initializeUserAndLocation()
-  }, [currentUser, currentLocation, initializeDefaultLocation])
+  // No need for location initialization anymore
 
   const MAX_FILE_SIZE = parseInt(process.env.REACT_APP_MAX_FILE_SIZE) || 52428800 // 50MB
   const MAX_BATCH_SIZE = parseInt(process.env.REACT_APP_MAX_BATCH_SIZE) || 100
@@ -250,15 +240,14 @@ const EnhancedUploadForm = () => {
     })
 
     try {
-      if (!currentUser || !currentLocation) {
-        toast.error('User or location not initialized')
+      if (!currentUser) {
+        console.log('No user available for upload')
         return
       }
 
       const results = await apiService.uploadBatch(
         selectedFiles,
         currentUser.user_id,
-        currentLocation.location_id,
         {
           ...processingOptions,
           collectionName,

@@ -41,7 +41,15 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || data.error || `HTTP ${response.status}`);
+        // Add more detailed error information
+        const errorMessage = data.message || data.error || `HTTP ${response.status}`;
+        console.error('API Error Details:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: data,
+          url: url
+        });
+        throw new Error(errorMessage);
       }
 
       console.log(`API Response: ${response.status}`, data);
@@ -49,16 +57,13 @@ class ApiService {
     } catch (error) {
       console.error('API Request Error:', error);
       
-      // Show user-friendly error messages
-      if (error.message.includes('fetch')) {
-        toast.error('Network error. Please check your connection.');
-      } else if (error.message.includes('404')) {
-        toast.error('API endpoint not found.');
-      } else if (error.message.includes('500')) {
-        toast.error('Server error. Please try again later.');
-      } else {
-        toast.error(error.message || 'An unexpected error occurred.');
-      }
+      // Just log errors, don't show toasts for API calls
+      console.error('API Error:', {
+        message: error.message,
+        type: error.message.includes('fetch') ? 'network' : 
+              error.message.includes('404') ? 'not-found' : 
+              error.message.includes('500') ? 'server' : 'other'
+      })
       
       throw error;
     }
@@ -144,7 +149,6 @@ class ApiService {
       return data;
     } catch (error) {
       console.error('File Upload Error:', error);
-      toast.error(error.message || 'File upload failed.');
       throw error;
     }
   }
@@ -188,53 +192,26 @@ class ApiService {
   }
 
   /**
-   * Get all locations
-   * @returns {Promise} - Locations list
+   * Get user by email
+   * @param {string} email - User email
+   * @returns {Promise} - User data
    */
-  async getLocations() {
-    return this.get('/locations');
+  async getUserByEmail(email) {
+    return this.get(`/users/email/${encodeURIComponent(email)}`);
   }
 
-  /**
-   * Create a new location
-   * @param {Object} locationData - Location data
-   * @returns {Promise} - Created location
-   */
-  async createLocation(locationData) {
-    return this.post('/locations', locationData);
-  }
-
-  /**
-   * Get location by ID
-   * @param {number} locationId - Location ID
-   * @returns {Promise} - Location data
-   */
-  async getLocation(locationId) {
-    return this.get(`/locations/${locationId}`);
-  }
-
-  /**
-   * Get locations for a specific user
-   * @param {string} userId - User ID
-   * @returns {Promise} - Array of user's locations
-   */
-  async getLocationsByUser(userId) {
-    return this.get(`/users/${userId}/locations`);
-  }
 
   /**
    * Upload image for OCR processing
    * @param {File} file - Image file
    * @param {string} userId - User ID
-   * @param {string} locationId - Location ID
    * @param {Object} ocrSettings - OCR processing settings
    * @returns {Promise} - OCR job data
    */
-  async uploadImage(file, userId, locationId, ocrSettings = {}) {
+  async uploadImage(file, userId, ocrSettings = {}) {
     const formData = new FormData();
     formData.append('image', file);
     formData.append('user_id', userId);
-    formData.append('location_id', locationId);
     if (Object.keys(ocrSettings).length > 0) {
       formData.append('ocrSettings', JSON.stringify(ocrSettings));
     }
@@ -283,12 +260,11 @@ class ApiService {
    * Upload multiple images for batch processing (parallel processing)
    * @param {Array} files - Array of file objects with metadata
    * @param {string} userId - User ID
-   * @param {string} locationId - Location ID
    * @param {Object} batchSettings - Batch processing settings
    * @param {Function} progressCallback - Progress callback function
    * @returns {Promise} - Batch processing results
    */
-  async uploadBatch(files, userId, locationId, batchSettings = {}, progressCallback = null) {
+  async uploadBatch(files, userId, batchSettings = {}, progressCallback = null) {
     const maxConcurrent = batchSettings.maxConcurrent || 5; // Process 5 files at once
     const results = [];
     let completed = 0;
@@ -297,7 +273,7 @@ class ApiService {
     const processChunk = async (chunk) => {
       const promises = chunk.map(async (fileInfo) => {
         try {
-          const result = await this.uploadImage(fileInfo.file, userId, locationId, batchSettings);
+          const result = await this.uploadImage(fileInfo.file, userId, batchSettings);
           const success = {
             file: fileInfo.file.name,
             fileId: fileInfo.id,
@@ -421,10 +397,7 @@ export const {
   getUsers,
   createUser,
   getUser,
-  getLocations,
-  createLocation,
-  getLocation,
-  getLocationsByUser,
+  getUserByEmail,
   uploadImage,
   getOcrJob,
   getOcrJobsByUser,

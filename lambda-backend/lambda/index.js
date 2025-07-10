@@ -257,8 +257,60 @@ exports.handler = async (event) => {
             }
         }
 
+        // Route: GET /users/email/:email - Get user by email
+        if (requestPath.match(/^\/users\/email\/[^\/]+$/) && httpMethod === 'GET') {
+            const email = decodeURIComponent(requestPath.split('/')[3]);
+            
+            if (!email) {
+                return {
+                    statusCode: 400,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        error: 'Bad Request',
+                        message: 'Invalid email'
+                    })
+                };
+            }
+
+            try {
+                const user = await getUserByEmail(email);
+                
+                if (!user) {
+                    return {
+                        statusCode: 404,
+                        headers: corsHeaders,
+                        body: JSON.stringify({
+                            error: 'Not Found',
+                            message: 'User not found'
+                        })
+                    };
+                }
+                
+                return {
+                    statusCode: 200,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        message: 'User retrieved successfully',
+                        data: user,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            } catch (error) {
+                console.error('DynamoDB error:', error);
+                return {
+                    statusCode: 500,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        error: 'Database Error',
+                        message: error.message,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            }
+        }
+
         // Route: GET /users/:id - Get user by ID
-        if (requestPath.startsWith('/users/') && httpMethod === 'GET') {
+        if (requestPath.startsWith('/users/') && httpMethod === 'GET' && !requestPath.includes('/email/') && !requestPath.includes('/locations')) {
             const userId = requestPath.split('/')[2];
             
             if (!userId) {
@@ -309,129 +361,6 @@ exports.handler = async (event) => {
             }
         }
 
-        // Route: POST /locations - Create a new location
-        if (requestPath === '/locations' && httpMethod === 'POST') {
-            try {
-                const requestBody = JSON.parse(event.body || '{}');
-                const { user_id, name, type, parent_id, path } = requestBody;
-                
-                // Validate required fields
-                if (!user_id || !name) {
-                    return {
-                        statusCode: 400,
-                        headers: corsHeaders,
-                        body: JSON.stringify({
-                            error: 'Bad Request',
-                            message: 'user_id and name are required fields'
-                        })
-                    };
-                }
-
-                // Create new location
-                const locationData = {
-                    user_id,
-                    name,
-                    type: type || 'folder',
-                    parent_id: parent_id || null,
-                    path: path || '/'
-                };
-
-                const newLocation = await createLocation(locationData);
-                
-                return {
-                    statusCode: 201,
-                    headers: corsHeaders,
-                    body: JSON.stringify({
-                        message: 'Location created successfully',
-                        data: newLocation,
-                        timestamp: new Date().toISOString()
-                    })
-                };
-            } catch (error) {
-                console.error('DynamoDB error:', error);
-                return {
-                    statusCode: 500,
-                    headers: corsHeaders,
-                    body: JSON.stringify({
-                        error: 'Database Error',
-                        message: error.message,
-                        timestamp: new Date().toISOString()
-                    })
-                };
-            }
-        }
-
-        // Route: GET /locations/:id - Get location by ID
-        if (requestPath.match(/^\/locations\/[^\/]+$/) && httpMethod === 'GET') {
-            const locationId = requestPath.split('/')[2];
-            
-            try {
-                const location = await getLocation(locationId);
-                
-                if (!location) {
-                    return {
-                        statusCode: 404,
-                        headers: corsHeaders,
-                        body: JSON.stringify({
-                            error: 'Not Found',
-                            message: 'Location not found'
-                        })
-                    };
-                }
-                
-                return {
-                    statusCode: 200,
-                    headers: corsHeaders,
-                    body: JSON.stringify({
-                        message: 'Location retrieved successfully',
-                        data: location,
-                        timestamp: new Date().toISOString()
-                    })
-                };
-            } catch (error) {
-                console.error('DynamoDB error:', error);
-                return {
-                    statusCode: 500,
-                    headers: corsHeaders,
-                    body: JSON.stringify({
-                        error: 'Database Error',
-                        message: error.message,
-                        timestamp: new Date().toISOString()
-                    })
-                };
-            }
-        }
-
-        // Route: GET /users/:userId/locations - Get all locations for a user
-        if (requestPath.match(/^\/users\/[^\/]+\/locations$/) && httpMethod === 'GET') {
-            const userId = requestPath.split('/')[2];
-            
-            try {
-                const locations = await getLocationsByUser(userId);
-                
-                return {
-                    statusCode: 200,
-                    headers: corsHeaders,
-                    body: JSON.stringify({
-                        message: 'Locations retrieved successfully',
-                        data: locations,
-                        count: locations.length,
-                        timestamp: new Date().toISOString()
-                    })
-                };
-            } catch (error) {
-                console.error('DynamoDB error:', error);
-                return {
-                    statusCode: 500,
-                    headers: corsHeaders,
-                    body: JSON.stringify({
-                        error: 'Database Error',
-                        message: error.message,
-                        timestamp: new Date().toISOString()
-                    })
-                };
-            }
-        }
 
         // Route: POST /images - Upload image and trigger OCR
         if (requestPath === '/images' && httpMethod === 'POST') {
@@ -457,15 +386,13 @@ exports.handler = async (event) => {
                 
                 const file = files[fileKey];
                 const userId = fields.user_id || fields.userId;
-                const locationId = fields.location_id || fields.locationId;
-                
-                if (!userId || !locationId) {
+                if (!userId) {
                     return {
                         statusCode: 400,
                         headers: corsHeaders,
                         body: JSON.stringify({
                             error: 'Bad Request',
-                            message: 'user_id and location_id are required'
+                            message: 'user_id is required'
                         })
                     };
                 }
@@ -481,7 +408,6 @@ exports.handler = async (event) => {
                 // Create OCR job record
                 const jobData = {
                     user_id: userId,
-                    location_id: locationId,
                     filename: file.filename,
                     s3_key: s3Key,
                     status: 'pending'
@@ -497,7 +423,6 @@ exports.handler = async (event) => {
                         s3_bucket: S3_BUCKET,
                         s3_key: s3Key,
                         user_id: userId,
-                        location_id: locationId,
                         filename: file.filename
                     };
                     
@@ -644,9 +569,7 @@ exports.handler = async (event) => {
                     'GET /users',
                     'POST /users',
                     'GET /users/:id',
-                    'POST /locations',
-                    'GET /locations/:id',
-                    'GET /users/:userId/locations',
+                    'GET /users/email/:email',
                     'POST /images',
                     'GET /ocr-jobs/:userId',
                     'GET /ocr-job/:jobId/:createdAt'
