@@ -23,8 +23,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { databaseService } from '../../services/databaseService';
-import { awsServices } from '../../services/awsServices';
-import { getCloudFrontUrl } from '../../utils/cloudfront';
 import ApiTest from '../ApiTest';
 
 // Status mapping for display
@@ -661,41 +659,37 @@ const QAEditor = () => {
                             : f
                     ));
 
-                    // Upload to S3
-                    const uploadResult = await awsServices.uploadToS3(
+                    // Upload via API Gateway for OCR processing
+                    const uploadResult = await databaseService.uploadImageForOCR(
                         fileInfo.file, 
-                        fileInfo.name, 
-                        'newspapers'
+                        user.id,
+                        { 
+                            ocrEnabled: true,
+                            batchId: batchResult.data.id,
+                            pageNumber: index + 1
+                        }
                     );
 
                     if (!uploadResult.success) {
                         throw new Error(uploadResult.error);
                     }
 
-                    // Add page to batch
-                    const pageResult = await databaseService.addPageToBatch({
-                        batchId: batchResult.data.id,
-                        pageNumber: index + 1,
-                        originalFilename: fileInfo.name,
-                        s3ImageUrl: uploadResult.url,
-                        s3ThumbnailUrl: null, // Will be generated later
-                        fileSize: fileInfo.file.size,
-                        imageWidth: null, // Will be determined during processing
-                        imageHeight: null
-                    });
+                    // Add page to batch (if not handled by API Gateway)
+                    if (uploadResult.data?.imageUrl) {
+                        const pageResult = await databaseService.addPageToBatch({
+                            batchId: batchResult.data.id,
+                            pageNumber: index + 1,
+                            originalFilename: fileInfo.name,
+                            s3ImageUrl: uploadResult.data.imageUrl,
+                            s3ThumbnailUrl: null,
+                            fileSize: fileInfo.file.size,
+                            imageWidth: null,
+                            imageHeight: null
+                        });
 
-                    if (!pageResult.success) {
-                        console.error('Failed to add page to batch:', pageResult.error);
-                    }
-
-                    // Start processing
-                    const processingResult = await awsServices.processPage(
-                        pageResult.data?.id, 
-                        uploadResult.key
-                    );
-
-                    if (!processingResult.success) {
-                        console.error('Failed to start processing:', processingResult.error);
+                        if (!pageResult.success) {
+                            console.error('Failed to add page to batch:', pageResult.error);
+                        }
                     }
 
                     // Update file status to completed
@@ -827,7 +821,7 @@ const QAEditor = () => {
                                 onClick={() => setShowUploadModal(true)}
                             >
                                 <img 
-                                    src={currentPage.s3_image_url ? getCloudFrontUrl(currentPage.s3_image_url) : 'https://placehold.co/800x1200/e2e8f0/4a5568?text=No+Image'} 
+                                    src={currentPage.s3_image_url || 'https://placehold.co/800x1200/e2e8f0/4a5568?text=No+Image'} 
                                     alt={`Scanned page ${currentPage.page_number}`} 
                                     className="scanned-image" 
                                 />
@@ -1072,6 +1066,7 @@ const MetadataInput = ({ icon: Icon, label, ...props }) => (
 
 // Upload View Component
 const UploadView = ({ setActiveView }) => {
+    const { user } = useAuth();
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [collectionName, setCollectionName] = useState('');
@@ -1157,7 +1152,15 @@ const UploadView = ({ setActiveView }) => {
 
             const batchId = batchResult.data.id;
 
-            // Upload files to S3 and add to database
+            // Check if API Gateway is available for OCR processing
+            const isApiGatewayAvailable = databaseService.isAPIGatewayAvailable();
+            
+            if (processingOptions.enableOCR && !isApiGatewayAvailable) {
+                toast.warn('API Gateway not configured. OCR processing will be disabled.');
+                setProcessingOptions(prev => ({ ...prev, enableOCR: false }));
+            }
+
+            // Upload files for processing
             for (let i = 0; i < selectedFiles.length; i++) {
                 const fileInfo = selectedFiles[i];
                 
@@ -1169,38 +1172,80 @@ const UploadView = ({ setActiveView }) => {
                             : f
                     ));
 
-                    // Upload to S3
-                    const fileName = `${Date.now()}-${fileInfo.name}`;
-                    const uploadResult = await awsServices.uploadToS3(fileInfo.file, fileName);
-                    
-                    if (!uploadResult.success) {
-                        throw new Error(uploadResult.error);
+                    if (processingOptions.enableOCR && isApiGatewayAvailable) {
+                        // Use API Gateway for OCR processing
+                        const ocrResult = await databaseService.uploadImageForOCR(
+                            fileInfo.file, 
+                            user.id, 
+                            {
+                                enableOCR: processingOptions.enableOCR,
+                                generateMETSALTO: processingOptions.generateMETSALTO,
+                                createSearchablePDFs: processingOptions.createSearchablePDFs
+                            }
+                        );
+                        
+                        if (!ocrResult.success) {
+                            throw new Error(ocrResult.error);
+                        }
+
+                        // Add page to database with OCR job ID
+                        const pageResult = await databaseService.addPageToBatch({
+                            batchId,
+                            pageNumber: i + 1,
+                            originalFilename: fileInfo.name,
+                            s3ImageUrl: ocrResult.data.cloudfrontUrl,
+                            fileSize: fileInfo.size,
+                            ocrJobId: ocrResult.data.jobId
+                        });
+
+                        if (!pageResult.success) {
+                            throw new Error('Failed to save page to database');
+                        }
+
+                        // Update file status with OCR job info
+                        setSelectedFiles(prev => prev.map(f => 
+                            f.id === fileInfo.id 
+                                ? { 
+                                    ...f, 
+                                    status: 'processing', 
+                                    ocrJobId: ocrResult.data.jobId,
+                                    s3Url: ocrResult.data.cloudfrontUrl
+                                }
+                                : f
+                        ));
+
+                    } else {
+                        // Fallback to API Gateway upload without OCR
+                        const uploadResult = await databaseService.uploadImageForOCR(
+                            fileInfo.file, 
+                            user.id,
+                            { ocrEnabled: false }
+                        );
+                        
+                        if (!uploadResult.success) {
+                            throw new Error(uploadResult.error);
+                        }
+
+                        // Add page to database
+                        const pageResult = await databaseService.addPageToBatch({
+                            batchId,
+                            pageNumber: i + 1,
+                            originalFilename: fileInfo.name,
+                            s3ImageUrl: uploadResult.url,
+                            fileSize: fileInfo.size
+                        });
+
+                        if (!pageResult.success) {
+                            throw new Error('Failed to save page to database');
+                        }
+
+                        // Update file status to completed
+                        setSelectedFiles(prev => prev.map(f => 
+                            f.id === fileInfo.id 
+                                ? { ...f, status: 'completed', s3Url: uploadResult.url }
+                                : f
+                        ));
                     }
-
-                    // Add page to database
-                    const pageResult = await databaseService.addPageToBatch({
-                        batchId,
-                        pageNumber: i + 1,
-                        originalFilename: fileInfo.name,
-                        s3ImageUrl: uploadResult.url,
-                        fileSize: fileInfo.size
-                    });
-
-                    if (!pageResult.success) {
-                        throw new Error('Failed to save page to database');
-                    }
-
-                    // Start AWS processing
-                    if (processingOptions.enableOCR) {
-                        awsServices.processPage(pageResult.data.id, uploadResult.key);
-                    }
-
-                    // Update file status to completed
-                    setSelectedFiles(prev => prev.map(f => 
-                        f.id === fileInfo.id 
-                            ? { ...f, status: 'completed' }
-                            : f
-                    ));
 
                 } catch (error) {
                     console.error(`Error processing file ${fileInfo.name}:`, error);

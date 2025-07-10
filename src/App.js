@@ -13,10 +13,11 @@ import ForgotPassword from './components/Auth/ForgotPassword'
 import ResetPassword from './components/Auth/ResetPassword'
 import EmailVerified from './components/Auth/EmailVerified'
 import EmailVerificationPending from './components/Auth/EmailVerificationPending'
-import Dashboard from './components/Dashboard/Dashboard'
+import DashboardTemplate from './components/Dashboard/DashboardTemplate'
 import CollectionList from './components/Collections/CollectionList'
 import UploadForm from './components/NewspaperProcessing/UploadForm'
 import Profile from './components/Profile/Profile'
+import ApiTest from './components/ApiTest'
 import './App.css'
 
 // Component to conditionally render header based on route
@@ -114,7 +115,7 @@ function App() {
               path="/dashboard" 
               element={
                 <AuthGuard>
-                  <Dashboard />
+                  <DashboardTemplate />
                 </AuthGuard>
               } 
             />
@@ -139,6 +140,14 @@ function App() {
               element={
                 <AuthGuard>
                   <Profile />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/api-test" 
+              element={
+                <AuthGuard>
+                  <ApiTest />
                 </AuthGuard>
               } 
             />

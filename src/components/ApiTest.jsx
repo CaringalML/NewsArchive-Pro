@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { awsServices } from '../services/awsServices';
 import { databaseService } from '../services/databaseService';
+import apiService from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -75,23 +75,59 @@ const ApiTest = () => {
       // Test 4: API Gateway connectivity
       addResult('API Gateway', true, 'Testing API Gateway connectivity...');
       
-      // Create a small test file
-      const testFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
-      
-      // Test upload URL generation (this should fail gracefully with wrong file type)
-      try {
-        const uploadResult = await awsServices.uploadToS3(testFile, 'test.txt');
+      // Test API Gateway connection
+      const apiHealthResult = await databaseService.getAPIHealthStatus();
+      addResult(
+        'API Gateway Health',
+        apiHealthResult.success,
+        apiHealthResult.success ? 
+          `API Gateway is ${apiHealthResult.data.status}` : 
+          apiHealthResult.error,
+        apiHealthResult.data
+      );
+
+      // Test API Gateway connection directly
+      if (databaseService.isAPIGatewayAvailable()) {
+        try {
+          const apiTestResult = await apiService.testConnection();
+          addResult(
+            'API Gateway Test',
+            true,
+            'API Gateway connection successful',
+            apiTestResult
+          );
+        } catch (error) {
+          addResult(
+            'API Gateway Test',
+            false,
+            `API Gateway connection failed: ${error.message}`,
+            null
+          );
+        }
+      } else {
         addResult(
-          'Upload URL Generation',
+          'API Gateway Test',
           false,
-          'Upload should have failed with unsupported file type, but succeeded unexpectedly',
-          uploadResult
+          'API Gateway URL not configured in environment variables',
+          null
+        );
+      }
+      
+      // Test API Gateway user endpoint
+      try {
+        const usersResult = await apiService.getUsers();
+        addResult(
+          'API Gateway Users',
+          true,
+          'Successfully fetched users from API Gateway',
+          usersResult
         );
       } catch (error) {
         addResult(
-          'Upload URL Generation',
-          true,
-          'Upload correctly rejected unsupported file type: ' + error.message
+          'API Gateway Users',
+          false,
+          `Failed to fetch users from API Gateway: ${error.message}`,
+          null
         );
       }
 
