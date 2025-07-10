@@ -106,6 +106,12 @@ const createOCRJob = async (jobData) => {
     correction_model: jobData.correction_model || '',
     document_type: jobData.document_type || '',
     error: jobData.error || null,
+    // Comprehend metadata fields
+    entities: jobData.entities || null,
+    key_phrases: jobData.key_phrases || null,
+    sentiment: jobData.sentiment || null,
+    metadata_summary: jobData.metadata_summary || null,
+    comprehend_processed: jobData.comprehend_processed || false,
     updated_at: timestamp,
     // Set TTL to 90 days from now (optional)
     ttl: Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60),

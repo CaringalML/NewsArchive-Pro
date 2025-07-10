@@ -8,6 +8,97 @@
   color: #111827;
 }
 
+/* Metadata Overview Styles */
+.metadata-overview {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+}
+
+.metadata-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.metadata-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e0f2fe;
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metadata-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.metadata-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 8px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.metadata-stat-icon.organizations {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+}
+
+.metadata-stat-icon.people {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+}
+
+.metadata-stat-icon.locations {
+  background: linear-gradient(135deg, #059669, #10b981);
+}
+
+.metadata-stat-icon.entities {
+  background: linear-gradient(135deg, #d946ef, #ec4899);
+}
+
+.metadata-stat-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.metadata-stat-value {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+}
+
+.metadata-stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+.entities-section {
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0f2fe;
+}
+
+.entities-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Sidebar Styles */
 .dashboard-sidebar {
   display: flex;

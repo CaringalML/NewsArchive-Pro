@@ -529,13 +529,49 @@ exports.handler = async (event) => {
                         })
                     };
                 }
+
+                // Parse and format the metadata for better display
+                let formattedJob = { ...job };
+                
+                // Parse JSON fields if they exist
+                if (job.entities && typeof job.entities === 'string') {
+                    try {
+                        formattedJob.entities = JSON.parse(job.entities);
+                    } catch (e) {
+                        console.error('Error parsing entities:', e);
+                    }
+                }
+                
+                if (job.key_phrases && typeof job.key_phrases === 'string') {
+                    try {
+                        formattedJob.key_phrases = JSON.parse(job.key_phrases);
+                    } catch (e) {
+                        console.error('Error parsing key_phrases:', e);
+                    }
+                }
+                
+                if (job.sentiment && typeof job.sentiment === 'string') {
+                    try {
+                        formattedJob.sentiment = JSON.parse(job.sentiment);
+                    } catch (e) {
+                        console.error('Error parsing sentiment:', e);
+                    }
+                }
+                
+                if (job.metadata_summary && typeof job.metadata_summary === 'string') {
+                    try {
+                        formattedJob.metadata_summary = JSON.parse(job.metadata_summary);
+                    } catch (e) {
+                        console.error('Error parsing metadata_summary:', e);
+                    }
+                }
                 
                 return {
                     statusCode: 200,
                     headers: corsHeaders,
                     body: JSON.stringify({
                         message: 'OCR job retrieved successfully',
-                        data: job,
+                        data: formattedJob,
                         timestamp: new Date().toISOString()
                     })
                 };

@@ -7,13 +7,18 @@ import {
   Clock, 
   Newspaper, 
   LogOut,
-  BarChart3
+  BarChart3,
+  Sparkles,
+  Building,
+  Users,
+  MapPin
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUserManagement } from '../../hooks/useUserManagement';
 import { useOCRJobs } from '../../hooks/useOCRJobs';
 import EnhancedUploadForm from '../NewspaperProcessing/EnhancedUploadForm';
 import OCRJobsPanel from './OCRJobsPanel';
+import EntityVisualization from '../Common/EntityVisualization';
 import './DashboardTemplate.css';
 
 // Helper Components
@@ -104,6 +109,55 @@ const Dashboard = ({ jobs, stats }) => {
 
     const recentJobs = jobs.slice(0, 5);
 
+    // Calculate metadata stats from completed jobs
+    const metadataStats = useMemo(() => {
+        const completedJobs = jobs.filter(job => job.status === 'completed' && job.comprehend_processed);
+        
+        let totalEntities = 0;
+        let totalOrganizations = 0;
+        let totalPeople = 0;
+        let totalLocations = 0;
+        let allEntities = {};
+
+        completedJobs.forEach(job => {
+            if (job.metadata_summary) {
+                try {
+                    const metadata = typeof job.metadata_summary === 'string' 
+                        ? JSON.parse(job.metadata_summary) 
+                        : job.metadata_summary;
+                    
+                    if (metadata.entities) {
+                        Object.entries(metadata.entities).forEach(([type, entityList]) => {
+                            totalEntities += entityList.length;
+                            if (type === 'ORGANIZATION') totalOrganizations += entityList.length;
+                            if (type === 'PERSON') totalPeople += entityList.length;
+                            if (type === 'LOCATION') totalLocations += entityList.length;
+                            
+                            // Aggregate entities for visualization
+                            if (!allEntities[type]) allEntities[type] = [];
+                            entityList.forEach(entity => {
+                                if (!allEntities[type].includes(entity)) {
+                                    allEntities[type].push(entity);
+                                }
+                            });
+                        });
+                    }
+                } catch (e) {
+                    console.error('Error parsing metadata:', e);
+                }
+            }
+        });
+
+        return {
+            totalJobs: completedJobs.length,
+            totalEntities,
+            totalOrganizations,
+            totalPeople,
+            totalLocations,
+            allEntities
+        };
+    }, [jobs]);
+
     return (
         <div>
             <div className="page-header">
@@ -127,6 +181,71 @@ const Dashboard = ({ jobs, stats }) => {
                     </div>
                 ))}
             </div>
+
+            {/* AI Metadata Stats */}
+            {metadataStats.totalJobs > 0 && (
+                <div className="dashboard-card metadata-overview">
+                    <div className="card-header">
+                        <h3 className="card-title">
+                            <Sparkles className="inline w-5 h-5 mr-2 text-purple-600" />
+                            AI Analysis Overview
+                        </h3>
+                        <p className="card-subtitle">
+                            Extracted from {metadataStats.totalJobs} processed documents
+                        </p>
+                    </div>
+                    
+                    <div className="metadata-stats-grid">
+                        <div className="metadata-stat-card">
+                            <div className="metadata-stat-icon organizations">
+                                <Building className="w-6 h-6" />
+                            </div>
+                            <div className="metadata-stat-content">
+                                <div className="metadata-stat-value">{metadataStats.totalOrganizations}</div>
+                                <div className="metadata-stat-label">Organizations</div>
+                            </div>
+                        </div>
+                        
+                        <div className="metadata-stat-card">
+                            <div className="metadata-stat-icon people">
+                                <Users className="w-6 h-6" />
+                            </div>
+                            <div className="metadata-stat-content">
+                                <div className="metadata-stat-value">{metadataStats.totalPeople}</div>
+                                <div className="metadata-stat-label">People</div>
+                            </div>
+                        </div>
+                        
+                        <div className="metadata-stat-card">
+                            <div className="metadata-stat-icon locations">
+                                <MapPin className="w-6 h-6" />
+                            </div>
+                            <div className="metadata-stat-content">
+                                <div className="metadata-stat-value">{metadataStats.totalLocations}</div>
+                                <div className="metadata-stat-label">Locations</div>
+                            </div>
+                        </div>
+                        
+                        <div className="metadata-stat-card">
+                            <div className="metadata-stat-icon entities">
+                                <Sparkles className="w-6 h-6" />
+                            </div>
+                            <div className="metadata-stat-content">
+                                <div className="metadata-stat-value">{metadataStats.totalEntities}</div>
+                                <div className="metadata-stat-label">Total Entities</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Entity Visualization */}
+                    {Object.keys(metadataStats.allEntities).length > 0 && (
+                        <div className="entities-section">
+                            <h4 className="entities-title">Discovered Entities</h4>
+                            <EntityVisualization entities={metadataStats.allEntities} compact={true} />
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Recent Jobs */}
             <div className="dashboard-card">

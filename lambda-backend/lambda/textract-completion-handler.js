@@ -1,5 +1,6 @@
 const { Client } = require('pg');
 const { TextractClient, GetDocumentTextDetectionCommand } = require('@aws-sdk/client-textract');
+const { analyzeTextWithComprehend, generateMetadataSummary } = require('./comprehend-client');
 
 // Database connection configuration
 const dbConfig = {
@@ -78,7 +79,22 @@ exports.handler = async (event) => {
                     ? confidenceScores.reduce((a, b) => a + b, 0) / confidenceScores.length 
                     : null;
                 
-                // Update job with results
+                // Analyze text with Comprehend for metadata extraction
+                let comprehendAnalysis = null;
+                let metadataSummary = null;
+                
+                if (extractedText && extractedText.trim().length > 0) {
+                    console.log('Analyzing text with AWS Comprehend...');
+                    comprehendAnalysis = await analyzeTextWithComprehend(extractedText);
+                    metadataSummary = generateMetadataSummary(comprehendAnalysis);
+                    console.log('Comprehend analysis completed:', {
+                        entitiesFound: comprehendAnalysis.entities.length,
+                        keyPhrasesFound: comprehendAnalysis.keyPhrases.length,
+                        sentiment: comprehendAnalysis.sentiment?.sentiment
+                    });
+                }
+                
+                // Update job with results including Comprehend metadata
                 await client.query(`
                     UPDATE ocr_jobs SET 
                         status = $1, 
@@ -86,19 +102,34 @@ exports.handler = async (event) => {
                         extracted_text = $3, 
                         confidence_score = $4, 
                         textract_response = $5,
+                        entities = $6,
+                        key_phrases = $7,
+                        sentiment = $8,
+                        metadata_summary = $9,
+                        comprehend_processed = $10,
                         textract_completed_at = NOW(),
                         processing_completed_at = NOW()
-                    WHERE id = $6
+                    WHERE id = $11
                 `, [
                     'completed', 
                     'finished', 
                     extractedText, 
                     avgConfidence, 
                     JSON.stringify(textractResults),
+                    comprehendAnalysis ? JSON.stringify(comprehendAnalysis.entities) : null,
+                    comprehendAnalysis ? JSON.stringify(comprehendAnalysis.keyPhrases) : null,
+                    comprehendAnalysis ? JSON.stringify(comprehendAnalysis.sentiment) : null,
+                    metadataSummary ? JSON.stringify(metadataSummary) : null,
+                    comprehendAnalysis ? true : false,
                     job.id
                 ]);
                 
                 console.log(`OCR job ${job.id} completed successfully. Extracted ${extractedText.length} characters.`);
+                
+                // Log example entities for debugging
+                if (comprehendAnalysis && comprehendAnalysis.entities.length > 0) {
+                    console.log('Sample entities found:', comprehendAnalysis.entities.slice(0, 3).map(e => `${e.type}: ${e.text}`));
+                }
                 
             } else if (Status === 'FAILED') {
                 // Get failure details

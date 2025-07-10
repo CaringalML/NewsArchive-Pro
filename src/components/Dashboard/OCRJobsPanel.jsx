@@ -6,10 +6,12 @@ import {
   ArrowPathIcon,
   EyeIcon,
   ChartBarIcon,
-  FunnelIcon
+  FunnelIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 import { useOCRJobs } from '../../hooks/useOCRJobs'
 import { useUserManagement } from '../../hooks/useUserManagement'
+import MetadataDisplay from '../Common/MetadataDisplay'
 import './OCRJobsPanel.css'
 
 const OCRJobsPanel = () => {
@@ -37,7 +39,7 @@ const OCRJobsPanel = () => {
       case 'failed':
         return <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
       case 'processing':
-        return <ArrowPathIcon className="w-5 h-5 text-blue-500 animate-spin" />
+        return <ArrowPathIcon className="w-5 h-5 text-green-500 animate-spin" />
       case 'pending':
         return <ClockIcon className="w-5 h-5 text-yellow-500" />
       default:
@@ -52,7 +54,7 @@ const OCRJobsPanel = () => {
       case 'failed':
         return 'bg-red-100 text-red-800'
       case 'processing':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-green-100 text-green-800'
       case 'pending':
         return 'bg-yellow-100 text-yellow-800'
       default:
@@ -61,6 +63,7 @@ const OCRJobsPanel = () => {
   }
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString()
   }
 
@@ -116,7 +119,7 @@ const OCRJobsPanel = () => {
         <div className="header-actions">
           {isAutoRefreshing && (
             <div className="auto-refresh-indicator">
-              <ArrowPathIcon className="w-4 h-4 animate-spin" />
+              <ArrowPathIcon className="w-4 h-4" />
               <span>Auto-refreshing</span>
             </div>
           )}
@@ -135,7 +138,7 @@ const OCRJobsPanel = () => {
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon">
-            <ChartBarIcon className="w-6 h-6 text-blue-500" />
+            <ChartBarIcon className="w-6 h-6 text-green-500" />
           </div>
           <div className="stat-content">
             <div className="stat-value">{stats.total}</div>
@@ -155,7 +158,7 @@ const OCRJobsPanel = () => {
 
         <div className="stat-card">
           <div className="stat-icon">
-            <ArrowPathIcon className="w-6 h-6 text-blue-500" />
+            <ArrowPathIcon className="w-6 h-6 text-green-500" />
           </div>
           <div className="stat-content">
             <div className="stat-value">{stats.processing}</div>
@@ -267,6 +270,13 @@ const OCRJobsPanel = () => {
                       Confidence: {Math.round(job.confidence_score)}%
                     </div>
                   )}
+                  
+                  {job.comprehend_processed && job.metadata_summary && (
+                    <div className="job-metadata-preview">
+                      <SparklesIcon className="w-4 h-4" />
+                      <span>Available</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="job-badge">
@@ -310,75 +320,95 @@ const OCRJobsPanel = () => {
               
               return (
                 <div className="modal-body">
-                  <div className="job-detail-grid">
-                    <div className="detail-item">
-                      <label>Job ID:</label>
-                      <span>{job.job_id}</span>
-                    </div>
-                    
-                    <div className="detail-item">
-                      <label>Filename:</label>
-                      <span>{job.filename}</span>
-                    </div>
-                    
-                    <div className="detail-item">
-                      <label>Status:</label>
-                      <span className={`status-badge ${getStatusColor(job.status)}`}>
-                        {job.status}
-                      </span>
-                    </div>
-                    
-                    <div className="detail-item">
-                      <label>Created:</label>
-                      <span>{formatDate(job.created_at)}</span>
-                    </div>
-                    
-                    {job.completed_at && (
+                  {/* Job Info Section */}
+                  <div className="job-info-section">
+                    <div className="job-detail-grid">
                       <div className="detail-item">
-                        <label>Completed:</label>
-                        <span>{formatDate(job.completed_at)}</span>
+                        <label>Job ID:</label>
+                        <span>{job.job_id}</span>
                       </div>
-                    )}
-                    
-                    {job.confidence_score && (
+                      
                       <div className="detail-item">
-                        <label>Confidence:</label>
-                        <span>{Math.round(job.confidence_score)}%</span>
+                        <label>Filename:</label>
+                        <span>{job.filename}</span>
                       </div>
-                    )}
-                    
-                    {job.document_type && (
+                      
                       <div className="detail-item">
-                        <label>Document Type:</label>
-                        <span>{job.document_type}</span>
+                        <label>Status:</label>
+                        <span className={`status-badge ${getStatusColor(job.status)}`}>
+                          {job.status}
+                        </span>
                       </div>
-                    )}
-                    
-                    {job.error && (
-                      <div className="detail-item full-width">
-                        <label>Error:</label>
-                        <span className="error-text">{job.error}</span>
+                      
+                      <div className="detail-item">
+                        <label>Created:</label>
+                        <span>{formatDate(job.created_at)}</span>
                       </div>
-                    )}
-                    
-                    {job.extracted_text && (
-                      <div className="detail-item full-width">
-                        <label>Extracted Text:</label>
-                        <div className="text-preview">
-                          {job.extracted_text}
+                      
+                      {job.completed_at && (
+                        <div className="detail-item">
+                          <label>Completed:</label>
+                          <span>{formatDate(job.completed_at)}</span>
                         </div>
-                      </div>
-                    )}
-                    
-                    {job.corrected_text && (
-                      <div className="detail-item full-width">
-                        <label>Corrected Text:</label>
-                        <div className="text-preview">
-                          {job.corrected_text}
+                      )}
+                      
+                      {job.confidence_score && (
+                        <div className="detail-item">
+                          <label>Confidence:</label>
+                          <span>{Math.round(job.confidence_score)}%</span>
                         </div>
-                      </div>
-                    )}
+                      )}
+                      
+                      {job.document_type && (
+                        <div className="detail-item">
+                          <label>Document Type:</label>
+                          <span>{job.document_type}</span>
+                        </div>
+                      )}
+                      
+                      {job.error && (
+                        <div className="detail-item">
+                          <label>Error:</label>
+                          <span className="error-text">{job.error}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Text Content Section */}
+                  {(job.extracted_text || job.corrected_text) && (
+                    <div className="text-content-section">
+                      <div className="text-content">
+                        {job.extracted_text && (
+                          <div className="text-block">
+                            <label>Extracted Text:</label>
+                            <div className="text-preview">
+                              {job.extracted_text}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {job.corrected_text && (
+                          <div className="text-block">
+                            <label>Corrected Text:</label>
+                            <div className="text-preview">
+                              {job.corrected_text}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {job.comprehend_processed && (
+                    <div className="ai-metadata-section">
+                      <label>
+                        <SparklesIcon className="w-5 h-5" />
+                        AI Metadata Analysis
+                      </label>
+                      <MetadataDisplay metadata={job.metadata_summary} />
+                    </div>
+                  )}
                 </div>
               )
             })()}

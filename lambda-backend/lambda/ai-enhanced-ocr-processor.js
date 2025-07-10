@@ -2,6 +2,7 @@ const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/clien
 const { TextractClient, StartDocumentTextDetectionCommand, GetDocumentTextDetectionCommand } = require('@aws-sdk/client-textract');
 const { correctOCRText, documentTypeEnhancements } = require('./enhanced-rule-based-corrector');
 const { getOCRJob, updateOCRJob } = require('./dynamodb-client');
+const { analyzeTextWithComprehend, generateMetadataSummary } = require('./comprehend-client');
 const https = require('https');
 const http = require('http');
 
@@ -334,6 +335,40 @@ async function processOCRJob(jobData) {
         // Calculate combined confidence score
         const combinedConfidence = (avgConfidence * 0.7 + correctionConfidence * 100 * 0.3) / 100;
         
+        // Analyze text with Comprehend for metadata extraction
+        console.log(`🔍 Analyzing text with AWS Comprehend...`);
+        let comprehendAnalysis = null;
+        let metadataSummary = null;
+        
+        try {
+            await updateDynamoDBJob(
+                jobId,
+                createdAt,
+                {
+                    processing_stage: 'comprehend_analysis'
+                },
+                `Job ${jobId} Comprehend analysis started`
+            );
+            
+            comprehendAnalysis = await analyzeTextWithComprehend(finalText);
+            metadataSummary = generateMetadataSummary(comprehendAnalysis);
+            
+            console.log(`📊 Comprehend analysis completed:`, {
+                entitiesFound: comprehendAnalysis.entities.length,
+                keyPhrasesFound: comprehendAnalysis.keyPhrases.length,
+                sentiment: comprehendAnalysis.sentiment?.sentiment
+            });
+            
+            // Log some sample entities for debugging
+            if (comprehendAnalysis.entities.length > 0) {
+                console.log(`📋 Sample entities found:`, comprehendAnalysis.entities.slice(0, 5).map(e => `${e.type}: ${e.text}`));
+            }
+            
+        } catch (comprehendError) {
+            console.error(`⚠️ Comprehend analysis failed:`, comprehendError);
+            // Continue processing even if Comprehend fails
+        }
+        
         // Update job with final results
         await updateDynamoDBJob(
             jobId,
@@ -356,11 +391,22 @@ async function processOCRJob(jobData) {
                 completed_at: new Date().toISOString(),
                 combined_confidence: combinedConfidence,
                 corrections_applied: correctionResult.corrections || 0,
+                // Comprehend metadata fields
+                entities: comprehendAnalysis ? JSON.stringify(comprehendAnalysis.entities) : null,
+                key_phrases: comprehendAnalysis ? JSON.stringify(comprehendAnalysis.keyPhrases) : null,
+                sentiment: comprehendAnalysis ? JSON.stringify(comprehendAnalysis.sentiment) : null,
+                metadata_summary: metadataSummary ? JSON.stringify(metadataSummary) : null,
+                comprehend_processed: comprehendAnalysis ? true : false,
                 ai_enhancements: {
                     documentType,
                     corrections: correctionResult.corrections,
                     confidence: correctionConfidence,
-                    model: correctionResult.model
+                    model: correctionResult.model,
+                    comprehend: comprehendAnalysis ? {
+                        entitiesFound: comprehendAnalysis.entities.length,
+                        keyPhrasesFound: comprehendAnalysis.keyPhrases.length,
+                        sentiment: comprehendAnalysis.sentiment?.sentiment
+                    } : null
                 }
             },
             `Job ${jobId} completed successfully`

@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useRealtimeOCR } from '../../hooks/useRealtimeOCR'
 import { useUserManagement } from '../../hooks/useUserManagement'
+import MetadataDisplay from '../Common/MetadataDisplay'
 import './RealtimeDashboard.css'
 
 const RealtimeDashboard = () => {
@@ -18,6 +19,7 @@ const RealtimeDashboard = () => {
   const { jobs, stats, refresh, isPolling, lastUpdate } = useRealtimeOCR(currentUser?.user_id)
   const [filter, setFilter] = useState('all')
   const [animatedStats, setAnimatedStats] = useState(stats)
+  const [selectedJob, setSelectedJob] = useState(null)
 
   // Animate stat changes
   useEffect(() => {
@@ -225,11 +227,13 @@ const RealtimeDashboard = () => {
 
                 <JobProgressBar job={job} />
 
-                {job.status === 'completed' && job.corrected_text && (
+                {job.status === 'completed' && (
                   <div className="job-preview">
-                    <p className="preview-text">
-                      {job.corrected_text.substring(0, 100)}...
-                    </p>
+                    {job.corrected_text && (
+                      <p className="preview-text">
+                        {job.corrected_text.substring(0, 100)}...
+                      </p>
+                    )}
                     <div className="job-stats">
                       <span className="confidence">
                         {Math.round((job.confidence_score || 0) * 100)}% confidence
@@ -238,6 +242,16 @@ const RealtimeDashboard = () => {
                         <span className="model">
                           {job.correction_model}
                         </span>
+                      )}
+                      {job.comprehend_processed && (
+                        <button 
+                          className="metadata-btn"
+                          onClick={() => setSelectedJob(job)}
+                          title="View AI Analysis"
+                        >
+                          <SparklesIcon className="w-4 h-4" />
+                          AI Analysis
+                        </button>
                       )}
                     </div>
                   </div>
@@ -254,6 +268,39 @@ const RealtimeDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Metadata Modal */}
+      {selectedJob && (
+        <div className="modal-overlay" onClick={() => setSelectedJob(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                <SparklesIcon className="w-5 h-5 inline mr-2" />
+                AI Analysis - {selectedJob.filename}
+              </h3>
+              <button 
+                onClick={() => setSelectedJob(null)}
+                className="close-btn"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <MetadataDisplay metadata={selectedJob.metadata_summary} />
+              
+              {selectedJob.corrected_text && (
+                <div className="text-section">
+                  <h4>Processed Text:</h4>
+                  <div className="text-preview">
+                    {selectedJob.corrected_text}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
