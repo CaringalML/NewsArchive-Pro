@@ -326,7 +326,7 @@ const EnhancedUploadForm = () => {
       case 'failed':
         return <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
       case 'uploading':
-        return <ArrowPathIcon className="w-5 h-5 text-blue-500 animate-spin" />
+        return <ArrowPathIcon className="w-5 h-5 text-green-600 animate-spin" />
       default:
         return <DocumentArrowUpIcon className="w-5 h-5 text-gray-400" />
     }

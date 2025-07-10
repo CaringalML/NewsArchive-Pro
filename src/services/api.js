@@ -220,9 +220,14 @@ class ApiService {
   /**
    * Get OCR job status
    * @param {string} jobId - OCR job ID
+   * @param {string} createdAt - Job creation timestamp
    * @returns {Promise} - OCR job status and results
    */
-  async getOcrJob(jobId) {
+  async getOcrJob(jobId, createdAt) {
+    if (createdAt) {
+      return this.get(`/ocr-job/${jobId}/${encodeURIComponent(createdAt)}`);
+    }
+    // Fallback to old endpoint if no createdAt provided
     return this.get(`/images/${jobId}`);
   }
 

@@ -18,6 +18,7 @@ import CollectionList from './components/Collections/CollectionList'
 import UploadForm from './components/NewspaperProcessing/UploadForm'
 import Profile from './components/Profile/Profile'
 import ApiTest from './components/ApiTest'
+import RealtimeDashboard from './components/Dashboard/RealtimeDashboard'
 import './App.css'
 
 // Component to conditionally render header based on route
@@ -132,6 +133,14 @@ function App() {
               element={
                 <AuthGuard>
                   <UploadForm />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/ocr-jobs" 
+              element={
+                <AuthGuard>
+                  <RealtimeDashboard />
                 </AuthGuard>
               } 
             />

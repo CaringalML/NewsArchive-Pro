@@ -35,7 +35,28 @@
 .logo-icon {
   width: 2rem;
   height: 2rem;
-  color: #16a34a;
+  color: #16a34a !important;
+  fill: currentColor;
+}
+
+/* Additional specificity for SVG icons */
+.logo-link svg.logo-icon {
+  color: #16a34a !important;
+  fill: currentColor !important;
+}
+
+.logo-link svg.logo-icon path {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+/* Extra specificity to override any global styles */
+.header .header-logo .logo-link .logo-icon,
+.header .header-logo .logo-link svg,
+.header .header-logo .logo-link svg path {
+  color: #16a34a !important;
+  fill: #16a34a !important;
+  stroke: #16a34a !important;
 }
 
 .logo-text {

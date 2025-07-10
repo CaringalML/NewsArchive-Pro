@@ -64,6 +64,7 @@ const Header = () => {
           { to: '/dashboard', text: 'Dashboard' },
           { to: '/collections', text: 'Collections' },
           { to: '/processing', text: 'Processing' },
+          { to: '/ocr-jobs', text: 'OCR Jobs' },
         ]
       : [
           { to: '/features',text: 'Features' },

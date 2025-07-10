@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { databaseService } from '../../services/databaseService';
 import ApiTest from '../ApiTest';
+import RealtimeDashboard from './RealtimeDashboard';
 
 // Status mapping for display
 const statusDisplayMap = {

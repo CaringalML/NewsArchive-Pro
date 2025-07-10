@@ -84,13 +84,13 @@
 }
 
 .nav-tab:hover {
-  color: #3b82f6;
+  color: #16a34a;
   background: #f8fafc;
 }
 
 .nav-tab.active {
-  color: #3b82f6;
-  border-bottom-color: #3b82f6;
+  color: #16a34a;
+  border-bottom-color: #16a34a;
 }
 
 /* Dashboard Content */
