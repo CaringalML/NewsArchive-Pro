@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiService } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
-import toast from 'react-hot-toast'
 
 /**
  * Hook for managing users with DynamoDB backend

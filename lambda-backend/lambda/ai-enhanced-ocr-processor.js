@@ -434,7 +434,6 @@ exports.handler = async (event) => {
                 s3Bucket: messageBody.s3_bucket,
                 s3Key: messageBody.s3_key,
                 userId: messageBody.user_id,
-                locationId: messageBody.location_id,
                 originalFilename: messageBody.filename || 'unknown.jpg'
             };
             

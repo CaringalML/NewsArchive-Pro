@@ -8,15 +8,11 @@ const {
     createUser,
     getUser,
     getUserByEmail,
-    createLocation,
-    getLocation,
-    getLocationsByUser,
     createOCRJob,
     getOCRJob,
     updateOCRJob,
     getOCRJobsByUser,
-    getOCRJobsByStatus,
-    getOCRJobsByLocation
+    getOCRJobsByStatus
 } = require('./dynamodb-client');
 
 // AWS SDK clients
@@ -310,7 +306,7 @@ exports.handler = async (event) => {
         }
 
         // Route: GET /users/:id - Get user by ID
-        if (requestPath.startsWith('/users/') && httpMethod === 'GET' && !requestPath.includes('/email/') && !requestPath.includes('/locations')) {
+        if (requestPath.startsWith('/users/') && httpMethod === 'GET' && !requestPath.includes('/email/')) {
             const userId = requestPath.split('/')[2];
             
             if (!userId) {

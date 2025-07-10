@@ -33,7 +33,6 @@ resource "aws_lambda_function" "newsarchive_lambda" {
       OCR_QUEUE_URL = aws_sqs_queue.ocr_queue.url
       NOTIFICATION_QUEUE_URL = aws_sqs_queue.notification_queue.url
       USERS_TABLE = aws_dynamodb_table.users.name
-      LOCATIONS_TABLE = aws_dynamodb_table.locations.name
       OCR_JOBS_TABLE = aws_dynamodb_table.ocr_jobs.name
     }
   }
@@ -64,7 +63,6 @@ resource "aws_lambda_function" "ocr_processor" {
       TEXTRACT_SNS_TOPIC_ARN = aws_sns_topic.textract_completion.arn
       TEXTRACT_ROLE_ARN = aws_iam_role.textract_service_role.arn
       USERS_TABLE = aws_dynamodb_table.users.name
-      LOCATIONS_TABLE = aws_dynamodb_table.locations.name
       OCR_JOBS_TABLE = aws_dynamodb_table.ocr_jobs.name
     }
   }
@@ -112,7 +110,6 @@ resource "aws_lambda_function" "textract_completion_handler" {
     variables = {
       S3_BUCKET = aws_s3_bucket.images_bucket.bucket
       USERS_TABLE = aws_dynamodb_table.users.name
-      LOCATIONS_TABLE = aws_dynamodb_table.locations.name
       OCR_JOBS_TABLE = aws_dynamodb_table.ocr_jobs.name
     }
   }
@@ -152,7 +149,6 @@ resource "aws_lambda_function" "job_recovery" {
       S3_BUCKET = aws_s3_bucket.images_bucket.bucket
       OCR_QUEUE_URL = aws_sqs_queue.ocr_queue.url
       USERS_TABLE = aws_dynamodb_table.users.name
-      LOCATIONS_TABLE = aws_dynamodb_table.locations.name
       OCR_JOBS_TABLE = aws_dynamodb_table.ocr_jobs.name
     }
   }

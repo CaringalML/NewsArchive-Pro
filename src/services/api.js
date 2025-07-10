@@ -3,8 +3,6 @@
  * Handles all API communication with the backend Lambda functions via API Gateway
  */
 
-import toast from 'react-hot-toast';
-
 class ApiService {
   constructor() {
     this.baseURL = process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:3000/api';

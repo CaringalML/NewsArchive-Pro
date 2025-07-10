@@ -37,42 +37,6 @@ resource "aws_dynamodb_table" "users" {
   })
 }
 
-# Locations Table
-resource "aws_dynamodb_table" "locations" {
-  name           = "${var.lambda_function_name}-locations-${var.environment}"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "location_id"
-
-  attribute {
-    name = "location_id"
-    type = "S"
-  }
-
-  attribute {
-    name = "user_id"
-    type = "S"
-  }
-
-  # Global secondary index for user_id lookups
-  global_secondary_index {
-    name            = "user-index"
-    hash_key        = "user_id"
-    projection_type = "ALL"
-  }
-
-  point_in_time_recovery {
-    enabled = true
-  }
-
-  server_side_encryption {
-    enabled = true
-  }
-
-  tags = merge(var.tags, {
-    Name = "${var.lambda_function_name}-locations-table"
-    Type = "dynamodb-table"
-  })
-}
 
 # OCR Jobs Table
 resource "aws_dynamodb_table" "ocr_jobs" {
@@ -101,10 +65,6 @@ resource "aws_dynamodb_table" "ocr_jobs" {
     type = "S"
   }
 
-  attribute {
-    name = "location_id"
-    type = "S"
-  }
 
   # Global secondary index for user_id lookups
   global_secondary_index {
@@ -122,13 +82,6 @@ resource "aws_dynamodb_table" "ocr_jobs" {
     projection_type = "ALL"
   }
 
-  # Global secondary index for location lookups
-  global_secondary_index {
-    name            = "location-index"
-    hash_key        = "location_id"
-    range_key       = "created_at"
-    projection_type = "ALL"
-  }
 
   # TTL for automatic deletion of old jobs (optional)
   ttl {
@@ -162,13 +115,6 @@ output "dynamodb_users_table_arn" {
   value = aws_dynamodb_table.users.arn
 }
 
-output "dynamodb_locations_table_name" {
-  value = aws_dynamodb_table.locations.name
-}
-
-output "dynamodb_locations_table_arn" {
-  value = aws_dynamodb_table.locations.arn
-}
 
 output "dynamodb_ocr_jobs_table_name" {
   value = aws_dynamodb_table.ocr_jobs.name

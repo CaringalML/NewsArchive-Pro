@@ -29,7 +29,6 @@ const dynamoDb = DynamoDBDocumentClient.from(client, {
 // Table names from environment variables or defaults
 const TABLES = {
   USERS: process.env.USERS_TABLE || 'newsarchive-pro-users-prod',
-  LOCATIONS: process.env.LOCATIONS_TABLE || 'newsarchive-pro-locations-prod',
   OCR_JOBS: process.env.OCR_JOBS_TABLE || 'newsarchive-pro-ocr-jobs-prod'
 };
 
@@ -88,55 +87,6 @@ const getUserByEmail = async (email) => {
   return result.Items?.[0];
 };
 
-// Locations table operations
-const createLocation = async (locationData) => {
-  const timestamp = new Date().toISOString();
-  const locationId = locationData.location_id || require('uuid').v4();
-  
-  const item = {
-    location_id: locationId,
-    user_id: locationData.user_id,
-    name: locationData.name,
-    type: locationData.type || 'folder',
-    parent_id: locationData.parent_id || null,
-    path: locationData.path || '/',
-    created_at: timestamp,
-    updated_at: timestamp,
-    ...locationData
-  };
-
-  const params = {
-    TableName: TABLES.LOCATIONS,
-    Item: item
-  };
-
-  await dynamoDb.send(new PutCommand(params));
-  return item;
-};
-
-const getLocation = async (locationId) => {
-  const params = {
-    TableName: TABLES.LOCATIONS,
-    Key: { location_id: locationId }
-  };
-
-  const result = await dynamoDb.send(new GetCommand(params));
-  return result.Item;
-};
-
-const getLocationsByUser = async (userId) => {
-  const params = {
-    TableName: TABLES.LOCATIONS,
-    IndexName: 'user-index',
-    KeyConditionExpression: 'user_id = :userId',
-    ExpressionAttributeValues: {
-      ':userId': userId
-    }
-  };
-
-  const result = await dynamoDb.send(new QueryCommand(params));
-  return result.Items || [];
-};
 
 // OCR Jobs table operations
 const createOCRJob = async (jobData) => {
@@ -147,7 +97,6 @@ const createOCRJob = async (jobData) => {
     job_id: jobId,
     created_at: timestamp,
     user_id: jobData.user_id,
-    location_id: jobData.location_id,
     filename: jobData.filename,
     s3_key: jobData.s3_key,
     status: jobData.status || 'pending',
@@ -259,21 +208,6 @@ const getOCRJobsByStatus = async (status, limit = 100) => {
   return result.Items || [];
 };
 
-const getOCRJobsByLocation = async (locationId, limit = 50) => {
-  const params = {
-    TableName: TABLES.OCR_JOBS,
-    IndexName: 'location-index',
-    KeyConditionExpression: 'location_id = :locationId',
-    ExpressionAttributeValues: {
-      ':locationId': locationId
-    },
-    ScanIndexForward: false, // Sort by created_at descending
-    Limit: limit
-  };
-
-  const result = await dynamoDb.send(new QueryCommand(params));
-  return result.Items || [];
-};
 
 // Export all functions and the DynamoDB client
 module.exports = {
@@ -283,15 +217,10 @@ module.exports = {
   createUser,
   getUser,
   getUserByEmail,
-  // Location operations
-  createLocation,
-  getLocation,
-  getLocationsByUser,
   // OCR Job operations
   createOCRJob,
   getOCRJob,
   updateOCRJob,
   getOCRJobsByUser,
-  getOCRJobsByStatus,
-  getOCRJobsByLocation
+  getOCRJobsByStatus
 };
