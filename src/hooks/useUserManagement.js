@@ -24,20 +24,9 @@ export const useUserManagement = () => {
         return null
       }
 
-      // Check if user exists in localStorage
-      const storedUser = localStorage.getItem('newsarchive_user')
-      if (storedUser) {
-        const userData = JSON.parse(storedUser)
-        // Verify stored user matches current auth user
-        if (userData.auth_user_id === authUser.id) {
-          setCurrentUser(userData)
-          return userData
-        }
-      }
-
       // Try to create a new user with Supabase auth data
       const userData = {
-        name: userInfo.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+        name: userInfo.name || authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
         email: authUser.email,
         message: userInfo.message || 'NewsArchive Pro user'
       }
@@ -51,11 +40,8 @@ export const useUserManagement = () => {
           auth_user_id: authUser.id
         }
         
-        // Store user in localStorage
-        localStorage.setItem('newsarchive_user', JSON.stringify(userWithAuthId))
         setCurrentUser(userWithAuthId)
-        
-        toast.success('User initialized successfully')
+        console.log('User initialized successfully from database')
         return userWithAuthId
       } catch (createError) {
         // If user already exists (409 error), try to get the existing user
@@ -63,7 +49,7 @@ export const useUserManagement = () => {
           try {
             // Try to get user by email since they already exist
             const existingUsers = await apiService.getUsers()
-            const existingUser = existingUsers.data.find(u => u.email === authUser.email)
+            const existingUser = existingUsers.data?.find(u => u.email === authUser.email)
             
             if (existingUser) {
               const userWithAuthId = {
@@ -71,10 +57,8 @@ export const useUserManagement = () => {
                 auth_user_id: authUser.id
               }
               
-              // Store user in localStorage
-              localStorage.setItem('newsarchive_user', JSON.stringify(userWithAuthId))
               setCurrentUser(userWithAuthId)
-              
+              console.log('Existing user loaded from database')
               return userWithAuthId
             }
           } catch (getError) {
@@ -89,20 +73,18 @@ export const useUserManagement = () => {
       console.error('Failed to initialize user:', error)
       setError(error.message)
       
-      // Create a fallback user if API fails
+      // Create a fallback user if API fails (this will not persist across sessions)
       const fallbackUser = {
         user_id: 'fallback-user-' + Date.now(),
         auth_user_id: authUser?.id,
-        name: userInfo.name || authUser?.user_metadata?.name || authUser?.email?.split('@')[0] || 'Offline User',
+        name: userInfo.name || authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || authUser?.email?.split('@')[0] || 'Offline User',
         email: authUser?.email || 'offline@example.com',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
       
-      localStorage.setItem('newsarchive_user', JSON.stringify(fallbackUser))
       setCurrentUser(fallbackUser)
-      
-      toast.error('Using offline mode')
+      toast.error('Database connection failed - using temporary session')
       return fallbackUser
     } finally {
       setLoading(false)
@@ -136,10 +118,10 @@ export const useUserManagement = () => {
     setError(null)
     
     try {
+      // For now, just update locally since we don't have an update API endpoint yet
+      // In a full implementation, you would call apiService.updateUser(currentUser.user_id, updates)
       const updatedUser = { ...currentUser, ...updates, updated_at: new Date().toISOString() }
       
-      // Update in localStorage
-      localStorage.setItem('newsarchive_user', JSON.stringify(updatedUser))
       setCurrentUser(updatedUser)
       
       toast.success('User updated successfully')
@@ -155,8 +137,6 @@ export const useUserManagement = () => {
 
   // Logout user
   const logout = () => {
-    localStorage.removeItem('newsarchive_user')
-    localStorage.removeItem('newsarchive_default_location')
     setCurrentUser(null)
     toast.success('Logged out successfully')
   }
@@ -167,8 +147,6 @@ export const useUserManagement = () => {
       initializeUser()
     } else {
       setCurrentUser(null)
-      localStorage.removeItem('newsarchive_user')
-      localStorage.removeItem('newsarchive_default_location')
     }
   }, [authUser, initializeUser])
 
@@ -235,15 +213,20 @@ export const useLocationManagement = () => {
     setError(null)
     
     try {
-      // Check if default location exists in localStorage
-      const storedLocation = localStorage.getItem('newsarchive_default_location')
-      if (storedLocation) {
-        const locationData = JSON.parse(storedLocation)
-        setCurrentLocation(locationData)
-        return locationData
+      // Try to get existing locations for the user first
+      try {
+        const userLocationsResponse = await apiService.getLocationsByUser(userId)
+        if (userLocationsResponse.data && userLocationsResponse.data.length > 0) {
+          const defaultLocation = userLocationsResponse.data[0] // Use first location as default
+          setCurrentLocation(defaultLocation)
+          console.log('Loaded existing default location from database')
+          return defaultLocation
+        }
+      } catch (getError) {
+        console.log('No existing locations found, creating default location')
       }
 
-      // Create default location
+      // Create default location if none exists
       const defaultLocationData = {
         user_id: userId,
         name: 'Default Collection',
@@ -253,20 +236,18 @@ export const useLocationManagement = () => {
       }
 
       const newLocation = await createLocation(defaultLocationData)
-      
-      // Store in localStorage
-      localStorage.setItem('newsarchive_default_location', JSON.stringify(newLocation))
       setCurrentLocation(newLocation)
+      console.log('Created new default location in database')
       
       return newLocation
     } catch (error) {
       console.error('Failed to initialize default location:', error)
       
-      // Create fallback location if API fails
+      // Create fallback location if API fails (this will not persist across sessions)
       const fallbackLocation = {
         location_id: 'fallback-location-' + Date.now(),
         user_id: userId,
-        name: 'Offline Collection',
+        name: 'Temporary Collection',
         type: 'folder',
         parent_id: null,
         path: '/',
@@ -274,8 +255,8 @@ export const useLocationManagement = () => {
         updated_at: new Date().toISOString()
       }
       
-      localStorage.setItem('newsarchive_default_location', JSON.stringify(fallbackLocation))
       setCurrentLocation(fallbackLocation)
+      toast.error('Database connection failed - using temporary collection')
       
       return fallbackLocation
     } finally {

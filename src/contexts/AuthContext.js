@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState(null)
   const [initialLoad, setInitialLoad] = useState(true)
+  const [hasShownInitialToast, setHasShownInitialToast] = useState(false)
 
   useEffect(() => {
     // Get initial session
@@ -29,7 +30,10 @@ export const AuthProvider = ({ children }) => {
         setUser(session?.user ?? null)
       }
       setLoading(false)
-      setInitialLoad(false)
+      // Set a small delay before marking initial load as complete
+      setTimeout(() => {
+        setInitialLoad(false)
+      }, 1000)
     }
 
     getSession()
@@ -42,26 +46,33 @@ export const AuthProvider = ({ children }) => {
         setUser(session?.user ?? null)
         setLoading(false)
 
-        // Only show sign-in toast for actual user-initiated sign-ins
-        // Skip initial session load and token refreshes
-        if (event === 'SIGNED_IN' && !initialLoad) {
+        // Only show toasts for user-initiated actions, not automatic session restoration
+        if (event === 'SIGNED_IN' && !initialLoad && !hasShownInitialToast) {
           const provider = session?.user?.app_metadata?.provider
           if (provider === 'google') {
             toast.success('Successfully signed in with Google!')
           } else {
             toast.success('Successfully signed in!')
           }
+          setHasShownInitialToast(true)
         } else if (event === 'SIGNED_OUT') {
           toast.success('Successfully signed out!')
+          setHasShownInitialToast(false) // Reset for next sign-in
         } else if (event === 'PASSWORD_RECOVERY') {
           console.log('Password recovery event detected')
           // Don't show toast here as it will be handled by the AuthHandler component
+        }
+        
+        // Skip showing toasts for these events
+        if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+          // These are automatic events, don't show toasts
+          return
         }
       }
     )
 
     return () => subscription.unsubscribe()
-  }, [initialLoad])
+  }, [initialLoad, hasShownInitialToast])
 
   const signUp = async (email, password, userData = {}) => {
     try {
@@ -143,10 +154,6 @@ export const AuthProvider = ({ children }) => {
       // Clear local state immediately
       setUser(null)
       setSession(null)
-      
-      // Clear any cached user data
-      localStorage.removeItem('newsarchive_user')
-      localStorage.removeItem('newsarchive_default_location')
       
       const { error } = await supabase.auth.signOut()
       if (error) {

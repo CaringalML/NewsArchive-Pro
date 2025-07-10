@@ -214,6 +214,15 @@ class ApiService {
   }
 
   /**
+   * Get locations for a specific user
+   * @param {string} userId - User ID
+   * @returns {Promise} - Array of user's locations
+   */
+  async getLocationsByUser(userId) {
+    return this.get(`/users/${userId}/locations`);
+  }
+
+  /**
    * Upload image for OCR processing
    * @param {File} file - Image file
    * @param {string} userId - User ID
@@ -415,6 +424,7 @@ export const {
   getLocations,
   createLocation,
   getLocation,
+  getLocationsByUser,
   uploadImage,
   getOcrJob,
   getOcrJobsByUser,
