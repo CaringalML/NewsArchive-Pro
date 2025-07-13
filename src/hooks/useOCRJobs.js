@@ -94,7 +94,6 @@ export const useOCRJobs = (userId) => {
   // Get processing route display info
   const getProcessingRouteInfo = useCallback((job) => {
     const route = job.processing_route || 'unknown'
-    const queueType = job.queue_type || 'unknown'
     
     switch (route) {
       case 'lambda':

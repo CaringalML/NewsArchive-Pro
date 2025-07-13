@@ -243,6 +243,39 @@ body {
   gap: 12px;
 }
 
+/* Processing Route Styles */
+.job-processing-route {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.route-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.route-badge.lambda {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  color: white;
+}
+
+.route-badge.batch {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.estimated-time {
+  font-size: 11px;
+  color: var(--c-text-secondary);
+  font-weight: 500;
+}
+
 .job-item {
   display: flex;
   align-items: center;

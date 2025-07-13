@@ -277,6 +277,19 @@ const OCRJobsPanel = () => {
                       <span>Available</span>
                     </div>
                   )}
+                  
+                  {job.processing && (
+                    <div className="job-processing-route">
+                      <span className={`route-badge ${job.processing.route}`}>
+                        {job.processing.processor || job.processing.route}
+                      </span>
+                      {job.processing.estimated_time && (
+                        <span className="estimated-time">
+                          ~{job.processing.estimated_time}s
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="job-badge">
