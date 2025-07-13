@@ -289,6 +289,13 @@ const EnhancedUploadForm = () => {
         documentGroups: documentGroups
       }))
 
+      console.log('🔍 Files being uploaded:', filesWithGroupInfo.map(f => ({
+        name: f.name,
+        groupId: f.groupId,
+        pageNumber: f.pageNumber,
+        hasGrouping: !!f.groupId
+      })))
+
       const results = await apiService.uploadBatch(
         filesWithGroupInfo,
         currentUser.user_id,

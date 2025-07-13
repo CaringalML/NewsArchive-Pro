@@ -318,11 +318,21 @@ const OCRJobsPanel = () => {
     const groupedJobs = {}
     const singleJobs = []
 
+    console.log('🔍 Grouping jobs:', jobsList.map(j => ({
+      job_id: j.job_id?.slice(0, 8),
+      group_id: j.group_id,
+      page_number: j.page_number,
+      filename: j.filename,
+      collection_name: j.collection_name
+    })))
+
     jobsList.forEach(job => {
       // Group jobs that have a group_id (multi-page documents)
       if (job.group_id) {
         // Ensure group_id is a string
         const groupId = job.group_id.toString()
+        console.log(`📄 Found grouped job: ${job.job_id?.slice(0, 8)} -> group ${groupId.slice(0, 8)}`)
+        
         if (!groupedJobs[groupId]) {
           groupedJobs[groupId] = {
             group_id: groupId,
@@ -342,6 +352,7 @@ const OCRJobsPanel = () => {
         groupedJobs[groupId].pages.push(job)
       } else {
         // Single page jobs
+        console.log(`📄 Single job: ${job.job_id?.slice(0, 8)} (no group_id)`)
         singleJobs.push(job)
       }
     })
@@ -416,11 +427,24 @@ const OCRJobsPanel = () => {
     })
 
     // Combine and sort all jobs by creation date (newest first)
-    return [...sortedSingleJobs, ...sortedGroupedJobs].sort((a, b) => {
+    const finalResult = [...sortedSingleJobs, ...sortedGroupedJobs].sort((a, b) => {
       const dateA = new Date(a.created_at)
       const dateB = new Date(b.created_at)
       return dateB - dateA // Descending order (newest first)
     })
+
+    console.log('📋 Final grouped result:', {
+      totalJobs: finalResult.length,
+      groupedJobs: finalResult.filter(j => j.is_grouped).length,
+      singleJobs: finalResult.filter(j => !j.is_grouped).length,
+      groups: finalResult.filter(j => j.is_grouped).map(g => ({
+        group_id: g.group_id?.slice(0, 8),
+        pages: g.pages?.length,
+        filename: g.filename
+      }))
+    })
+
+    return finalResult
   }
 
   const getFilteredJobs = () => {
