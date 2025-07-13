@@ -381,13 +381,59 @@ const EnhancedUploadForm = () => {
 
       // Automatically create the group after a short delay to let UI update
       setTimeout(() => {
-        createDocumentGroup()
+        createDocumentGroupFromRange(startIdx, endIdx)
       }, 100)
     } else {
       // Reset selection if clicking on already selected range or third click
       setGroupingState({ firstPage: null, lastPage: null })
       setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
     }
+  }
+
+  const createDocumentGroupFromRange = (startIdx, endIdx) => {
+    // Get files in the selected range
+    const rangeFiles = selectedFiles.slice(startIdx, endIdx + 1)
+    const selectedFileIds = rangeFiles.map(f => f.id)
+    
+    if (selectedFileIds.length < 2) {
+      toast.error('Please select at least 2 files to group as a multi-page document')
+      return
+    }
+
+    const groupId = Date.now() + Math.random()
+    const newGroup = {
+      id: groupId,
+      name: `Document ${Object.keys(documentGroups).length + 1}`,
+      fileIds: selectedFileIds,
+      createdAt: new Date()
+    }
+
+    setDocumentGroups(prev => ({
+      ...prev,
+      [groupId]: newGroup
+    }))
+
+    // Update files with group info and page numbers
+    setSelectedFiles(prev => {
+      let pageNum = 1
+      return prev.map((f, idx) => {
+        if (idx >= startIdx && idx <= endIdx) {
+          const updatedFile = {
+            ...f,
+            groupId,
+            pageNumber: pageNum,
+            selected: false
+          }
+          pageNum++
+          return updatedFile
+        }
+        return f
+      })
+    })
+
+    toast.success(`Created multi-page document with ${selectedFileIds.length} pages`)
+    setIsGroupingMode(false)
+    setGroupingState({ firstPage: null, lastPage: null })
   }
 
   const createDocumentGroup = () => {
