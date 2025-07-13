@@ -319,7 +319,8 @@ const OCRJobsPanel = () => {
     const singleJobs = []
 
     jobsList.forEach(job => {
-      if (job.group_id && job.is_multi_page) {
+      // Group jobs that have a group_id (multi-page documents)
+      if (job.group_id) {
         // Ensure group_id is a string
         const groupId = job.group_id.toString()
         if (!groupedJobs[groupId]) {
@@ -330,7 +331,7 @@ const OCRJobsPanel = () => {
             // Use first job data as base for group
             job_id: job.job_id,
             created_at: job.created_at,
-            filename: job.filename || 'Multi-page Document',
+            filename: job.collection_name || job.filename || 'Multi-page Document',
             collection_name: job.collection_name,
             // Group status is derived from all pages
             status: 'processing', // Will be calculated
@@ -340,6 +341,7 @@ const OCRJobsPanel = () => {
         }
         groupedJobs[groupId].pages.push(job)
       } else {
+        // Single page jobs
         singleJobs.push(job)
       }
     })
@@ -372,8 +374,16 @@ const OCRJobsPanel = () => {
         , null)
       }
 
-      // Update filename to show page count
+      // Update filename to show page count and status summary
+      const statusSummary = {
+        completed: pages.filter(p => p.status === 'completed').length,
+        processing: pages.filter(p => p.status === 'processing').length,
+        pending: pages.filter(p => p.status === 'pending' || p.status === 'queued').length,
+        failed: pages.filter(p => p.status === 'failed').length
+      }
+      
       group.filename = `${group.collection_name || 'Multi-page Document'} (${pages.length} pages)`
+      group.statusSummary = statusSummary
       
       // Calculate combined confidence if available
       const confidenceScores = pages.filter(p => p.confidence_score).map(p => p.confidence_score)
@@ -607,6 +617,33 @@ const OCRJobsPanel = () => {
                     </div>
                   )}
                   
+                  {job.is_grouped && job.statusSummary && (
+                    <div className="job-status-summary">
+                      <div className="status-counts">
+                        {job.statusSummary.completed > 0 && (
+                          <span className="status-count completed">
+                            ✓ {job.statusSummary.completed}
+                          </span>
+                        )}
+                        {job.statusSummary.processing > 0 && (
+                          <span className="status-count processing">
+                            ⚡ {job.statusSummary.processing}
+                          </span>
+                        )}
+                        {job.statusSummary.pending > 0 && (
+                          <span className="status-count pending">
+                            ⏳ {job.statusSummary.pending}
+                          </span>
+                        )}
+                        {job.statusSummary.failed > 0 && (
+                          <span className="status-count failed">
+                            ✗ {job.statusSummary.failed}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {job.processing && (
                     <div className="job-processing-route">
                       <span className={`route-badge ${job.processing.route}`}>

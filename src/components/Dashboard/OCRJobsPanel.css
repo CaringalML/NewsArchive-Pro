@@ -1076,3 +1076,50 @@ body {
   margin: 0.75rem 0 0 0;
   font-size: 0.875rem;
 }
+
+/* ===================================================================
+ * Status Summary for Grouped Jobs
+ * =================================================================== */
+.job-status-summary {
+  margin-top: 0.5rem;
+}
+
+.status-counts {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.status-count {
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.status-count.completed {
+  background: var(--c-brand-lightest);
+  color: var(--c-brand-dark);
+  border: 1px solid var(--c-brand-light);
+}
+
+.status-count.processing {
+  background: var(--c-info-light);
+  color: var(--c-info-dark);
+  border: 1px solid var(--c-info);
+}
+
+.status-count.pending {
+  background: var(--c-warning-light);
+  color: var(--c-warning-dark);
+  border: 1px solid var(--c-warning);
+}
+
+.status-count.failed {
+  background: var(--c-danger-light);
+  color: var(--c-danger-dark);
+  border: 1px solid var(--c-danger);
+}
