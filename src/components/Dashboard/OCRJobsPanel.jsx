@@ -320,9 +320,11 @@ const OCRJobsPanel = () => {
 
     jobsList.forEach(job => {
       if (job.group_id && job.is_multi_page) {
-        if (!groupedJobs[job.group_id]) {
-          groupedJobs[job.group_id] = {
-            group_id: job.group_id,
+        // Ensure group_id is a string
+        const groupId = job.group_id.toString()
+        if (!groupedJobs[groupId]) {
+          groupedJobs[groupId] = {
+            group_id: groupId,
             is_grouped: true,
             pages: [],
             // Use first job data as base for group
@@ -336,7 +338,7 @@ const OCRJobsPanel = () => {
             processing: job.processing
           }
         }
-        groupedJobs[job.group_id].pages.push(job)
+        groupedJobs[groupId].pages.push(job)
       } else {
         singleJobs.push(job)
       }
@@ -574,7 +576,7 @@ const OCRJobsPanel = () => {
                   </div>
                   <div className="job-details">
                     <span className="job-id">
-                      ID: {job.is_grouped ? job.group_id.slice(0, 8) : job.job_id.slice(0, 8)}...
+                      ID: {job.is_grouped ? (job.group_id || '').toString().slice(0, 8) : (job.job_id || '').toString().slice(0, 8)}...
                     </span>
                     <span className="job-created">
                       Created: {formatDate(job.created_at)}
@@ -640,7 +642,7 @@ const OCRJobsPanel = () => {
                     </button>
                   )}
                   <button
-                    onClick={() => setShowJobDetails(job.job_id)}
+                    onClick={() => setShowJobDetails(job.is_grouped ? job.group_id : job.job_id)}
                     className="view-btn"
                     title="View details"
                   >
@@ -661,7 +663,7 @@ const OCRJobsPanel = () => {
                             Page {page.page_number}: {page.filename}
                           </div>
                           <div className="page-details">
-                            <span className="page-id">ID: {page.job_id.slice(0, 8)}...</span>
+                            <span className="page-id">ID: {(page.job_id || '').toString().slice(0, 8)}...</span>
                             {page.confidence_score && (
                               <span className="page-confidence">
                                 Confidence: {Math.round(page.confidence_score)}%
