@@ -369,7 +369,7 @@ const EnhancedUploadForm = () => {
         idx === fileIndex ? { ...f, selected: true } : f
       ))
     } else if (groupingState.lastPage === null && fileIndex !== groupingState.firstPage) {
-      // Second click - select end page and range
+      // Second click - select end page and range, then automatically create group
       const startIdx = Math.min(groupingState.firstPage, fileIndex)
       const endIdx = Math.max(groupingState.firstPage, fileIndex)
       
@@ -377,6 +377,11 @@ const EnhancedUploadForm = () => {
       setSelectedFiles(prev => prev.map((f, idx) => 
         idx >= startIdx && idx <= endIdx ? { ...f, selected: true } : { ...f, selected: false }
       ))
+
+      // Automatically create the group after a short delay to let UI update
+      setTimeout(() => {
+        createDocumentGroup()
+      }, 100)
     } else {
       // Reset selection if clicking on already selected range or third click
       setGroupingState({ firstPage: null, lastPage: null })
@@ -638,7 +643,7 @@ const EnhancedUploadForm = () => {
                     <p className="text-sm text-gray-600">
                       {groupingState.firstPage === null && "Click a checkbox to select the first page"}
                       {groupingState.firstPage !== null && groupingState.lastPage === null && "Click another checkbox to select the last page"}
-                      {groupingState.lastPage !== null && "Range selected. Click 'Create Group' or click any checkbox to reset."}
+                      {groupingState.lastPage !== null && "Range selected automatically. Click any checkbox to reset."}
                     </p>
                   </div>
                 )}
@@ -653,27 +658,17 @@ const EnhancedUploadForm = () => {
                       Group as Multi-Page
                     </button>
                   ) : (
-                    <>
-                      <button
-                        onClick={createDocumentGroup}
-                        className="create-group-btn"
-                        disabled={selectedFiles.filter(f => f.selected).length < 2}
-                      >
-                        <CheckCircleIcon className="w-4 h-4" />
-                        Create Group
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsGroupingMode(false)
-                          setGroupingState({ firstPage: null, lastPage: null })
-                          setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
-                        }}
-                        className="cancel-group-btn"
-                      >
-                        <XMarkIcon className="w-4 h-4" />
-                        Cancel
-                      </button>
-                    </>
+                    <button
+                      onClick={() => {
+                        setIsGroupingMode(false)
+                        setGroupingState({ firstPage: null, lastPage: null })
+                        setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
+                      }}
+                      className="cancel-group-btn"
+                    >
+                      <XMarkIcon className="w-4 h-4" />
+                      Cancel Grouping
+                    </button>
                   )}
                   <button
                     onClick={clearAllFiles}

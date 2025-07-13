@@ -401,7 +401,26 @@ const OCRJobsPanel = () => {
       }
     })
 
-    return [...singleJobs, ...Object.values(groupedJobs)]
+    // Sort grouped jobs by creation date (newest first)
+    const sortedGroupedJobs = Object.values(groupedJobs).sort((a, b) => {
+      const dateA = new Date(a.created_at)
+      const dateB = new Date(b.created_at)
+      return dateB - dateA // Descending order (newest first)
+    })
+
+    // Sort single jobs by creation date (newest first)
+    const sortedSingleJobs = singleJobs.sort((a, b) => {
+      const dateA = new Date(a.created_at)
+      const dateB = new Date(b.created_at)
+      return dateB - dateA // Descending order (newest first)
+    })
+
+    // Combine and sort all jobs by creation date (newest first)
+    return [...sortedSingleJobs, ...sortedGroupedJobs].sort((a, b) => {
+      const dateA = new Date(a.created_at)
+      const dateB = new Date(b.created_at)
+      return dateB - dateA // Descending order (newest first)
+    })
   }
 
   const getFilteredJobs = () => {
@@ -426,7 +445,14 @@ const OCRJobsPanel = () => {
         baseJobs = jobs
     }
     
-    return groupJobs(baseJobs)
+    // Sort jobs by creation date (newest first) before grouping
+    const sortedJobs = baseJobs.sort((a, b) => {
+      const dateA = new Date(a.created_at)
+      const dateB = new Date(b.created_at)
+      return dateB - dateA // Descending order (newest first)
+    })
+    
+    return groupJobs(sortedJobs)
   }
 
   const filteredJobs = getFilteredJobs()
@@ -580,9 +606,12 @@ const OCRJobsPanel = () => {
                 <div className="job-info">
                   <div className="job-filename">
                     {job.is_grouped && (
-                      <DocumentTextIcon className="w-4 h-4 inline-block mr-2" />
+                      <DocumentTextIcon className="w-4 h-4 inline-block mr-2 text-blue-600" />
                     )}
                     {job.filename}
+                    {job.is_grouped && job.pages && (
+                      <span className="text-sm text-gray-500 ml-2">({job.pages.length} pages)</span>
+                    )}
                   </div>
                   <div className="job-details">
                     <span className="job-id">
@@ -687,41 +716,58 @@ const OCRJobsPanel = () => {
                   </button>
                 </div>
               
-                {/* Expanded page details for grouped jobs */}
+                {/* Dropdown content for grouped jobs */}
                 {job.is_grouped && expandedGroups.has(job.group_id) && (
-                  <div className="expanded-pages">
-                    {job.pages.map(page => (
-                      <div key={page.job_id} className={`page-item ${page.status}`}>
-                        <div className="page-status">
-                          {getStatusIcon(page.status)}
-                        </div>
-                        <div className="page-info">
-                          <div className="page-filename">
-                            Page {page.page_number}: {page.filename}
+                  <div className="dropdown-content">
+                    <div className="dropdown-header">
+                      <h4>Individual Pages</h4>
+                      <span className="text-sm text-gray-500">
+                        {job.pages.length} pages in this document
+                      </span>
+                    </div>
+                    <div className="pages-grid">
+                      {job.pages.map((page, index) => (
+                        <div key={page.job_id} className={`page-row ${page.status}`}>
+                          <div className="page-left">
+                            <div className="page-status-icon">
+                              {getStatusIcon(page.status)}
+                            </div>
+                            <div className="page-info">
+                              <div className="page-title">
+                                Page {page.page_number || index + 1}
+                              </div>
+                              <div className="page-subtitle">
+                                {page.filename}
+                              </div>
+                            </div>
                           </div>
-                          <div className="page-details">
-                            <span className="page-id">ID: {(page.job_id || '').toString().slice(0, 8)}...</span>
-                            {page.confidence_score && (
-                              <span className="page-confidence">
-                                Confidence: {Math.round(page.confidence_score)}%
+                          <div className="page-right">
+                            <div className="page-stats">
+                              {page.confidence_score && (
+                                <span className="confidence-badge">
+                                  {Math.round(page.confidence_score)}%
+                                </span>
+                              )}
+                              <span className={`status-badge small ${getStatusColor(page.status)}`}>
+                                {page.status}
                               </span>
-                            )}
-                            {page.error && (
-                              <span className="page-error">Error: {page.error}</span>
-                            )}
+                            </div>
+                            <button
+                              onClick={() => setShowJobDetails(page.job_id)}
+                              className="view-btn small"
+                              title="View page details"
+                            >
+                              <EyeIcon className="w-4 h-4" />
+                            </button>
                           </div>
+                          {page.error && (
+                            <div className="page-error-full">
+                              <span className="error-label">Error:</span> {page.error}
+                            </div>
+                          )}
                         </div>
-                        <div className="page-actions">
-                          <button
-                            onClick={() => setShowJobDetails(page.job_id)}
-                            className="view-btn small"
-                            title="View page details"
-                          >
-                            <EyeIcon className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

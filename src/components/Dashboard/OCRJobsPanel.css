@@ -850,6 +850,161 @@ body {
 .text-gray-800 { color: var(--c-text-primary); }
 
 /* ===================================================================
+ * Improved Dropdown Styles for Grouped Jobs
+ * =================================================================== */
+.dropdown-content {
+  margin-top: 16px;
+  border-top: 1px solid var(--c-border);
+  background: var(--c-bg-secondary);
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--c-border-light);
+}
+
+.dropdown-header h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--c-text-primary);
+}
+
+.pages-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.page-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--c-bg-primary);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--c-border-light);
+  transition: var(--transition-fast);
+  position: relative;
+}
+
+.page-row:hover {
+  border-color: var(--c-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.page-status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.page-info {
+  flex: 1;
+}
+
+.page-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--c-text-primary);
+  margin-bottom: 2px;
+}
+
+.page-subtitle {
+  font-size: 0.75rem;
+  color: var(--c-text-secondary);
+}
+
+.page-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confidence-badge {
+  background: var(--c-info-light);
+  color: var(--c-info-dark);
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge.small {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.page-error-full {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--c-danger-light);
+  border: 1px solid var(--c-danger);
+  border-radius: 0 0 var(--border-radius-sm) var(--border-radius-sm);
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  color: var(--c-danger-dark);
+  margin-top: -1px;
+}
+
+.error-label {
+  font-weight: 600;
+}
+
+/* Better grouped job styling in main row */
+.job-item.grouped-job {
+  border-left: 4px solid var(--c-primary);
+}
+
+.job-item.grouped-job .job-filename {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Responsive dropdown */
+@media (max-width: 768px) {
+  .page-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .page-left, .page-right {
+    justify-content: space-between;
+  }
+  
+  .dropdown-content {
+    padding: 12px;
+  }
+}
+
+/* ===================================================================
  * Grouped Jobs Styles
  * =================================================================== */
 .job-item.grouped-job {
