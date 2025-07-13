@@ -446,6 +446,9 @@ exports.handler = async (event) => {
                 
                 const ocrJob = await createOCRJob(jobData);
                 
+                // Initialize routing result
+                let routingResult = null;
+                
                 // Use intelligent routing to decide between Lambda and Batch processing
                 if (OCR_QUEUE_URL) {
                     console.log(`🧠 Analyzing processing requirements for job ${ocrJob.job_id}`);
@@ -465,7 +468,7 @@ exports.handler = async (event) => {
                     };
                     
                     // Route the job intelligently
-                    const routingResult = await intelligentOCRRouter.routeOCRJob(routingData);
+                    routingResult = await intelligentOCRRouter.routeOCRJob(routingData);
                     
                     console.log(`📋 Job ${ocrJob.job_id} routed to ${routingResult.route} processing:`, {
                         processor: routingResult.processor,
@@ -487,7 +490,7 @@ exports.handler = async (event) => {
                 };
 
                 // Add routing information if available
-                if (OCR_QUEUE_URL && typeof routingResult !== 'undefined') {
+                if (routingResult) {
                     responseData.processing = {
                         route: routingResult.route,
                         processor: routingResult.processor,
@@ -501,7 +504,7 @@ exports.handler = async (event) => {
                     statusCode: 201,
                     headers: corsHeaders,
                     body: JSON.stringify({
-                        message: `Image uploaded successfully and ${routingResult?.route ? `routed to ${routingResult.route} processing` : 'queued for processing'}`,
+                        message: `Image uploaded successfully and ${routingResult ? `routed to ${routingResult.route} processing` : 'queued for processing'}`,
                         data: responseData,
                         timestamp: new Date().toISOString()
                     })

@@ -29,6 +29,7 @@ const EnhancedUploadForm = () => {
   const [dragActive, setDragActive] = useState(false)
   const [documentGroups, setDocumentGroups] = useState({})
   const [isGroupingMode, setIsGroupingMode] = useState(false)
+  const [groupingState, setGroupingState] = useState({ firstPage: null, lastPage: null })
   const [showProcessingInfo, setShowProcessingInfo] = useState(false)
   const [processingRecommendations, setProcessingRecommendations] = useState({})
   
@@ -357,9 +358,30 @@ const EnhancedUploadForm = () => {
 
   // Multi-page document management functions
   const toggleFileSelection = (fileId) => {
-    setSelectedFiles(prev => prev.map(f => 
-      f.id === fileId ? { ...f, selected: !f.selected } : f
-    ))
+    const fileIndex = selectedFiles.findIndex(f => f.id === fileId)
+    if (fileIndex === -1) return
+
+    if (groupingState.firstPage === null) {
+      // First click - select start page
+      setGroupingState({ firstPage: fileIndex, lastPage: null })
+      setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
+      setSelectedFiles(prev => prev.map((f, idx) => 
+        idx === fileIndex ? { ...f, selected: true } : f
+      ))
+    } else if (groupingState.lastPage === null && fileIndex !== groupingState.firstPage) {
+      // Second click - select end page and range
+      const startIdx = Math.min(groupingState.firstPage, fileIndex)
+      const endIdx = Math.max(groupingState.firstPage, fileIndex)
+      
+      setGroupingState(prev => ({ ...prev, lastPage: fileIndex }))
+      setSelectedFiles(prev => prev.map((f, idx) => 
+        idx >= startIdx && idx <= endIdx ? { ...f, selected: true } : { ...f, selected: false }
+      ))
+    } else {
+      // Reset selection if clicking on already selected range or third click
+      setGroupingState({ firstPage: null, lastPage: null })
+      setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
+    }
   }
 
   const createDocumentGroup = () => {
@@ -402,6 +424,7 @@ const EnhancedUploadForm = () => {
 
     toast.success(`Created multi-page document with ${selectedFileIds.length} pages`)
     setIsGroupingMode(false)
+    setGroupingState({ firstPage: null, lastPage: null })
   }
 
   const removeFromGroup = (fileId) => {
@@ -610,6 +633,15 @@ const EnhancedUploadForm = () => {
             <div className="selected-files-section">
               <div className="files-header">
                 <h3>Selected Files ({selectedFiles.length})</h3>
+                {isGroupingMode && (
+                  <div className="grouping-instructions">
+                    <p className="text-sm text-gray-600">
+                      {groupingState.firstPage === null && "Click a checkbox to select the first page"}
+                      {groupingState.firstPage !== null && groupingState.lastPage === null && "Click another checkbox to select the last page"}
+                      {groupingState.lastPage !== null && "Range selected. Click 'Create Group' or click any checkbox to reset."}
+                    </p>
+                  </div>
+                )}
                 <div className="header-actions">
                   {!isGroupingMode ? (
                     <button
@@ -633,6 +665,7 @@ const EnhancedUploadForm = () => {
                       <button
                         onClick={() => {
                           setIsGroupingMode(false)
+                          setGroupingState({ firstPage: null, lastPage: null })
                           setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
                         }}
                         className="cancel-group-btn"
@@ -653,10 +686,26 @@ const EnhancedUploadForm = () => {
                 </div>
               </div>
               <div className="files-list">
-                {selectedFiles.map((fileInfo) => (
+                {selectedFiles.map((fileInfo, index) => {
+                  let groupingClass = ''
+                  if (isGroupingMode && groupingState.firstPage !== null) {
+                    if (index === groupingState.firstPage) {
+                      groupingClass = 'first-page'
+                    } else if (index === groupingState.lastPage) {
+                      groupingClass = 'last-page'
+                    } else if (
+                      groupingState.lastPage !== null &&
+                      index > Math.min(groupingState.firstPage, groupingState.lastPage) &&
+                      index < Math.max(groupingState.firstPage, groupingState.lastPage)
+                    ) {
+                      groupingClass = 'in-range'
+                    }
+                  }
+                  
+                  return (
                   <div
                     key={fileInfo.id}
-                    className={`file-item ${fileInfo.status} ${fileInfo.selected ? 'selected' : ''} ${fileInfo.groupId ? 'grouped' : ''}`}
+                    className={`file-item ${fileInfo.status} ${fileInfo.selected ? 'selected' : ''} ${fileInfo.groupId ? 'grouped' : ''} ${groupingClass}`}
                   >
                     {isGroupingMode && (
                       <div className="file-checkbox">
@@ -676,6 +725,13 @@ const EnhancedUploadForm = () => {
                       />
                       {fileInfo.pageNumber && (
                         <span className="page-badge">Page {fileInfo.pageNumber}</span>
+                      )}
+                      {isGroupingMode && groupingClass && (
+                        <div className="grouping-indicator">
+                          {groupingClass === 'first-page' && <span className="indicator-badge first">Start</span>}
+                          {groupingClass === 'last-page' && <span className="indicator-badge last">End</span>}
+                          {groupingClass === 'in-range' && <span className="indicator-badge range">•</span>}
+                        </div>
                       )}
                     </div>
                     <div className="file-info">
@@ -739,7 +795,8 @@ const EnhancedUploadForm = () => {
                       </button>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}

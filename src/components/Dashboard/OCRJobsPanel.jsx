@@ -7,12 +7,212 @@ import {
   EyeIcon,
   ChartBarIcon,
   FunnelIcon,
-  SparklesIcon
+  SparklesIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline'
 import { useOCRJobs } from '../../hooks/useOCRJobs'
 import { useUserManagement } from '../../hooks/useUserManagement'
+import { apiService } from '../../services/api'
 import MetadataDisplay from '../Common/MetadataDisplay'
 import './OCRJobsPanel.css'
+
+const JobDetailsModalContent = ({ showJobDetails, jobs, getStatusColor, formatDate, fetchGroupedDocument }) => {
+  const [groupedData, setGroupedData] = React.useState(null)
+  const [loading, setLoading] = React.useState(false)
+
+  // Find the job (could be single job or grouped job)
+  const job = jobs.find(j => j.job_id === showJobDetails || j.group_id === showJobDetails)
+  
+  React.useEffect(() => {
+    const loadGroupedData = async () => {
+      if (job && job.is_grouped && job.group_id) {
+        setLoading(true)
+        try {
+          const data = await fetchGroupedDocument(job.group_id)
+          setGroupedData(data)
+        } catch (error) {
+          console.error('Failed to load grouped document:', error)
+        } finally {
+          setLoading(false)
+        }
+      } else {
+        setGroupedData(null)
+      }
+    }
+
+    loadGroupedData()
+  }, [job, fetchGroupedDocument])
+
+  if (!job) return <div className="modal-body"><p>Job not found</p></div>
+
+  const isGrouped = job.is_grouped && groupedData
+  const displayData = isGrouped ? groupedData : job
+
+  return (
+    <div className="modal-body">
+      {/* Job Info Section */}
+      <div className="job-info-section">
+        <div className="job-detail-grid">
+          <div className="detail-item">
+            <label>{isGrouped ? 'Group ID:' : 'Job ID:'}</label>
+            <span>{isGrouped ? job.group_id : job.job_id}</span>
+          </div>
+          
+          <div className="detail-item">
+            <label>Document:</label>
+            <span>{job.filename}</span>
+          </div>
+
+          {isGrouped && (
+            <div className="detail-item">
+              <label>Total Pages:</label>
+              <span>{displayData.total_pages}</span>
+            </div>
+          )}
+          
+          <div className="detail-item">
+            <label>Status:</label>
+            <span className={`status-badge ${getStatusColor(job.status)}`}>
+              {job.status}
+            </span>
+          </div>
+          
+          <div className="detail-item">
+            <label>Created:</label>
+            <span>{formatDate(job.created_at)}</span>
+          </div>
+          
+          {job.completed_at && (
+            <div className="detail-item">
+              <label>Completed:</label>
+              <span>{formatDate(job.completed_at)}</span>
+            </div>
+          )}
+          
+          {job.confidence_score && (
+            <div className="detail-item">
+              <label>{isGrouped ? 'Avg Confidence:' : 'Confidence:'}</label>
+              <span>{Math.round(job.confidence_score)}%</span>
+            </div>
+          )}
+          
+          {job.document_type && (
+            <div className="detail-item">
+              <label>Document Type:</label>
+              <span>{job.document_type}</span>
+            </div>
+          )}
+          
+          {job.error && (
+            <div className="detail-item">
+              <label>Error:</label>
+              <span className="error-text">{job.error}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Combined Text Content Section for Grouped Documents */}
+      {isGrouped && displayData.combined_text && (
+        <div className="text-content-section">
+          <div className="text-content">
+            <div className="text-block">
+              <label>
+                <DocumentTextIcon className="w-5 h-5" />
+                Combined Text from All Pages:
+              </label>
+              <div className="text-preview multi-page">
+                {displayData.combined_text}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Individual Page Text Content for Single Jobs */}
+      {!isGrouped && (job.extracted_text || job.corrected_text) && (
+        <div className="text-content-section">
+          <div className="text-content">
+            {job.extracted_text && (
+              <div className="text-block">
+                <label>Extracted Text:</label>
+                <div className="text-preview">
+                  {job.extracted_text}
+                </div>
+              </div>
+            )}
+            
+            {job.corrected_text && (
+              <div className="text-block">
+                <label>Corrected Text:</label>
+                <div className="text-preview">
+                  {job.corrected_text}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Individual Pages Section for Grouped Documents */}
+      {isGrouped && displayData.pages && (
+        <div className="pages-section">
+          <label>
+            <DocumentTextIcon className="w-5 h-5" />
+            Individual Pages:
+          </label>
+          <div className="pages-grid">
+            {displayData.pages.map((page, index) => (
+              <div key={page.job_id} className="page-card">
+                <div className="page-header">
+                  <h4>Page {page.page_number || index + 1}</h4>
+                  <span className={`status-badge ${getStatusColor(page.status)}`}>
+                    {page.status}
+                  </span>
+                </div>
+                <div className="page-info">
+                  <p><strong>Filename:</strong> {page.filename}</p>
+                  {page.confidence_score && (
+                    <p><strong>Confidence:</strong> {Math.round(page.confidence_score)}%</p>
+                  )}
+                  {page.error && (
+                    <p className="page-error"><strong>Error:</strong> {page.error}</p>
+                  )}
+                </div>
+                {(page.corrected_text || page.extracted_text) && (
+                  <div className="page-text-preview">
+                    <div className="text-preview small">
+                      {page.corrected_text || page.extracted_text}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {loading && (
+        <div className="loading-section">
+          <ArrowPathIcon className="w-6 h-6 animate-spin" />
+          <p>Loading multi-page document...</p>
+        </div>
+      )}
+      
+      {job.comprehend_processed && (
+        <div className="ai-metadata-section">
+          <label>
+            <SparklesIcon className="w-5 h-5" />
+            AI Metadata Analysis
+          </label>
+          <MetadataDisplay metadata={job.metadata_summary} />
+        </div>
+      )}
+    </div>
+  )
+}
 
 const OCRJobsPanel = () => {
   const { currentUser } = useUserManagement()
@@ -29,8 +229,41 @@ const OCRJobsPanel = () => {
 
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [showJobDetails, setShowJobDetails] = useState(null)
+  const [expandedGroups, setExpandedGroups] = useState(new Set())
+  const [groupedDocuments, setGroupedDocuments] = useState({})
 
   const stats = getJobStats()
+
+  const toggleGroupExpansion = (groupId) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId)
+      } else {
+        newSet.add(groupId)
+      }
+      return newSet
+    })
+  }
+
+  const fetchGroupedDocument = async (groupId) => {
+    if (groupedDocuments[groupId]) {
+      return groupedDocuments[groupId]
+    }
+
+    try {
+      const response = await apiService.getMultiPageDocument(groupId)
+      const groupData = response.data
+      setGroupedDocuments(prev => ({
+        ...prev,
+        [groupId]: groupData
+      }))
+      return groupData
+    } catch (error) {
+      console.error('Failed to fetch grouped document:', error)
+      return null
+    }
+  }
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -80,21 +313,108 @@ const OCRJobsPanel = () => {
     return `${Math.round(duration / 3600000)}h`
   }
 
+  // Group jobs by group_id for multi-page documents
+  const groupJobs = (jobsList) => {
+    const groupedJobs = {}
+    const singleJobs = []
+
+    jobsList.forEach(job => {
+      if (job.group_id && job.is_multi_page) {
+        if (!groupedJobs[job.group_id]) {
+          groupedJobs[job.group_id] = {
+            group_id: job.group_id,
+            is_grouped: true,
+            pages: [],
+            // Use first job data as base for group
+            job_id: job.job_id,
+            created_at: job.created_at,
+            filename: job.filename || 'Multi-page Document',
+            collection_name: job.collection_name,
+            // Group status is derived from all pages
+            status: 'processing', // Will be calculated
+            // Processing route (use first page route or determine overall)
+            processing: job.processing
+          }
+        }
+        groupedJobs[job.group_id].pages.push(job)
+      } else {
+        singleJobs.push(job)
+      }
+    })
+
+    // Calculate group status and update group metadata
+    Object.values(groupedJobs).forEach(group => {
+      const pages = group.pages.sort((a, b) => (a.page_number || 0) - (b.page_number || 0))
+      
+      // Determine overall status
+      const statuses = pages.map(p => p.status)
+      if (statuses.every(s => s === 'completed')) {
+        group.status = 'completed'
+      } else if (statuses.some(s => s === 'failed')) {
+        group.status = 'failed'
+      } else if (statuses.some(s => s === 'processing')) {
+        group.status = 'processing'
+      } else {
+        group.status = 'pending'
+      }
+
+      // Use earliest creation time
+      group.created_at = pages.reduce((earliest, page) => 
+        new Date(page.created_at) < new Date(earliest) ? page.created_at : earliest
+      , pages[0].created_at)
+
+      // Use latest completion time if all completed
+      if (group.status === 'completed') {
+        group.completed_at = pages.reduce((latest, page) => 
+          page.completed_at && new Date(page.completed_at) > new Date(latest || 0) ? page.completed_at : latest
+        , null)
+      }
+
+      // Update filename to show page count
+      group.filename = `${group.collection_name || 'Multi-page Document'} (${pages.length} pages)`
+      
+      // Calculate combined confidence if available
+      const confidenceScores = pages.filter(p => p.confidence_score).map(p => p.confidence_score)
+      if (confidenceScores.length > 0) {
+        group.confidence_score = confidenceScores.reduce((sum, score) => sum + score, 0) / confidenceScores.length
+      }
+
+      // Check if any page has AI processing
+      group.comprehend_processed = pages.some(p => p.comprehend_processed)
+      
+      // Combine any errors
+      const errors = pages.filter(p => p.error).map(p => p.error)
+      if (errors.length > 0) {
+        group.error = `${errors.length} page(s) failed: ${errors[0]}${errors.length > 1 ? '...' : ''}`
+      }
+    })
+
+    return [...singleJobs, ...Object.values(groupedJobs)]
+  }
+
   const getFilteredJobs = () => {
+    let baseJobs
     switch (selectedFilter) {
       case 'recent':
-        return getRecentJobs()
+        baseJobs = getRecentJobs()
+        break
       case 'pending':
-        return getJobsByStatus('pending')
+        baseJobs = getJobsByStatus('pending')
+        break
       case 'processing':
-        return getJobsByStatus('processing')
+        baseJobs = getJobsByStatus('processing')
+        break
       case 'completed':
-        return getJobsByStatus('completed')
+        baseJobs = getJobsByStatus('completed')
+        break
       case 'failed':
-        return getJobsByStatus('failed')
+        baseJobs = getJobsByStatus('failed')
+        break
       default:
-        return jobs
+        baseJobs = jobs
     }
+    
+    return groupJobs(baseJobs)
   }
 
   const filteredJobs = getFilteredJobs()
@@ -240,15 +560,22 @@ const OCRJobsPanel = () => {
         ) : (
           <div className="jobs-list">
             {filteredJobs.map(job => (
-              <div key={job.job_id} className={`job-item ${job.status}`}>
+              <div key={job.job_id || job.group_id} className={`job-item ${job.status} ${job.is_grouped ? 'grouped-job' : ''}`}>
                 <div className="job-status">
                   {getStatusIcon(job.status)}
                 </div>
                 
                 <div className="job-info">
-                  <div className="job-filename">{job.filename}</div>
+                  <div className="job-filename">
+                    {job.is_grouped && (
+                      <DocumentTextIcon className="w-4 h-4 inline-block mr-2" />
+                    )}
+                    {job.filename}
+                  </div>
                   <div className="job-details">
-                    <span className="job-id">ID: {job.job_id.slice(0, 8)}...</span>
+                    <span className="job-id">
+                      ID: {job.is_grouped ? job.group_id.slice(0, 8) : job.job_id.slice(0, 8)}...
+                    </span>
                     <span className="job-created">
                       Created: {formatDate(job.created_at)}
                     </span>
@@ -271,10 +598,10 @@ const OCRJobsPanel = () => {
                     </div>
                   )}
                   
-                  {job.comprehend_processed && job.metadata_summary && (
+                  {job.comprehend_processed && (
                     <div className="job-metadata-preview">
                       <SparklesIcon className="w-4 h-4" />
-                      <span>Available</span>
+                      <span>AI Analysis Available</span>
                     </div>
                   )}
                   
@@ -299,6 +626,19 @@ const OCRJobsPanel = () => {
                 </div>
 
                 <div className="job-actions">
+                  {job.is_grouped && (
+                    <button
+                      onClick={() => toggleGroupExpansion(job.group_id)}
+                      className="expand-btn"
+                      title={expandedGroups.has(job.group_id) ? "Collapse pages" : "Expand pages"}
+                    >
+                      {expandedGroups.has(job.group_id) ? (
+                        <ChevronDownIcon className="w-4 h-4" />
+                      ) : (
+                        <ChevronRightIcon className="w-4 h-4" />
+                      )}
+                    </button>
+                  )}
                   <button
                     onClick={() => setShowJobDetails(job.job_id)}
                     className="view-btn"
@@ -307,6 +647,44 @@ const OCRJobsPanel = () => {
                     <EyeIcon className="w-4 h-4" />
                   </button>
                 </div>
+              
+                {/* Expanded page details for grouped jobs */}
+                {job.is_grouped && expandedGroups.has(job.group_id) && (
+                  <div className="expanded-pages">
+                    {job.pages.map(page => (
+                      <div key={page.job_id} className={`page-item ${page.status}`}>
+                        <div className="page-status">
+                          {getStatusIcon(page.status)}
+                        </div>
+                        <div className="page-info">
+                          <div className="page-filename">
+                            Page {page.page_number}: {page.filename}
+                          </div>
+                          <div className="page-details">
+                            <span className="page-id">ID: {page.job_id.slice(0, 8)}...</span>
+                            {page.confidence_score && (
+                              <span className="page-confidence">
+                                Confidence: {Math.round(page.confidence_score)}%
+                              </span>
+                            )}
+                            {page.error && (
+                              <span className="page-error">Error: {page.error}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="page-actions">
+                          <button
+                            onClick={() => setShowJobDetails(page.job_id)}
+                            className="view-btn small"
+                            title="View page details"
+                          >
+                            <EyeIcon className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -327,104 +705,13 @@ const OCRJobsPanel = () => {
               </button>
             </div>
             
-            {(() => {
-              const job = jobs.find(j => j.job_id === showJobDetails)
-              if (!job) return <p>Job not found</p>
-              
-              return (
-                <div className="modal-body">
-                  {/* Job Info Section */}
-                  <div className="job-info-section">
-                    <div className="job-detail-grid">
-                      <div className="detail-item">
-                        <label>Job ID:</label>
-                        <span>{job.job_id}</span>
-                      </div>
-                      
-                      <div className="detail-item">
-                        <label>Filename:</label>
-                        <span>{job.filename}</span>
-                      </div>
-                      
-                      <div className="detail-item">
-                        <label>Status:</label>
-                        <span className={`status-badge ${getStatusColor(job.status)}`}>
-                          {job.status}
-                        </span>
-                      </div>
-                      
-                      <div className="detail-item">
-                        <label>Created:</label>
-                        <span>{formatDate(job.created_at)}</span>
-                      </div>
-                      
-                      {job.completed_at && (
-                        <div className="detail-item">
-                          <label>Completed:</label>
-                          <span>{formatDate(job.completed_at)}</span>
-                        </div>
-                      )}
-                      
-                      {job.confidence_score && (
-                        <div className="detail-item">
-                          <label>Confidence:</label>
-                          <span>{Math.round(job.confidence_score)}%</span>
-                        </div>
-                      )}
-                      
-                      {job.document_type && (
-                        <div className="detail-item">
-                          <label>Document Type:</label>
-                          <span>{job.document_type}</span>
-                        </div>
-                      )}
-                      
-                      {job.error && (
-                        <div className="detail-item">
-                          <label>Error:</label>
-                          <span className="error-text">{job.error}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Text Content Section */}
-                  {(job.extracted_text || job.corrected_text) && (
-                    <div className="text-content-section">
-                      <div className="text-content">
-                        {job.extracted_text && (
-                          <div className="text-block">
-                            <label>Extracted Text:</label>
-                            <div className="text-preview">
-                              {job.extracted_text}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {job.corrected_text && (
-                          <div className="text-block">
-                            <label>Corrected Text:</label>
-                            <div className="text-preview">
-                              {job.corrected_text}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {job.comprehend_processed && (
-                    <div className="ai-metadata-section">
-                      <label>
-                        <SparklesIcon className="w-5 h-5" />
-                        AI Metadata Analysis
-                      </label>
-                      <MetadataDisplay metadata={job.metadata_summary} />
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
+            <JobDetailsModalContent 
+              showJobDetails={showJobDetails}
+              jobs={jobs}
+              getStatusColor={getStatusColor}
+              formatDate={formatDate}
+              fetchGroupedDocument={fetchGroupedDocument}
+            />
           </div>
         </div>
       )}

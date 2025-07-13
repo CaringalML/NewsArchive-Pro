@@ -273,6 +273,15 @@ class ApiService {
   }
 
   /**
+   * Get all pages of a multi-page document by group ID
+   * @param {string} groupId - Document group ID
+   * @returns {Promise} - Multi-page document with all pages
+   */
+  async getMultiPageDocument(groupId) {
+    return this.get(`/document/${groupId}`);
+  }
+
+  /**
    * Send notification
    * @param {number} userId - User ID
    * @param {string} message - Notification message
@@ -454,6 +463,7 @@ export const {
   uploadImage,
   getOcrJob,
   getOcrJobsByUser,
+  getMultiPageDocument,
   sendNotification,
   uploadBatch,
   getBatchStatus,
