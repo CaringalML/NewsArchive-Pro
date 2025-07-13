@@ -436,48 +436,6 @@ const EnhancedUploadForm = () => {
     setGroupingState({ firstPage: null, lastPage: null })
   }
 
-  const createDocumentGroup = () => {
-    const selectedFileIds = selectedFiles.filter(f => f.selected).map(f => f.id)
-    if (selectedFileIds.length < 2) {
-      toast.error('Please select at least 2 files to group as a multi-page document')
-      return
-    }
-
-    const groupId = Date.now() + Math.random()
-    const newGroup = {
-      id: groupId,
-      name: `Document ${Object.keys(documentGroups).length + 1}`,
-      fileIds: selectedFileIds,
-      createdAt: new Date()
-    }
-
-    setDocumentGroups(prev => ({
-      ...prev,
-      [groupId]: newGroup
-    }))
-
-    // Update files with group info and page numbers
-    setSelectedFiles(prev => {
-      let pageNum = 1
-      return prev.map(f => {
-        if (selectedFileIds.includes(f.id)) {
-          const updatedFile = {
-            ...f,
-            groupId,
-            pageNumber: pageNum,
-            selected: false
-          }
-          pageNum++
-          return updatedFile
-        }
-        return f
-      })
-    })
-
-    toast.success(`Created multi-page document with ${selectedFileIds.length} pages`)
-    setIsGroupingMode(false)
-    setGroupingState({ firstPage: null, lastPage: null })
-  }
 
   const removeFromGroup = (fileId) => {
     setSelectedFiles(prev => prev.map(f => {
