@@ -117,12 +117,13 @@ const JobDetailsModalContent = ({ showJobDetails, jobs, getStatusColor, formatDa
       {/* Combined Text Content Section for Grouped Documents */}
       {isGrouped && displayData.combined_text && (
         <div className="text-content-section">
+          <div className="section-header">
+            <DocumentTextIcon className="w-5 h-5" />
+            <h3>Combined Text from All Pages</h3>
+            <span className="page-count-badge">{displayData.total_pages} pages</span>
+          </div>
           <div className="text-content">
             <div className="text-block">
-              <label>
-                <DocumentTextIcon className="w-5 h-5" />
-                Combined Text from All Pages:
-              </label>
               <div className="text-preview multi-page">
                 {displayData.combined_text}
               </div>
@@ -159,32 +160,54 @@ const JobDetailsModalContent = ({ showJobDetails, jobs, getStatusColor, formatDa
       {/* Individual Pages Section for Grouped Documents */}
       {isGrouped && displayData.pages && (
         <div className="pages-section">
-          <label>
+          <div className="section-header">
             <DocumentTextIcon className="w-5 h-5" />
-            Individual Pages:
-          </label>
+            <h3>Individual Pages</h3>
+            <span className="pages-summary">
+              {displayData.pages.filter(p => p.status === 'completed').length} of {displayData.pages.length} completed
+            </span>
+          </div>
           <div className="pages-grid">
             {displayData.pages.map((page, index) => (
-              <div key={page.job_id} className="page-card">
+              <div key={page.job_id} className="page-card enhanced">
                 <div className="page-header">
-                  <h4>Page {page.page_number || index + 1}</h4>
+                  <div className="page-title">
+                    <h4>Page {page.page_number || index + 1}</h4>
+                    <span className="page-filename">{page.filename}</span>
+                  </div>
                   <span className={`status-badge ${getStatusColor(page.status)}`}>
                     {page.status}
                   </span>
                 </div>
-                <div className="page-info">
-                  <p><strong>Filename:</strong> {page.filename}</p>
+                
+                <div className="page-stats">
                   {page.confidence_score && (
-                    <p><strong>Confidence:</strong> {Math.round(page.confidence_score)}%</p>
+                    <div className="stat-item">
+                      <span className="stat-label">Confidence:</span>
+                      <span className="stat-value">{Math.round(page.confidence_score)}%</span>
+                    </div>
                   )}
-                  {page.error && (
-                    <p className="page-error"><strong>Error:</strong> {page.error}</p>
+                  {page.created_at && (
+                    <div className="stat-item">
+                      <span className="stat-label">Processed:</span>
+                      <span className="stat-value">{formatDate(page.created_at)}</span>
+                    </div>
                   )}
                 </div>
+
+                {page.error && (
+                  <div className="page-error-banner">
+                    <ExclamationTriangleIcon className="w-4 h-4" />
+                    <span>{page.error}</span>
+                  </div>
+                )}
+
                 {(page.corrected_text || page.extracted_text) && (
                   <div className="page-text-preview">
+                    <label className="preview-label">Text Preview:</label>
                     <div className="text-preview small">
-                      {page.corrected_text || page.extracted_text}
+                      {(page.corrected_text || page.extracted_text).substring(0, 200)}
+                      {(page.corrected_text || page.extracted_text).length > 200 && '...'}
                     </div>
                   </div>
                 )}
@@ -318,20 +341,11 @@ const OCRJobsPanel = () => {
     const groupedJobs = {}
     const singleJobs = []
 
-    console.log('🔍 Grouping jobs:', jobsList.map(j => ({
-      job_id: j.job_id?.slice(0, 8),
-      group_id: j.group_id,
-      page_number: j.page_number,
-      filename: j.filename,
-      collection_name: j.collection_name
-    })))
-
     jobsList.forEach(job => {
       // Group jobs that have a group_id (multi-page documents)
       if (job.group_id) {
         // Ensure group_id is a string
         const groupId = job.group_id.toString()
-        console.log(`📄 Found grouped job: ${job.job_id?.slice(0, 8)} -> group ${groupId.slice(0, 8)}`)
         
         if (!groupedJobs[groupId]) {
           groupedJobs[groupId] = {
@@ -352,7 +366,6 @@ const OCRJobsPanel = () => {
         groupedJobs[groupId].pages.push(job)
       } else {
         // Single page jobs
-        console.log(`📄 Single job: ${job.job_id?.slice(0, 8)} (no group_id)`)
         singleJobs.push(job)
       }
     })
@@ -431,17 +444,6 @@ const OCRJobsPanel = () => {
       const dateA = new Date(a.created_at)
       const dateB = new Date(b.created_at)
       return dateB - dateA // Descending order (newest first)
-    })
-
-    console.log('📋 Final grouped result:', {
-      totalJobs: finalResult.length,
-      groupedJobs: finalResult.filter(j => j.is_grouped).length,
-      singleJobs: finalResult.filter(j => !j.is_grouped).length,
-      groups: finalResult.filter(j => j.is_grouped).map(g => ({
-        group_id: g.group_id?.slice(0, 8),
-        pages: g.pages?.length,
-        filename: g.filename
-      }))
     })
 
     return finalResult
@@ -622,133 +624,107 @@ const OCRJobsPanel = () => {
         ) : (
           <div className="jobs-list">
             {filteredJobs.map(job => (
-              <div key={job.job_id || job.group_id} className={`job-item ${job.status} ${job.is_grouped ? 'grouped-job' : ''}`}>
-                <div className="job-status">
-                  {getStatusIcon(job.status)}
-                </div>
+              <div key={job.is_grouped ? `group-${job.group_id}` : `job-${job.job_id}`} className={`dropdown-row ${job.status} ${job.is_grouped ? 'grouped-job' : ''}`}>
                 
-                <div className="job-info">
-                  <div className="job-filename">
-                    {job.is_grouped && (
-                      <DocumentTextIcon className="w-4 h-4 inline-block mr-2 text-blue-600" />
-                    )}
-                    {job.filename}
-                    {job.is_grouped && job.pages && (
-                      <span className="text-sm text-gray-500 ml-2">({job.pages.length} pages)</span>
-                    )}
-                  </div>
-                  <div className="job-details">
-                    <span className="job-id">
-                      ID: {job.is_grouped ? (job.group_id || '').toString().slice(0, 8) : (job.job_id || '').toString().slice(0, 8)}...
-                    </span>
-                    <span className="job-created">
-                      Created: {formatDate(job.created_at)}
-                    </span>
-                    {job.completed_at && (
-                      <span className="job-duration">
-                        Duration: {formatDuration(job.created_at, job.completed_at)}
-                      </span>
-                    )}
+                {/* Main Row Content */}
+                <div className={`dropdown-main-row ${job.is_grouped ? 'clickable' : ''}`} onClick={() => job.is_grouped && toggleGroupExpansion(job.group_id)}>
+                  <div className="job-status">
+                    {getStatusIcon(job.status)}
                   </div>
                   
-                  {job.error && (
-                    <div className="job-error">
-                      Error: {job.error}
+                  <div className="job-info">
+                    <div className="job-filename">
+                      {job.is_grouped ? (
+                        <>
+                          <DocumentTextIcon className="w-4 h-4 inline-block mr-2 text-blue-600" />
+                          <span className="font-semibold">📄 {job.collection_name || 'Multi-page Document'}</span>
+                          <span className="text-sm text-gray-500 ml-2">({job.pages?.length || 0} pages)</span>
+                        </>
+                      ) : (
+                        job.filename
+                      )}
                     </div>
-                  )}
-                  
-                  {job.confidence_score && (
-                    <div className="job-confidence">
-                      Confidence: {Math.round(job.confidence_score)}%
-                    </div>
-                  )}
-                  
-                  {job.comprehend_processed && (
-                    <div className="job-metadata-preview">
-                      <SparklesIcon className="w-4 h-4" />
-                      <span>AI Analysis Available</span>
-                    </div>
-                  )}
-                  
-                  {job.is_grouped && job.statusSummary && (
-                    <div className="job-status-summary">
-                      <div className="status-counts">
-                        {job.statusSummary.completed > 0 && (
-                          <span className="status-count completed">
-                            ✓ {job.statusSummary.completed}
-                          </span>
-                        )}
-                        {job.statusSummary.processing > 0 && (
-                          <span className="status-count processing">
-                            ⚡ {job.statusSummary.processing}
-                          </span>
-                        )}
-                        {job.statusSummary.pending > 0 && (
-                          <span className="status-count pending">
-                            ⏳ {job.statusSummary.pending}
-                          </span>
-                        )}
-                        {job.statusSummary.failed > 0 && (
-                          <span className="status-count failed">
-                            ✗ {job.statusSummary.failed}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {job.processing && (
-                    <div className="job-processing-route">
-                      <span className={`route-badge ${job.processing.route}`}>
-                        {job.processing.processor || job.processing.route}
+                    <div className="job-details">
+                      <span className="job-id">
+                        ID: {job.is_grouped ? (job.group_id || '').toString().slice(0, 8) : (job.job_id || '').toString().slice(0, 8)}...
                       </span>
-                      {job.processing.estimated_time && (
-                        <span className="estimated-time">
-                          ~{job.processing.estimated_time}s
+                      <span className="job-created">
+                        Created: {formatDate(job.created_at)}
+                      </span>
+                      {job.completed_at && (
+                        <span className="job-duration">
+                          Duration: {formatDuration(job.created_at, job.completed_at)}
                         </span>
                       )}
                     </div>
-                  )}
-                </div>
+                    
+                    {job.is_grouped && job.statusSummary && (
+                      <div className="job-status-summary">
+                        <div className="status-counts">
+                          {job.statusSummary.completed > 0 && (
+                            <span className="status-count completed">
+                              ✓ {job.statusSummary.completed}
+                            </span>
+                          )}
+                          {job.statusSummary.processing > 0 && (
+                            <span className="status-count processing">
+                              ⚡ {job.statusSummary.processing}
+                            </span>
+                          )}
+                          {job.statusSummary.pending > 0 && (
+                            <span className="status-count pending">
+                              ⏳ {job.statusSummary.pending}
+                            </span>
+                          )}
+                          {job.statusSummary.failed > 0 && (
+                            <span className="status-count failed">
+                              ✗ {job.statusSummary.failed}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="job-badge">
-                  <span className={`status-badge ${getStatusColor(job.status)}`}>
-                    {job.status}
-                  </span>
-                </div>
+                  <div className="job-badge">
+                    <span className={`status-badge ${getStatusColor(job.status)}`}>
+                      {job.status}
+                    </span>
+                  </div>
 
-                <div className="job-actions">
-                  {job.is_grouped && (
+                  <div className="job-actions">
+                    {job.is_grouped && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleGroupExpansion(job.group_id)
+                        }}
+                        className="expand-btn"
+                        title={expandedGroups.has(job.group_id) ? "Collapse pages" : "Expand pages"}
+                      >
+                        {expandedGroups.has(job.group_id) ? (
+                          <ChevronDownIcon className="w-4 h-4" />
+                        ) : (
+                          <ChevronRightIcon className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
                     <button
-                      onClick={() => toggleGroupExpansion(job.group_id)}
-                      className="expand-btn"
-                      title={expandedGroups.has(job.group_id) ? "Collapse pages" : "Expand pages"}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowJobDetails(job.is_grouped ? job.group_id : job.job_id)
+                      }}
+                      className="view-btn"
+                      title="View details"
                     >
-                      {expandedGroups.has(job.group_id) ? (
-                        <ChevronDownIcon className="w-4 h-4" />
-                      ) : (
-                        <ChevronRightIcon className="w-4 h-4" />
-                      )}
+                      <EyeIcon className="w-4 h-4" />
                     </button>
-                  )}
-                  <button
-                    onClick={() => setShowJobDetails(job.is_grouped ? job.group_id : job.job_id)}
-                    className="view-btn"
-                    title="View details"
-                  >
-                    <EyeIcon className="w-4 h-4" />
-                  </button>
+                  </div>
                 </div>
               
-                {/* Dropdown content for grouped jobs */}
+                {/* Dropdown Content - Only shows for grouped jobs when expanded */}
                 {job.is_grouped && expandedGroups.has(job.group_id) && (
                   <div className="dropdown-content">
-                    <div className="dropdown-header">
-                      <h4>Individual Pages</h4>
-                      <span className="text-sm text-gray-500">
-                        {job.pages.length} pages in this document
-                      </span>
-                    </div>
                     <div className="pages-grid">
                       {job.pages.map((page, index) => (
                         <div key={page.job_id} className={`page-row ${page.status}`}>
