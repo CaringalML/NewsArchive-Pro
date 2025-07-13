@@ -200,11 +200,28 @@ class ApiService {
 
 
   /**
-   * Upload image for OCR processing
+   * Get processing recommendation for a file
+   * @param {File} file - Image file
+   * @param {Object} settings - File analysis settings
+   * @returns {Promise} - Processing recommendation
+   */
+  async getProcessingRecommendation(file, settings = {}) {
+    const actualFile = file.file || file;
+    
+    return this.post('/processing-recommendation', {
+      fileSize: actualFile.size,
+      isMultiPage: settings.isMultiPage || false,
+      pageCount: settings.pageCount || 1,
+      filename: actualFile.name
+    });
+  }
+
+  /**
+   * Upload image for OCR processing with intelligent routing
    * @param {File} file - Image file
    * @param {string} userId - User ID
    * @param {Object} ocrSettings - OCR processing settings
-   * @returns {Promise} - OCR job data
+   * @returns {Promise} - OCR job data with processing route info
    */
   async uploadImage(file, userId, ocrSettings = {}) {
     const formData = new FormData();
@@ -220,7 +237,10 @@ class ApiService {
       settingsToSend.pageNumber = file.pageNumber;
     }
     
-    // Document groups information is already included in settingsToSend if present
+    // Add file size for routing analysis
+    const actualFile = file.file || file;
+    settingsToSend.fileSize = actualFile.size;
+    settingsToSend.fileName = actualFile.name;
     
     if (Object.keys(settingsToSend).length > 0) {
       formData.append('ocrSettings', JSON.stringify(settingsToSend));
@@ -430,6 +450,7 @@ export const {
   createUser,
   getUser,
   getUserByEmail,
+  getProcessingRecommendation,
   uploadImage,
   getOcrJob,
   getOcrJobsByUser,

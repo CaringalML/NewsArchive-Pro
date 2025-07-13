@@ -91,6 +91,36 @@ export const useOCRJobs = (userId) => {
     )
   }, [])
 
+  // Get processing route display info
+  const getProcessingRouteInfo = useCallback((job) => {
+    const route = job.processing_route || 'unknown'
+    const queueType = job.queue_type || 'unknown'
+    
+    switch (route) {
+      case 'lambda':
+        return {
+          processor: 'AWS Lambda',
+          icon: '⚡',
+          color: '#22c55e',
+          description: 'Fast processing (< 5 minutes)'
+        }
+      case 'batch':
+        return {
+          processor: 'AWS Batch',
+          icon: '🏭',
+          color: '#f59e0b',
+          description: 'Heavy processing (5-30 minutes)'
+        }
+      default:
+        return {
+          processor: 'Processing',
+          icon: '🔄',
+          color: '#6b7280',
+          description: 'Determining processing route...'
+        }
+    }
+  }, [])
+
   // Add new job to the list
   const addJob = useCallback((newJob) => {
     setJobs(prevJobs => [newJob, ...prevJobs])
@@ -263,6 +293,7 @@ export const useOCRJobs = (userId) => {
     getJobStats,
     getJobsByStatus,
     getRecentJobs,
+    getProcessingRouteInfo,
     isAutoRefreshing: !!refreshInterval
   }
 }

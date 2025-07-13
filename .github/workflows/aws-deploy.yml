@@ -1,4 +1,4 @@
-name: React CI/CD
+name: NewsArchivePro CI/CD
 
 on:
   push:
@@ -8,6 +8,9 @@ on:
 
 env:
   TREAT_WARNINGS_AS_ERRORS: true
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+  ECR_REPOSITORY: newsarchivepro-backend
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   build-and-test:
@@ -91,9 +94,106 @@ jobs:
           path: build/
           retention-days: 1
 
+  build-and-push-backend:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        working-directory: ./backend/batch-ocr-app
+        run: |
+          echo "🐳 Building Docker image..."
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:ocr-batch .
+          
+          echo "📤 Pushing image to ECR..."
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:ocr-batch
+          
+          echo "✅ Image pushed successfully!"
+          echo "🔄 ECR-Batch automation will now automatically update AWS Batch job definitions"
+          echo "📋 Monitor at: https://console.aws.amazon.com/cloudwatch/home?region=${{ secrets.AWS_REGION }}#dashboards:name=newsarchivepro-ocr-processing"
+          echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Wait for ECR-Batch automation
+        run: |
+          echo "⏳ Waiting for ECR-Batch automation to complete..."
+          echo "🤖 EventBridge will trigger Lambda function to update Batch job definitions"
+          sleep 30
+          
+          # Check if Lambda function exists and get recent logs
+          FUNCTION_NAME="newsarchivepro-ecr-batch-updater"
+          if aws lambda get-function --function-name $FUNCTION_NAME --region ${{ secrets.AWS_REGION }} >/dev/null 2>&1; then
+            echo "✅ ECR-Batch automation Lambda function is deployed"
+            
+            # Get recent logs (last 2 minutes)
+            echo "📋 Recent automation logs:"
+            aws logs filter-log-events \
+              --log-group-name "/aws/lambda/$FUNCTION_NAME" \
+              --start-time $(date -d '2 minutes ago' +%s)000 \
+              --region ${{ secrets.AWS_REGION }} \
+              --query 'events[].message' \
+              --output text || echo "No recent logs found (this is normal if automation hasn't run yet)"
+          else
+            echo "⚠️ ECR-Batch automation not deployed yet - run 'terraform apply' to enable automatic Batch updates"
+          fi
+
+      - name: Verify Batch job definition update
+        run: |
+          echo "🔍 Verifying AWS Batch job definition was updated..."
+          
+          JOB_DEF_NAME="newsarchivepro-ocr-job-definition"
+          
+          # Get current Batch job definition image
+          if aws batch describe-job-definitions --job-definition-name $JOB_DEF_NAME --status ACTIVE --region ${{ secrets.AWS_REGION }} >/dev/null 2>&1; then
+            CURRENT_IMAGE=$(aws batch describe-job-definitions \
+              --job-definition-name $JOB_DEF_NAME \
+              --status ACTIVE \
+              --region ${{ secrets.AWS_REGION }} \
+              --query 'jobDefinitions[0].containerProperties.image' \
+              --output text)
+            
+            CURRENT_REVISION=$(aws batch describe-job-definitions \
+              --job-definition-name $JOB_DEF_NAME \
+              --status ACTIVE \
+              --region ${{ secrets.AWS_REGION }} \
+              --query 'jobDefinitions[0].revision' \
+              --output text)
+            
+            echo "📋 Current Batch job definition:"
+            echo "   Revision: $CURRENT_REVISION"
+            echo "   Image: $CURRENT_IMAGE"
+            
+            # Check if the image contains our latest tag or commit SHA
+            if [[ "$CURRENT_IMAGE" == *"$IMAGE_TAG"* ]] || [[ "$CURRENT_IMAGE" == *"latest"* ]]; then
+              echo "✅ Batch job definition appears to be updated with latest image!"
+            else
+              echo "⚠️ Batch job definition may not be updated yet. This can take 1-2 minutes."
+              echo "   Expected image to contain: $IMAGE_TAG or latest"
+              echo "   Actual image: $CURRENT_IMAGE"
+            fi
+          else
+            echo "⚠️ Batch job definition not found - may not be deployed yet"
+            echo "   Run 'terraform apply' to deploy the complete infrastructure"
+          fi
+
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: [build-and-test, build-and-push-backend]
     if: github.ref == 'refs/heads/main' && needs.build-and-test.outputs.build-success == 'true'
     
     steps:
@@ -139,18 +239,20 @@ jobs:
 
   notify:
     runs-on: ubuntu-latest
-    needs: [build-and-test, deploy]
+    needs: [build-and-test, build-and-push-backend, deploy]
     if: always()
     
     steps:
       - name: Deployment Status
         run: |
-          if [ "${{ needs.build-and-test.result }}" = "success" ] && [ "${{ needs.deploy.result }}" = "success" ]; then
-            echo "🎉 Deployment completed successfully!"
+          if [ "${{ needs.build-and-test.result }}" = "success" ] && [ "${{ needs.build-and-push-backend.result }}" = "success" ] && [ "${{ needs.deploy.result }}" = "success" ]; then
+            echo "🎉 Full deployment completed successfully!"
           elif [ "${{ needs.build-and-test.result }}" = "failure" ]; then
-            echo "❌ Build failed - deployment skipped"
+            echo "❌ Frontend build failed - deployment skipped"
+          elif [ "${{ needs.build-and-push-backend.result }}" = "failure" ]; then
+            echo "❌ Backend container build failed"
           elif [ "${{ needs.deploy.result }}" = "failure" ]; then
-            echo "❌ Deployment failed"
+            echo "❌ Frontend deployment failed"
           elif [ "${{ needs.deploy.result }}" = "skipped" ]; then
             echo "⏭️ Deployment skipped (not main branch or PR)"
           else

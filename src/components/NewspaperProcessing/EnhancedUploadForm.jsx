@@ -29,6 +29,8 @@ const EnhancedUploadForm = () => {
   const [dragActive, setDragActive] = useState(false)
   const [documentGroups, setDocumentGroups] = useState({})
   const [isGroupingMode, setIsGroupingMode] = useState(false)
+  const [showProcessingInfo, setShowProcessingInfo] = useState(false)
+  const [processingRecommendations, setProcessingRecommendations] = useState({})
   
   // User management
   const { currentUser } = useUserManagement()
@@ -202,6 +204,36 @@ const EnhancedUploadForm = () => {
         ? { ...f, status, progress: progress !== null ? progress : f.progress, error }
         : f
     ))
+  }
+
+  const getProcessingRecommendation = async (file) => {
+    try {
+      const groupId = file.groupId
+      const groupFiles = groupId ? selectedFiles.filter(f => f.groupId === groupId) : [file]
+      
+      const settings = {
+        isMultiPage: groupId ? true : false,
+        pageCount: groupFiles.length
+      }
+
+      const recommendation = await apiService.getProcessingRecommendation(file, settings)
+      
+      setProcessingRecommendations(prev => ({
+        ...prev,
+        [file.id]: recommendation.data
+      }))
+
+      return recommendation.data
+    } catch (error) {
+      console.error('Error getting processing recommendation:', error)
+      return null
+    }
+  }
+
+  const analyzeAllFiles = async () => {
+    setShowProcessingInfo(true)
+    const promises = selectedFiles.map(file => getProcessingRecommendation(file))
+    await Promise.all(promises)
   }
 
   const handleUploadProgress = (completed, total, result) => {
@@ -658,6 +690,27 @@ const EnhancedUploadForm = () => {
                           </span>
                         </div>
                       )}
+                      {showProcessingInfo && processingRecommendations[fileInfo.id] && (
+                        <div className="processing-info">
+                          <div className="processing-route">
+                            <span className={`route-badge ${processingRecommendations[fileInfo.id].recommendation}`}>
+                              {processingRecommendations[fileInfo.id].processor}
+                            </span>
+                            <span className="estimated-time">
+                              ~{processingRecommendations[fileInfo.id].estimated_time}
+                            </span>
+                          </div>
+                          {processingRecommendations[fileInfo.id].factors.length > 0 && (
+                            <div className="processing-factors">
+                              {processingRecommendations[fileInfo.id].factors.slice(0, 2).map((factor, index) => (
+                                <span key={index} className="factor-tag">
+                                  {factor}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                       {fileInfo.error && (
                         <div className="file-error">{fileInfo.error}</div>
                       )}
@@ -688,6 +741,28 @@ const EnhancedUploadForm = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Processing Analysis */}
+          {selectedFiles.length > 0 && (
+            <div className="processing-analysis">
+              <button
+                onClick={analyzeAllFiles}
+                disabled={uploading}
+                className="analyze-btn"
+              >
+                <DocumentArrowUpIcon className="w-4 h-4" />
+                {showProcessingInfo ? 'Refresh Analysis' : 'Analyze Processing Routes'}
+              </button>
+              {showProcessingInfo && (
+                <button
+                  onClick={() => setShowProcessingInfo(false)}
+                  className="hide-analysis-btn"
+                >
+                  Hide Analysis
+                </button>
+              )}
             </div>
           )}
 

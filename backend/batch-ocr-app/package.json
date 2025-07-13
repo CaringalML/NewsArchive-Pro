@@ -1,0 +1,29 @@
+{
+  "name": "newsarchive-batch-ocr",
+  "version": "1.0.0",
+  "description": "Dockerized OCR processor for NewsArchive Pro using AWS Batch",
+  "main": "ocr-processor.js",
+  "scripts": {
+    "start": "node ocr-processor.js",
+    "dev": "nodemon ocr-processor.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ocr",
+    "textract",
+    "comprehend",
+    "aws-batch",
+    "docker"
+  ],
+  "author": "NewsArchive Pro",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.1691.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
