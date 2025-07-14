@@ -727,6 +727,40 @@
   color: white;
 }
 
+/* Force Batch Option Styling */
+.force-batch-option {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.force-batch-option:hover {
+  background: #fef3c7;
+  border-color: #d97706;
+}
+
+.force-batch-option input[type="checkbox"] {
+  margin-top: 2px;
+}
+
+.force-batch-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.force-batch-help {
+  font-size: 12px;
+  color: #92400e;
+  font-style: italic;
+}
+
 .estimated-time {
   font-size: 12px;
   color: #6b7280;

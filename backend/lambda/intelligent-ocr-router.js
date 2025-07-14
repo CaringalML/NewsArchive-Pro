@@ -61,6 +61,19 @@ class IntelligentOCRRouter {
      * @returns {Object} - Routing decision with reasoning
      */
     async analyzeProcessingRequirements(jobData) {
+        // Check for force batch override first
+        if (jobData.forceBatch || jobData.force_batch) {
+            return {
+                fileSize: jobData.file_size || 0,
+                isMultiPage: jobData.is_multi_page || false,
+                pageCount: jobData.page_count || 1,
+                estimatedComplexity: 'forced',
+                estimatedProcessingTime: 300, // 5 minutes estimate for forced batch
+                factors: ['User forced AWS Batch processing'],
+                recommendation: 'batch'
+            };
+        }
+
         // Get actual page count for grouped documents
         const actualPageCount = jobData.group_id ? 
             await this.getGroupPageCount(jobData.group_id) : 
@@ -145,7 +158,8 @@ class IntelligentOCRRouter {
                 processing_complexity: analysis.estimatedComplexity,
                 estimated_processing_time: analysis.estimatedProcessingTime,
                 routing_factors: JSON.stringify(analysis.factors),
-                routing_decided_at: new Date().toISOString()
+                routing_decided_at: new Date().toISOString(),
+                forced_batch: jobData.force_batch || false
             });
 
             if (analysis.recommendation === 'batch') {
@@ -192,7 +206,8 @@ class IntelligentOCRRouter {
                 status: 'processing',
                 processing_route: 'lambda',
                 started_at: new Date().toISOString(),
-                queue_type: 'direct_invocation'
+                queue_type: 'direct_invocation',
+                forced_batch: false  // Lambda jobs are never force batch
             });
 
             // Invoke OCR processor Lambda directly (async)
@@ -249,13 +264,15 @@ class IntelligentOCRRouter {
                     s3Key: jobData.s3_key,
                     fileName: jobData.filename,
                     fileSize: String(jobData.file_size || 0),
-                    processingRoute: 'batch'
+                    processingRoute: 'batch',
+                    forcedBatch: String(jobData.force_batch || false)
                 },
                 tags: {
                     JobId: jobData.job_id,
                     UserId: jobData.user_id,
                     ProcessingRoute: 'batch',
                     Complexity: analysis.estimatedComplexity,
+                    ForcedBatch: jobData.force_batch ? 'true' : 'false',
                     Service: 'newsarchive-ocr'
                 }
             };
@@ -272,7 +289,8 @@ class IntelligentOCRRouter {
                 batch_job_id: batchResponse.jobId,
                 batch_job_name: batchResponse.jobName,
                 batch_submitted_at: new Date().toISOString(),
-                queue_type: 'aws_batch'
+                queue_type: 'aws_batch',
+                forced_batch: jobData.force_batch || false
             });
 
             console.log(`🏭 Job ${jobData.job_id} routed to AWS Batch processing: ${batchResponse.jobId}`);

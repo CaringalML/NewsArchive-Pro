@@ -466,7 +466,8 @@ exports.handler = async (event) => {
                         group_id: jobData.group_id || null,
                         page_number: jobData.page_number || null,
                         is_multi_page: jobData.is_multi_page || false,
-                        page_count: jobData.page_count || 1
+                        page_count: jobData.page_count || 1,
+                        force_batch: ocrSettings.forceBatch || false
                     };
                     
                     // Route the job intelligently
@@ -639,7 +640,7 @@ exports.handler = async (event) => {
         if (requestPath === '/processing-recommendation' && httpMethod === 'POST') {
             try {
                 const requestBody = JSON.parse(event.body || '{}');
-                const { fileSize, isMultiPage, pageCount, filename } = requestBody;
+                const { fileSize, isMultiPage, pageCount, filename, forceBatch } = requestBody;
                 
                 if (!fileSize) {
                     return {
@@ -656,7 +657,8 @@ exports.handler = async (event) => {
                     file_size: fileSize,
                     is_multi_page: isMultiPage || false,
                     page_count: pageCount || 1,
-                    filename: filename || 'document.jpg'
+                    filename: filename || 'document.jpg',
+                    force_batch: forceBatch || false
                 };
                 
                 const recommendation = await intelligentOCRRouter.getRouteRecommendation(mockJobData);

@@ -39,7 +39,8 @@ const EnhancedUploadForm = () => {
     enableOCR: true,
     generateMETSALTO: true,
     createSearchablePDFs: false,
-    maxConcurrent: 5
+    maxConcurrent: 5,
+    forceBatch: false  // New option to force AWS Batch processing
   })
 
   const fileInputRef = useRef(null)
@@ -226,7 +227,8 @@ const EnhancedUploadForm = () => {
       // Each file is analyzed individually regardless of grouping
       const settings = {
         isMultiPage: false,  // Individual files are analyzed separately
-        pageCount: 1         // Each file is treated as single unit
+        pageCount: 1,        // Each file is treated as single unit
+        forceBatch: processingOptions.forceBatch  // Include force batch setting
       }
 
       const recommendation = await apiService.getProcessingRecommendation(file, settings)
@@ -891,6 +893,24 @@ const EnhancedUploadForm = () => {
                   }))}
                 />
                 Create Searchable PDFs
+              </label>
+            </div>
+            <div className="form-group">
+              <label className="force-batch-option">
+                <input
+                  type="checkbox"
+                  checked={processingOptions.forceBatch}
+                  onChange={(e) => setProcessingOptions(prev => ({
+                    ...prev,
+                    forceBatch: e.target.checked
+                  }))}
+                />
+                <span className="force-batch-text">
+                  Force AWS Batch Processing 
+                  <span className="force-batch-help">
+                    🏭 Override automatic routing - use Batch for all files
+                  </span>
+                </span>
               </label>
             </div>
             <div className="form-group">
