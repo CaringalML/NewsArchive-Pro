@@ -363,18 +363,17 @@ const EnhancedUploadForm = () => {
     if (fileIndex === -1) return
 
     if (groupingState.firstPage === null) {
-      // First click - select start page
-      setGroupingState({ firstPage: fileIndex, lastPage: null })
-      setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
-      setSelectedFiles(prev => prev.map((f, idx) => 
-        idx === fileIndex ? { ...f, selected: true } : f
-      ))
-    } else if (groupingState.lastPage === null && fileIndex !== groupingState.firstPage) {
-      // Second click - select end page and range, then automatically create group
-      const startIdx = Math.min(groupingState.firstPage, fileIndex)
-      const endIdx = Math.max(groupingState.firstPage, fileIndex)
+      // First click - select start page (store fileId instead of index)
+      setGroupingState({ firstPage: fileId, lastPage: null })
+      setSelectedFiles(prev => prev.map(f => ({ ...f, selected: f.id === fileId })))
+    } else if (groupingState.lastPage === null && fileId !== groupingState.firstPage) {
+      // Second click - select end page and range
+      const firstFileIndex = selectedFiles.findIndex(f => f.id === groupingState.firstPage)
+      const lastFileIndex = fileIndex
+      const startIdx = Math.min(firstFileIndex, lastFileIndex)
+      const endIdx = Math.max(firstFileIndex, lastFileIndex)
       
-      setGroupingState(prev => ({ ...prev, lastPage: fileIndex }))
+      setGroupingState(prev => ({ ...prev, lastPage: fileId }))
       setSelectedFiles(prev => prev.map((f, idx) => 
         idx >= startIdx && idx <= endIdx ? { ...f, selected: true } : { ...f, selected: false }
       ))
@@ -647,8 +646,8 @@ const EnhancedUploadForm = () => {
                   <div className="grouping-instructions">
                     <p className="text-sm text-gray-600">
                       {groupingState.firstPage === null && "Click a checkbox to select the first page"}
-                      {groupingState.firstPage !== null && groupingState.lastPage === null && "Click another checkbox to select the last page"}
-                      {groupingState.lastPage !== null && "Range selected automatically. Click any checkbox to reset."}
+                      {groupingState.firstPage !== null && groupingState.lastPage === null && "Click another checkbox to select the last page and create range"}
+                      {groupingState.lastPage !== null && "Range selected. Click any checkbox to reset."}
                     </p>
                   </div>
                 )}
@@ -689,14 +688,13 @@ const EnhancedUploadForm = () => {
                 {selectedFiles.map((fileInfo, index) => {
                   let groupingClass = ''
                   if (isGroupingMode && groupingState.firstPage !== null) {
-                    if (index === groupingState.firstPage) {
+                    if (fileInfo.id === groupingState.firstPage) {
                       groupingClass = 'first-page'
-                    } else if (index === groupingState.lastPage) {
+                    } else if (fileInfo.id === groupingState.lastPage) {
                       groupingClass = 'last-page'
                     } else if (
                       groupingState.lastPage !== null &&
-                      index > Math.min(groupingState.firstPage, groupingState.lastPage) &&
-                      index < Math.max(groupingState.firstPage, groupingState.lastPage)
+                      fileInfo.selected
                     ) {
                       groupingClass = 'in-range'
                     }
