@@ -37,25 +37,53 @@ const JobDetailsModalContent = ({ showJobDetails, jobs, getStatusColor, formatDa
     const loadGroupedData = async () => {
       if (job && job.is_grouped && job.group_id) {
         setLoading(true)
-        try {
-          const data = await fetchGroupedDocument(job.group_id)
-          setGroupedData(data)
-        } catch (error) {
-          console.error('Failed to load grouped document:', error)
-          // If API fails, use the local job data as fallback
-          if (job.pages) {
+        
+        // First try to use local data if available
+        if (job.pages && job.pages.length > 0) {
+          // Sort pages by page number
+          const sortedPages = [...job.pages].sort((a, b) => (a.page_number || 0) - (b.page_number || 0))
+          
+          // Build combined text from all pages
+          const combinedText = sortedPages
+            .filter(p => p.corrected_text || p.extracted_text)
+            .map((p, index) => {
+              const pageText = p.corrected_text || p.extracted_text || ''
+              return `[Page ${p.page_number || index + 1}]\n${pageText}`
+            })
+            .join('\n\n--- Page Break ---\n\n')
+          
+          setGroupedData({
+            group_id: job.group_id,
+            total_pages: sortedPages.length,
+            pages: sortedPages,
+            combined_text: combinedText,
+            collection_name: job.collection_name || job.filename,
+            status_summary: {
+              completed: sortedPages.filter(p => p.status === 'completed').length,
+              processing: sortedPages.filter(p => p.status === 'processing').length,
+              pending: sortedPages.filter(p => p.status === 'pending' || p.status === 'queued').length,
+              failed: sortedPages.filter(p => p.status === 'failed').length
+            }
+          })
+          setLoading(false)
+        } else {
+          // Only try API if no local data available
+          try {
+            const data = await fetchGroupedDocument(job.group_id)
+            setGroupedData(data)
+          } catch (error) {
+            console.error('Failed to load grouped document:', error)
+            // Fallback to basic structure
             setGroupedData({
               group_id: job.group_id,
-              total_pages: job.pages.length,
-              pages: job.pages,
-              combined_text: job.pages
-                .filter(p => p.corrected_text || p.extracted_text)
-                .map(p => p.corrected_text || p.extracted_text)
-                .join('\n\n')
+              total_pages: 0,
+              pages: [],
+              combined_text: 'Unable to load document content',
+              error: error.message
             })
+          } finally {
+            setLoading(false)
           }
-        } finally {
-          setLoading(false)
         }
       } else {
         setGroupedData(null)
@@ -135,18 +163,57 @@ const JobDetailsModalContent = ({ showJobDetails, jobs, getStatusColor, formatDa
       </div>
 
       {/* Combined Text Content Section for Grouped Documents */}
-      {isGrouped && displayData.combined_text && (
+      {isGrouped && (
         <div className="text-content-section">
           <div className="section-header">
             <DocumentTextIcon className="w-5 h-5" />
-            <h3>Combined Text from All Pages</h3>
-            <span className="page-count-badge">{displayData.total_pages} pages</span>
+            <h3>Combined Document Content</h3>
+            <span className="page-count-badge">{displayData.total_pages || 0} pages</span>
           </div>
+          
+          {/* Status Summary for Grouped Document */}
+          {displayData.status_summary && (
+            <div className="grouped-status-summary">
+              {displayData.status_summary.completed > 0 && (
+                <span className="status-badge completed">
+                  ✓ {displayData.status_summary.completed} completed
+                </span>
+              )}
+              {displayData.status_summary.processing > 0 && (
+                <span className="status-badge processing">
+                  ⚡ {displayData.status_summary.processing} processing
+                </span>
+              )}
+              {displayData.status_summary.pending > 0 && (
+                <span className="status-badge pending">
+                  ⏳ {displayData.status_summary.pending} pending
+                </span>
+              )}
+              {displayData.status_summary.failed > 0 && (
+                <span className="status-badge failed">
+                  ✗ {displayData.status_summary.failed} failed
+                </span>
+              )}
+            </div>
+          )}
+          
           <div className="text-content">
             <div className="text-block">
-              <div className="text-preview multi-page">
-                {displayData.combined_text}
-              </div>
+              {displayData.combined_text ? (
+                <div className="text-preview multi-page">
+                  {displayData.combined_text}
+                </div>
+              ) : displayData.error ? (
+                <div className="error-message-display">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
+                  <p>Unable to load combined text: {displayData.error}</p>
+                  <p className="error-hint">Individual page content may still be available below.</p>
+                </div>
+              ) : (
+                <div className="no-text-message">
+                  <p>No text content available for this document.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

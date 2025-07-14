@@ -2041,3 +2041,93 @@ body {
 .page-card-compact:nth-child(n+50) {
   contain: layout style paint;
 }
+
+/* ===================================================================
+ * Modal Enhancements for Grouped Documents
+ * =================================================================== */
+.grouped-status-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+  padding: 12px;
+  background: var(--c-bg-tertiary);
+  border-radius: var(--border-radius-sm);
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-badge.completed {
+  background: var(--c-brand-lightest);
+  color: var(--c-brand-dark);
+  border: 1px solid var(--c-brand-light);
+}
+
+.status-badge.processing {
+  background: var(--c-info-light);
+  color: var(--c-info-dark);
+  border: 1px solid var(--c-info);
+}
+
+.status-badge.pending {
+  background: var(--c-warning-light);
+  color: var(--c-warning-dark);
+  border: 1px solid var(--c-warning);
+}
+
+.status-badge.failed {
+  background: var(--c-danger-light);
+  color: var(--c-danger-dark);
+  border: 1px solid var(--c-danger);
+}
+
+.error-message-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  background: var(--c-danger-light);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--c-danger);
+  text-align: center;
+}
+
+.error-message-display p {
+  margin: 0;
+  color: var(--c-danger-dark);
+  font-weight: 500;
+}
+
+.error-hint {
+  font-size: 12px;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.no-text-message {
+  padding: 20px;
+  text-align: center;
+  color: var(--c-text-secondary);
+  background: var(--c-bg-tertiary);
+  border-radius: var(--border-radius-md);
+}
+
+.text-preview.multi-page {
+  max-height: 500px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: monospace;
+  line-height: 1.6;
+  padding: 16px;
+  background: var(--c-bg-tertiary);
+  border-radius: var(--border-radius-md);
+}
