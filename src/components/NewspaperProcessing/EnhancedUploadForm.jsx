@@ -29,7 +29,6 @@ const EnhancedUploadForm = () => {
   const [dragActive, setDragActive] = useState(false)
   const [documentGroups, setDocumentGroups] = useState({})
   const [isGroupingMode, setIsGroupingMode] = useState(false)
-  const [groupingState, setGroupingState] = useState({ firstPage: null, lastPage: null })
   const [showProcessingInfo, setShowProcessingInfo] = useState(false)
   const [processingRecommendations, setProcessingRecommendations] = useState({})
   
@@ -416,7 +415,6 @@ const EnhancedUploadForm = () => {
 
     toast.success(`Created multi-page document with ${selectedFilesList.length} pages`)
     setIsGroupingMode(false)
-    setGroupingState({ firstPage: null, lastPage: null })
   }
 
 
@@ -656,7 +654,6 @@ const EnhancedUploadForm = () => {
                       <button
                         onClick={() => {
                           setIsGroupingMode(false)
-                          setGroupingState({ firstPage: null, lastPage: null })
                           setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
                         }}
                         className="cancel-group-btn"
