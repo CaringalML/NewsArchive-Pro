@@ -251,6 +251,14 @@ const EnhancedUploadForm = () => {
     await Promise.all(promises)
   }
 
+  // Auto-update analysis when Force Batch toggle changes
+  useEffect(() => {
+    if (showProcessingInfo && selectedFiles.length > 0) {
+      console.log('🔄 Force Batch setting changed, refreshing analysis...')
+      analyzeAllFiles()
+    }
+  }, [processingOptions.forceBatch])
+
   const handleUploadProgress = (completed, total, result) => {
     const percentage = Math.round((completed / total) * 100)
     setUploadProgress(prev => ({
@@ -589,6 +597,24 @@ const EnhancedUploadForm = () => {
                 />
               </div>
             </div>
+            
+            {/* Quick Force Batch Toggle */}
+            <div className="quick-options">
+              <label className="force-batch-quick-toggle">
+                <input
+                  type="checkbox"
+                  checked={processingOptions.forceBatch}
+                  onChange={(e) => setProcessingOptions(prev => ({
+                    ...prev,
+                    forceBatch: e.target.checked
+                  }))}
+                />
+                <span className="toggle-text">
+                  🏭 Force AWS Batch Processing
+                  <span className="toggle-hint">Override automatic routing</span>
+                </span>
+              </label>
+            </div>
           </div>
 
           {/* Drag and Drop Upload Area */}
@@ -813,10 +839,13 @@ const EnhancedUploadForm = () => {
               <button
                 onClick={analyzeAllFiles}
                 disabled={uploading}
-                className="analyze-btn"
+                className={`analyze-btn ${processingOptions.forceBatch ? 'force-batch-active' : ''}`}
               >
                 <DocumentArrowUpIcon className="w-4 h-4" />
-                {showProcessingInfo ? 'Refresh Analysis' : 'Analyze Processing Routes'}
+                {processingOptions.forceBatch ? 
+                  (showProcessingInfo ? '🏭 Refresh Analysis (Force Batch)' : '🏭 Analyze Routes (Force Batch)') :
+                  (showProcessingInfo ? 'Refresh Analysis' : 'Analyze Processing Routes')
+                }
               </button>
               {showProcessingInfo && (
                 <button
