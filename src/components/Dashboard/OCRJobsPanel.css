@@ -1397,6 +1397,215 @@ body {
 
 .cancel-btn:hover {
   background: var(--c-bg-tertiary);
+}
+
+/* ===================================================================
+ * Combined AI Metadata Analysis Section
+ * =================================================================== */
+.combined-ai-metadata-section {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--c-bg-secondary);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--c-border);
+}
+
+.combined-ai-metadata-section .section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--c-primary);
+}
+
+.combined-ai-metadata-section .section-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--c-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.ai-metadata-card {
+  background: var(--c-bg-primary);
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-md);
+  padding: 16px;
+  transition: var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-metadata-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--c-primary);
+}
+
+.ai-metadata-card h4 {
+  margin: 0 0 12px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--c-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-metadata-card .card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-metadata-card .metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--c-border-light);
+}
+
+.ai-metadata-card .metric-row:last-child {
+  border-bottom: none;
+}
+
+.ai-metadata-card .metric-label {
+  font-size: 0.75rem;
+  color: var(--c-text-secondary);
+  font-weight: 500;
+}
+
+.ai-metadata-card .metric-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--c-text-primary);
+}
+
+.ai-highlight {
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+.ai-metadata-card .status-indicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-brand);
+}
+
+.ai-metadata-card.no-data {
+  background: var(--c-bg-tertiary);
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+.ai-metadata-card.no-data .status-indicator {
+  background: var(--c-text-tertiary);
+}
+
+.ai-metadata-card.full-width {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, var(--c-brand-lightest) 0%, rgba(5, 150, 105, 0.03) 100%);
+  border-left: 4px solid var(--c-brand);
+}
+
+.ai-metadata-card.full-width h4 {
+  color: var(--c-brand-dark);
+  font-size: 1rem;
+}
+
+/* Entity and Key Phrase Lists */
+.entity-list, .phrase-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.entity-tag, .phrase-tag {
+  background: var(--c-primary);
+  color: white;
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.entity-tag.person {
+  background: var(--c-brand);
+}
+
+.entity-tag.location {
+  background: var(--c-info);
+}
+
+.entity-tag.organization {
+  background: var(--c-warning);
+}
+
+.entity-tag.other {
+  background: var(--c-text-secondary);
+}
+
+/* Sentiment indicator */
+.sentiment-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sentiment-indicator.positive {
+  background: var(--c-info-light);
+  color: var(--c-info-dark);
+}
+
+.sentiment-indicator.negative {
+  background: var(--c-danger-light);
+  color: var(--c-danger-dark);
+}
+
+.sentiment-indicator.neutral {
+  background: var(--c-bg-tertiary);
+  color: var(--c-text-secondary);
+}
+
+.sentiment-indicator.mixed {
+  background: var(--c-warning-light);
+  color: var(--c-warning-dark);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ai-metadata-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .combined-ai-metadata-section {
+    padding: 16px;
+  }
+  
+  .ai-metadata-card {
+    padding: 12px;
+  }
+}
   color: var(--c-text-primary);
 }
 
