@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useMemo } from 'react'
 import { 
   CloudArrowUpIcon,
   DocumentArrowUpIcon,
@@ -47,31 +47,12 @@ const EnhancedUploadForm = () => {
 
   const MAX_FILE_SIZE = parseInt(process.env.REACT_APP_MAX_FILE_SIZE) || 52428800 // 50MB
   const MAX_BATCH_SIZE = parseInt(process.env.REACT_APP_MAX_BATCH_SIZE) || 100
-  const ALLOWED_TYPES = process.env.REACT_APP_ALLOWED_IMAGE_TYPES?.split(',') || [
-    'image/jpeg', 'image/png', 'image/tiff', 'image/webp', 'image/bmp', 'image/gif'
-  ]
-
-  // Drag and drop handlers
-  const handleDrag = useCallback((e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
-    }
-  }, [])
-
-  const handleDrop = useCallback((e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-    
-    if (e.dataTransfer?.files) {
-      const droppedFiles = Array.from(e.dataTransfer.files)
-      processFiles(droppedFiles)
-    }
-  }, [processFiles])
+  
+  // Fixed: Wrap ALLOWED_TYPES in useMemo
+  const ALLOWED_TYPES = useMemo(() => 
+    process.env.REACT_APP_ALLOWED_IMAGE_TYPES?.split(',') || [
+      'image/jpeg', 'image/png', 'image/tiff', 'image/webp', 'image/bmp', 'image/gif'
+    ], [])
 
   const validateFile = useCallback((file) => {
     const errors = []
@@ -181,6 +162,28 @@ const EnhancedUploadForm = () => {
       toast.success(`${newFiles.length} files added successfully`)
     }
   }, [selectedFiles.length, MAX_BATCH_SIZE, validateFile, generateThumbnail])
+
+  // Drag and drop handlers
+  const handleDrag = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
+    }
+  }, [])
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    
+    if (e.dataTransfer?.files) {
+      const droppedFiles = Array.from(e.dataTransfer.files)
+      processFiles(droppedFiles)
+    }
+  }, [processFiles])
 
   const handleFileSelection = useCallback((event) => {
     const files = Array.from(event.target.files)
