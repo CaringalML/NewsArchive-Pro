@@ -395,12 +395,6 @@ const EnhancedUploadForm = () => {
     })
   }
 
-  // Get the page number for a file based on selection order
-  const getPageNumberForFile = (fileId) => {
-    const index = selectionOrder.findIndex(id => id === fileId)
-    return index !== -1 ? index + 1 : null
-  }
-
   // Clear selections when exiting grouping mode
   const exitGroupingMode = () => {
     setIsGroupingMode(false)
