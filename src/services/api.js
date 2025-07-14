@@ -284,10 +284,11 @@ class ApiService {
   /**
    * Delete a single OCR job
    * @param {string} jobId - OCR job ID
+   * @param {string} createdAt - Job creation timestamp
    * @returns {Promise} - Deletion result
    */
-  async deleteOCRJob(jobId) {
-    return this.delete(`/ocr-job/${jobId}`);
+  async deleteOCRJob(jobId, createdAt) {
+    return this.delete(`/ocr-job/${jobId}/${encodeURIComponent(createdAt)}`);
   }
 
   /**
@@ -302,11 +303,12 @@ class ApiService {
   /**
    * Update OCR job metadata
    * @param {string} jobId - OCR job ID
+   * @param {string} createdAt - Job creation timestamp
    * @param {Object} updates - Fields to update
    * @returns {Promise} - Update result
    */
-  async updateOCRJob(jobId, updates) {
-    return this.put(`/ocr-job/${jobId}`, updates);
+  async updateOCRJob(jobId, createdAt, updates) {
+    return this.put(`/ocr-job/${jobId}/${encodeURIComponent(createdAt)}`, updates);
   }
 
   /**

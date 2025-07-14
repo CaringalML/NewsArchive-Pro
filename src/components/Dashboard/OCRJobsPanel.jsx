@@ -308,10 +308,10 @@ const OCRJobsPanel = () => {
     })
   }
 
-  const handleSaveEdit = async (jobId) => {
+  const handleSaveEdit = async (job) => {
     try {
-      // Call API to update job
-      await apiService.updateOCRJob(jobId, editFormData)
+      // Call API to update job with job_id and created_at
+      await apiService.updateOCRJob(job.job_id, job.created_at, editFormData)
       toast.success('Job updated successfully')
       setEditingJob(null)
       fetchJobs() // Refresh the jobs list
@@ -340,8 +340,8 @@ const OCRJobsPanel = () => {
         await apiService.deleteOCRGroup(showDeleteConfirm.group_id)
         toast.success('Document group deleted successfully')
       } else {
-        // Delete single job
-        await apiService.deleteOCRJob(showDeleteConfirm.job_id)
+        // Delete single job with job_id and created_at
+        await apiService.deleteOCRJob(showDeleteConfirm.job_id, showDeleteConfirm.created_at)
         toast.success('Job deleted successfully')
       }
       
@@ -832,7 +832,7 @@ const OCRJobsPanel = () => {
                     </div>
                     <div className="edit-form-actions">
                       <button
-                        onClick={() => handleSaveEdit(job.job_id)}
+                        onClick={() => handleSaveEdit(job)}
                         className="save-btn"
                       >
                         Save Changes

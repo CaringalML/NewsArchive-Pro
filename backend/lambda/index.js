@@ -13,6 +13,8 @@ const {
     createOCRJob,
     getOCRJob,
     updateOCRJob,
+    deleteOCRJob,
+    deleteOCRGroup,
     getOCRJobsByUser,
     getOCRJobsByStatus
 } = require('./dynamodb-client');
@@ -142,7 +144,7 @@ exports.handler = async (event) => {
     const corsHeaders = {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type'
     };
 
@@ -743,6 +745,137 @@ exports.handler = async (event) => {
             }
         }
 
+        // Route: PUT /ocr-job/:jobId/:createdAt - Update OCR job
+        if (requestPath.match(/^\/ocr-job\/[^\/]+\/[^\/]+$/) && httpMethod === 'PUT') {
+            const pathParts = requestPath.split('/');
+            const jobId = pathParts[2];
+            const createdAt = decodeURIComponent(pathParts[3]);
+            
+            try {
+                const requestBody = JSON.parse(event.body || '{}');
+                
+                // Validate that we have some fields to update
+                if (Object.keys(requestBody).length === 0) {
+                    return {
+                        statusCode: 400,
+                        headers: corsHeaders,
+                        body: JSON.stringify({
+                            error: 'Bad Request',
+                            message: 'No fields provided for update'
+                        })
+                    };
+                }
+                
+                const updatedJob = await updateOCRJob(jobId, createdAt, requestBody);
+                
+                return {
+                    statusCode: 200,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        message: 'OCR job updated successfully',
+                        data: updatedJob,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            } catch (error) {
+                console.error('Error updating OCR job:', error);
+                return {
+                    statusCode: 500,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        error: 'Database Error',
+                        message: error.message,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            }
+        }
+
+        // Route: DELETE /ocr-job/:jobId/:createdAt - Delete single OCR job
+        if (requestPath.match(/^\/ocr-job\/[^\/]+\/[^\/]+$/) && httpMethod === 'DELETE') {
+            const pathParts = requestPath.split('/');
+            const jobId = pathParts[2];
+            const createdAt = decodeURIComponent(pathParts[3]);
+            
+            try {
+                const deletedJob = await deleteOCRJob(jobId, createdAt);
+                
+                if (!deletedJob) {
+                    return {
+                        statusCode: 404,
+                        headers: corsHeaders,
+                        body: JSON.stringify({
+                            error: 'Not Found',
+                            message: 'OCR job not found'
+                        })
+                    };
+                }
+                
+                return {
+                    statusCode: 200,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        message: 'OCR job deleted successfully',
+                        data: deletedJob,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            } catch (error) {
+                console.error('Error deleting OCR job:', error);
+                return {
+                    statusCode: 500,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        error: 'Database Error',
+                        message: error.message,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            }
+        }
+
+        // Route: DELETE /ocr-group/:groupId - Delete entire OCR group
+        if (requestPath.match(/^\/ocr-group\/[^\/]+$/) && httpMethod === 'DELETE') {
+            const groupId = requestPath.split('/')[2];
+            
+            try {
+                const deleteResult = await deleteOCRGroup(groupId);
+                
+                return {
+                    statusCode: 200,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        message: `OCR group deleted successfully`,
+                        data: deleteResult,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            } catch (error) {
+                console.error('Error deleting OCR group:', error);
+                
+                if (error.message.includes('No jobs found')) {
+                    return {
+                        statusCode: 404,
+                        headers: corsHeaders,
+                        body: JSON.stringify({
+                            error: 'Not Found',
+                            message: error.message
+                        })
+                    };
+                }
+                
+                return {
+                    statusCode: 500,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        error: 'Database Error',
+                        message: error.message,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            }
+        }
+
         // Route not found
         return {
             statusCode: 404,
@@ -760,6 +893,9 @@ exports.handler = async (event) => {
                     'POST /processing-recommendation',
                     'GET /ocr-jobs/:userId',
                     'GET /ocr-job/:jobId/:createdAt',
+                    'PUT /ocr-job/:jobId/:createdAt',
+                    'DELETE /ocr-job/:jobId/:createdAt',
+                    'DELETE /ocr-group/:groupId',
                     'GET /document/:groupId'
                 ]
             })

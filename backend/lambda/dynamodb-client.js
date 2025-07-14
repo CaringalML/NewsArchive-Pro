@@ -1,5 +1,6 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand, DeleteCommand, QueryCommand, ScanCommand, BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
+const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
 // Initialize DynamoDB client
 const client = new DynamoDBClient({
@@ -26,10 +27,38 @@ const dynamoDb = DynamoDBDocumentClient.from(client, {
   }
 });
 
+// Initialize S3 client
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION || 'us-east-1'
+});
+
 // Table names from environment variables or defaults
 const TABLES = {
   USERS: process.env.USERS_TABLE || 'newsarchive-pro-users-prod',
   OCR_JOBS: process.env.OCR_JOBS_TABLE || 'newsarchive-pro-ocr-jobs-prod'
+};
+
+// S3 bucket for file cleanup
+const S3_BUCKET = process.env.S3_BUCKET || 'newsarchivepro-images-1747a635';
+
+// Helper function to delete S3 file
+const deleteS3File = async (s3Key) => {
+  if (!s3Key) return { success: false, reason: 'No S3 key provided' };
+  
+  try {
+    const deleteParams = {
+      Bucket: S3_BUCKET,
+      Key: s3Key
+    };
+    
+    await s3Client.send(new DeleteObjectCommand(deleteParams));
+    console.log(`Successfully deleted S3 file: ${s3Key}`);
+    return { success: true };
+  } catch (error) {
+    console.error(`Failed to delete S3 file ${s3Key}:`, error);
+    // Don't throw error - file might already be deleted or not exist
+    return { success: false, error: error.message };
+  }
 };
 
 // Helper functions for common DynamoDB operations
@@ -179,6 +208,96 @@ const updateOCRJob = async (jobId, createdAt, updates) => {
   return result.Attributes;
 };
 
+// Delete a single OCR job
+const deleteOCRJob = async (jobId, createdAt) => {
+  const params = {
+    TableName: TABLES.OCR_JOBS,
+    Key: { 
+      job_id: jobId,
+      created_at: createdAt
+    },
+    ReturnValues: 'ALL_OLD'
+  };
+  
+  const result = await dynamoDb.send(new DeleteCommand(params));
+  const deletedJob = result.Attributes;
+  
+  // Also delete the S3 file if it exists
+  if (deletedJob && deletedJob.s3_key) {
+    const s3Result = await deleteS3File(deletedJob.s3_key);
+    deletedJob.s3_cleanup = s3Result;
+  }
+  
+  return deletedJob;
+};
+
+// Delete all OCR jobs in a group (multi-page document)
+const deleteOCRGroup = async (groupId) => {
+  // First, query all jobs in the group
+  const queryParams = {
+    TableName: TABLES.OCR_JOBS,
+    IndexName: 'group-index',
+    KeyConditionExpression: 'group_id = :groupId',
+    ExpressionAttributeValues: {
+      ':groupId': groupId
+    }
+  };
+  
+  const queryResult = await dynamoDb.send(new QueryCommand(queryParams));
+  const jobs = queryResult.Items || [];
+  
+  if (jobs.length === 0) {
+    throw new Error(`No jobs found for group ${groupId}`);
+  }
+  
+  // Delete all jobs in the group using batch write
+  const deleteRequests = jobs.map(job => ({
+    DeleteRequest: {
+      Key: {
+        job_id: job.job_id,
+        created_at: job.created_at
+      }
+    }
+  }));
+  
+  // DynamoDB batch write can handle max 25 items at a time
+  const batches = [];
+  for (let i = 0; i < deleteRequests.length; i += 25) {
+    batches.push(deleteRequests.slice(i, i + 25));
+  }
+  
+  const deletedJobs = [];
+  for (const batch of batches) {
+    const batchParams = {
+      RequestItems: {
+        [TABLES.OCR_JOBS]: batch
+      }
+    };
+    
+    await dynamoDb.send(new BatchWriteCommand(batchParams));
+    deletedJobs.push(...batch.map(req => req.DeleteRequest.Key));
+  }
+  
+  // Also delete all S3 files for jobs in this group
+  const s3CleanupResults = [];
+  for (const job of jobs) {
+    if (job.s3_key) {
+      const s3Result = await deleteS3File(job.s3_key);
+      s3CleanupResults.push({
+        job_id: job.job_id,
+        s3_key: job.s3_key,
+        s3_cleanup: s3Result
+      });
+    }
+  }
+  
+  return {
+    deletedCount: deletedJobs.length,
+    deletedJobs: deletedJobs,
+    s3Cleanup: s3CleanupResults
+  };
+};
+
 const getOCRJobsByUser = async (userId, limit = 50) => {
   const params = {
     TableName: TABLES.OCR_JOBS,
@@ -227,6 +346,8 @@ module.exports = {
   createOCRJob,
   getOCRJob,
   updateOCRJob,
+  deleteOCRJob,
+  deleteOCRGroup,
   getOCRJobsByUser,
   getOCRJobsByStatus
 };
