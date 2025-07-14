@@ -62,7 +62,7 @@ const EnhancedUploadForm = () => {
     }
   }, [])
 
-  const handleDrop = (e) => {
+  const handleDrop = useCallback((e) => {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
@@ -71,9 +71,9 @@ const EnhancedUploadForm = () => {
       const droppedFiles = Array.from(e.dataTransfer.files)
       processFiles(droppedFiles)
     }
-  }
+  }, [processFiles])
 
-  const validateFile = (file) => {
+  const validateFile = useCallback((file) => {
     const errors = []
     
     if (file.size > MAX_FILE_SIZE) {
@@ -85,9 +85,9 @@ const EnhancedUploadForm = () => {
     }
     
     return errors
-  }
+  }, [MAX_FILE_SIZE, ALLOWED_TYPES])
 
-  const generateThumbnail = (file) => {
+  const generateThumbnail = useCallback((file) => {
     return new Promise((resolve) => {
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -118,13 +118,19 @@ const EnhancedUploadForm = () => {
           
           resolve(canvas.toDataURL('image/jpeg', 0.7))
         }
+        img.onerror = () => {
+          resolve('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkVycm9yPC90ZXh0Pjwvc3ZnPg==')
+        }
         img.src = e.target.result
+      }
+      reader.onerror = () => {
+        resolve('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkVycm9yPC90ZXh0Pjwvc3ZnPg==')
       }
       reader.readAsDataURL(file)
     })
-  }
+  }, [])
 
-  const processFiles = async (files) => {
+  const processFiles = useCallback(async (files) => {
     const newFiles = []
     const errors = []
     
@@ -174,14 +180,14 @@ const EnhancedUploadForm = () => {
       setSelectedFiles(prev => [...prev, ...newFiles])
       toast.success(`${newFiles.length} files added successfully`)
     }
-  }
+  }, [selectedFiles.length, MAX_BATCH_SIZE, validateFile, generateThumbnail])
 
-  const handleFileSelection = (event) => {
+  const handleFileSelection = useCallback((event) => {
     const files = Array.from(event.target.files)
     processFiles(files)
-  }
+  }, [processFiles])
 
-  const removeFile = (fileId) => {
+  const removeFile = useCallback((fileId) => {
     setSelectedFiles(prev => prev.filter(f => f.id !== fileId))
     setUploadProgress(prev => {
       const newProgress = { ...prev }
@@ -191,16 +197,17 @@ const EnhancedUploadForm = () => {
     
     // Remove from selection order if it was selected
     setSelectionOrder(prev => prev.filter(id => id !== fileId))
-  }
+  }, [])
 
-  const clearAllFiles = () => {
+  const clearAllFiles = useCallback(() => {
     setSelectedFiles([])
     setUploadProgress({})
     setSelectionOrder([])
+    setDocumentGroups({})
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
-  }
+  }, [])
 
   const updateFileStatus = (fileId, status, progress = null, error = null) => {
     setSelectedFiles(prev => prev.map(f => 
@@ -357,46 +364,40 @@ const EnhancedUploadForm = () => {
     toast.success('Upload cancelled')
   }
 
-  // Fixed checkbox selection logic
-  const toggleFileSelection = (fileId) => {
-    setSelectedFiles(prev => {
-      const file = prev.find(f => f.id === fileId)
-      if (!file) return prev
+  const toggleFileSelection = useCallback((fileId) => {
+    setSelectedFiles(prevFiles => {
+      const file = prevFiles.find(f => f.id === fileId)
+      if (!file) return prevFiles
       
       const isCurrentlySelected = file.selected
       
-      if (isCurrentlySelected) {
-        // Deselecting - remove from selection order and update all selection indices
-        setSelectionOrder(prevOrder => {
-          const newOrder = prevOrder.filter(id => id !== fileId)
-          return newOrder
-        })
-        
-        return prev.map(f => {
-          if (f.id === fileId) {
-            return { ...f, selected: false, selectionIndex: null }
+      // Update selection order first
+      setSelectionOrder(prevOrder => {
+        if (isCurrentlySelected) {
+          // Deselecting - remove from selection order
+          return prevOrder.filter(id => id !== fileId)
+        } else {
+          // Selecting - add to end of selection order
+          return [...prevOrder, fileId]
+        }
+      })
+      
+      // Then update file selection state
+      return prevFiles.map(f => {
+        if (f.id === fileId) {
+          return { 
+            ...f, 
+            selected: !isCurrentlySelected, 
+            selectionIndex: !isCurrentlySelected ? null : null // Will be set by render logic
           }
-          return f
-        })
-      } else {
-        // Selecting - add to end of selection order
-        setSelectionOrder(prevOrder => {
-          const newOrder = [...prevOrder, fileId]
-          return newOrder
-        })
-        
-        return prev.map(f => {
-          if (f.id === fileId) {
-            return { ...f, selected: true, selectionIndex: selectionOrder.length + 1 }
-          }
-          return f
-        })
-      }
+        }
+        return f
+      })
     })
-  }
+  }, [])
 
   // Clear selections when exiting grouping mode
-  const exitGroupingMode = () => {
+  const exitGroupingMode = useCallback(() => {
     setIsGroupingMode(false)
     setSelectionOrder([])
     setSelectedFiles(prev => prev.map(f => ({ 
@@ -404,19 +405,23 @@ const EnhancedUploadForm = () => {
       selected: false, 
       selectionIndex: null 
     })))
-  }
+  }, [])
 
-  const createDocumentGroup = () => {
+  const createDocumentGroup = useCallback(() => {
     if (selectionOrder.length < 2) {
       toast.error('Please select at least 2 files to group as a multi-page document')
       return
     }
 
+    // Store the current selection order before clearing it
+    const currentSelectionOrder = [...selectionOrder]
+    const selectedCount = currentSelectionOrder.length
+
     const groupId = Date.now() + Math.random()
     const newGroup = {
       id: groupId,
       name: `Document ${Object.keys(documentGroups).length + 1}`,
-      fileIds: [...selectionOrder], // Use selection order directly
+      fileIds: currentSelectionOrder, // Use stored selection order
       createdAt: new Date()
     }
 
@@ -425,9 +430,9 @@ const EnhancedUploadForm = () => {
       [groupId]: newGroup
     }))
 
-    // Update files with group info and page numbers based on selection order
+    // Update files with group info and page numbers based on stored selection order
     setSelectedFiles(prev => prev.map(f => {
-      const pageIndex = selectionOrder.indexOf(f.id)
+      const pageIndex = currentSelectionOrder.indexOf(f.id)
       if (pageIndex !== -1) {
         const pageNumber = pageIndex + 1
         return {
@@ -442,11 +447,10 @@ const EnhancedUploadForm = () => {
       return { ...f, selected: false, selectionIndex: null }
     }))
 
-    // Clear selection order and exit grouping mode
-    setSelectionOrder([])
-    setIsGroupingMode(false)
-    toast.success(`Created multi-page document with ${selectionOrder.length} pages`)
-  }
+    // Use exitGroupingMode to ensure complete cleanup
+    toast.success(`Created multi-page document with ${selectedCount} pages`)
+    exitGroupingMode()
+  }, [selectionOrder, documentGroups, exitGroupingMode])
 
   const removeFromGroup = (fileId) => {
     const fileToRemove = selectedFiles.find(f => f.id === fileId)
@@ -497,15 +501,15 @@ const EnhancedUploadForm = () => {
     }
   }
 
-  const formatFileSize = (bytes) => {
+  const formatFileSize = useCallback((bytes) => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
+  }, [])
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = useCallback((status) => {
     switch (status) {
       case 'completed':
         return <CheckCircleIcon className="w-5 h-5 text-green-500" />
@@ -516,7 +520,7 @@ const EnhancedUploadForm = () => {
       default:
         return <DocumentArrowUpIcon className="w-5 h-5 text-gray-400" />
     }
-  }
+  }, [])
 
   return (
     <div className="enhanced-upload-form">
@@ -715,6 +719,7 @@ const EnhancedUploadForm = () => {
                             checked={fileInfo.selected}
                             onChange={() => toggleFileSelection(fileInfo.id)}
                             disabled={uploading || fileInfo.groupId}
+                        aria-label={`Select file ${fileInfo.name} for grouping`}
                           />
                           {showSelectionNumber && (
                             <span className="selection-order">{pageInSelection}</span>
