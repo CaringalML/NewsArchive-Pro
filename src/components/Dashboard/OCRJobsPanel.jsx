@@ -244,62 +244,118 @@ const JobDetailsModalContent = ({ showJobDetails, jobs, getStatusColor, formatDa
         </div>
       )}
 
-      {/* Individual Pages Section for Grouped Documents */}
+      {/* Combined Metadata Section for Grouped Documents */}
       {isGrouped && displayData.pages && (
-        <div className="pages-section">
+        <div className="combined-metadata-section">
           <div className="section-header">
-            <DocumentTextIcon className="w-5 h-5" />
-            <h3>Individual Pages</h3>
-            <span className="pages-summary">
-              {displayData.pages.filter(p => p.status === 'completed').length} of {displayData.pages.length} completed
-            </span>
+            <SparklesIcon className="w-5 h-5" />
+            <h3>Combined Document Metadata</h3>
           </div>
-          <div className="pages-grid">
-            {displayData.pages.map((page, index) => (
-              <div key={page.job_id} className="page-card enhanced">
-                <div className="page-header">
-                  <div className="page-title">
-                    <h4>Page {page.page_number || index + 1}</h4>
-                    <span className="page-filename">{page.filename}</span>
-                  </div>
-                  <span className={`status-badge ${getStatusColor(page.status)}`}>
-                    {page.status}
+          
+          <div className="metadata-grid">
+            {/* Processing Statistics */}
+            <div className="metadata-card">
+              <h4>Processing Statistics</h4>
+              <div className="metadata-stats">
+                <div className="stat-row">
+                  <span className="stat-label">Total Pages:</span>
+                  <span className="stat-value">{displayData.total_pages}</span>
+                </div>
+                <div className="stat-row">
+                  <span className="stat-label">Average Confidence:</span>
+                  <span className="stat-value">
+                    {displayData.pages.filter(p => p.confidence_score).length > 0 
+                      ? Math.round(
+                          displayData.pages
+                            .filter(p => p.confidence_score)
+                            .reduce((sum, p) => sum + p.confidence_score, 0) / 
+                          displayData.pages.filter(p => p.confidence_score).length
+                        )
+                      : 'N/A'
+                    }%
                   </span>
                 </div>
-                
-                <div className="page-stats">
-                  {page.confidence_score && (
-                    <div className="stat-item">
-                      <span className="stat-label">Confidence:</span>
-                      <span className="stat-value">{Math.round(page.confidence_score)}%</span>
-                    </div>
-                  )}
-                  {page.created_at && (
-                    <div className="stat-item">
-                      <span className="stat-label">Processed:</span>
-                      <span className="stat-value">{formatDate(page.created_at)}</span>
-                    </div>
-                  )}
+                <div className="stat-row">
+                  <span className="stat-label">Processing Method:</span>
+                  <span className="stat-value">
+                    {displayData.pages[0]?.processing?.processor || 'OCR Processing'}
+                  </span>
                 </div>
-
-                {page.error && (
-                  <div className="page-error-banner">
-                    <ExclamationTriangleIcon className="w-4 h-4" />
-                    <span>{page.error}</span>
-                  </div>
-                )}
-
-                {(page.corrected_text || page.extracted_text) && (
-                  <div className="page-text-preview">
-                    <label className="preview-label">Text Preview:</label>
-                    <div className="text-preview small">
-                      {(page.corrected_text || page.extracted_text).substring(0, 200)}
-                      {(page.corrected_text || page.extracted_text).length > 200 && '...'}
-                    </div>
-                  </div>
-                )}
+                <div className="stat-row">
+                  <span className="stat-label">Document Type:</span>
+                  <span className="stat-value">
+                    {job.document_type || 'Multi-page Document'}
+                  </span>
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Content Analysis */}
+            <div className="metadata-card">
+              <h4>Content Analysis</h4>
+              <div className="metadata-stats">
+                <div className="stat-row">
+                  <span className="stat-label">Total Characters:</span>
+                  <span className="stat-value">
+                    {displayData.combined_text ? displayData.combined_text.length.toLocaleString() : '0'}
+                  </span>
+                </div>
+                <div className="stat-row">
+                  <span className="stat-label">Estimated Words:</span>
+                  <span className="stat-value">
+                    {displayData.combined_text 
+                      ? Math.round(displayData.combined_text.split(' ').length).toLocaleString()
+                      : '0'
+                    }
+                  </span>
+                </div>
+                <div className="stat-row">
+                  <span className="stat-label">Pages with Text:</span>
+                  <span className="stat-value">
+                    {displayData.pages.filter(p => p.corrected_text || p.extracted_text).length} of {displayData.total_pages}
+                  </span>
+                </div>
+                <div className="stat-row">
+                  <span className="stat-label">Collection:</span>
+                  <span className="stat-value">
+                    {job.collection_name || 'Default Collection'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* AI Processing Results */}
+            {displayData.pages.some(p => p.comprehend_processed || p.metadata_summary) && (
+              <div className="metadata-card">
+                <h4>AI Analysis Results</h4>
+                <div className="metadata-stats">
+                  <div className="stat-row">
+                    <span className="stat-label">AI Processed Pages:</span>
+                    <span className="stat-value">
+                      {displayData.pages.filter(p => p.comprehend_processed).length} of {displayData.total_pages}
+                    </span>
+                  </div>
+                  <div className="stat-row">
+                    <span className="stat-label">Entities Detected:</span>
+                    <span className="stat-value">
+                      {displayData.pages.some(p => p.entities) ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div className="stat-row">
+                    <span className="stat-label">Key Phrases Extracted:</span>
+                    <span className="stat-value">
+                      {displayData.pages.some(p => p.key_phrases) ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div className="stat-row">
+                    <span className="stat-label">Sentiment Analysis:</span>
+                    <span className="stat-value">
+                      {displayData.pages.some(p => p.sentiment) ? 'Available' : 'Not Available'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

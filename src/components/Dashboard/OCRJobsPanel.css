@@ -2122,12 +2122,138 @@ body {
 }
 
 .text-preview.multi-page {
-  max-height: 500px;
+  max-height: 600px;
   overflow-y: auto;
   white-space: pre-wrap;
   font-family: monospace;
   line-height: 1.6;
-  padding: 16px;
+  padding: 20px;
   background: var(--c-bg-tertiary);
   border-radius: var(--border-radius-md);
+  border: 1px solid var(--c-border);
+}
+
+/* ===================================================================
+ * Combined Metadata Section
+ * =================================================================== */
+.combined-metadata-section {
+  margin-top: 24px;
+  background: var(--c-bg-primary);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--c-border);
+  overflow: hidden;
+}
+
+.combined-metadata-section .section-header {
+  padding: 16px 20px;
+  background: var(--c-bg-secondary);
+  border-bottom: 1px solid var(--c-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.combined-metadata-section .section-header h3 {
+  margin: 0;
+  color: var(--c-text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.metadata-card {
+  background: var(--c-bg-secondary);
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-md);
+  padding: 16px;
+  transition: var(--transition-fast);
+}
+
+.metadata-card:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--c-text-tertiary);
+}
+
+.metadata-card h4 {
+  margin: 0 0 16px 0;
+  color: var(--c-text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.metadata-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--c-text-secondary);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 14px;
+  color: var(--c-text-primary);
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Enhanced styling for specific stat values */
+.stat-value:has(+ .stat-label:contains("Confidence")),
+.stat-row:has(.stat-label:contains("Confidence")) .stat-value {
+  background: var(--c-brand-lightest);
+  color: var(--c-brand-dark);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--c-brand-light);
+}
+
+/* Full-width layout for modal content */
+.text-content-section {
+  width: 100%;
+  max-width: none;
+}
+
+.text-content-section .text-content {
+  width: 100%;
+}
+
+.text-content-section .text-block {
+  width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .metadata-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+  
+  .stat-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .stat-value {
+    text-align: left;
+  }
 }
