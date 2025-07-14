@@ -282,6 +282,34 @@ class ApiService {
   }
 
   /**
+   * Delete a single OCR job
+   * @param {string} jobId - OCR job ID
+   * @returns {Promise} - Deletion result
+   */
+  async deleteOCRJob(jobId) {
+    return this.delete(`/ocr-job/${jobId}`);
+  }
+
+  /**
+   * Delete an entire OCR group (multi-page document)
+   * @param {string} groupId - Group ID
+   * @returns {Promise} - Deletion result
+   */
+  async deleteOCRGroup(groupId) {
+    return this.delete(`/ocr-group/${groupId}`);
+  }
+
+  /**
+   * Update OCR job metadata
+   * @param {string} jobId - OCR job ID
+   * @param {Object} updates - Fields to update
+   * @returns {Promise} - Update result
+   */
+  async updateOCRJob(jobId, updates) {
+    return this.put(`/ocr-job/${jobId}`, updates);
+  }
+
+  /**
    * Send notification
    * @param {number} userId - User ID
    * @param {string} message - Notification message
@@ -464,6 +492,9 @@ export const {
   getOcrJob,
   getOcrJobsByUser,
   getMultiPageDocument,
+  deleteOCRJob,
+  deleteOCRGroup,
+  updateOCRJob,
   sendNotification,
   uploadBatch,
   getBatchStatus,
