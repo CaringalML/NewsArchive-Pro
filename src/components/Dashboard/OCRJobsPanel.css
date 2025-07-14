@@ -1606,8 +1606,6 @@ body {
     padding: 12px;
   }
 }
-  color: var(--c-text-primary);
-}
 
 /* Delete Confirmation Modal */
 .modal-content.small {
