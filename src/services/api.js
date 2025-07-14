@@ -212,7 +212,8 @@ class ApiService {
       fileSize: actualFile.size,
       isMultiPage: settings.isMultiPage || false,
       pageCount: settings.pageCount || 1,
-      filename: actualFile.name
+      filename: actualFile.name,
+      forceBatch: settings.forceBatch || false
     });
   }
 

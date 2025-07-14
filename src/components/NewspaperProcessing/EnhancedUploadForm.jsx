@@ -449,7 +449,7 @@ const EnhancedUploadForm = () => {
     const currentSelectionOrder = [...selectionOrder]
     const selectedCount = currentSelectionOrder.length
 
-    const groupId = Date.now() + Math.random()
+    const groupId = `group_${Date.now()}_${Math.random().toString(36).substring(2)}`
     const newGroup = {
       id: groupId,
       name: `Document ${Object.keys(documentGroups).length + 1}`,
