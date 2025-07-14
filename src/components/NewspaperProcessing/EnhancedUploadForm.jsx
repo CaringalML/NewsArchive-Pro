@@ -231,6 +231,12 @@ const EnhancedUploadForm = () => {
         forceBatch: processingOptions.forceBatch  // Include force batch setting
       }
 
+      console.log('🎯 Frontend: Getting processing recommendation for', file.name, {
+        fileSize: `${(file.size / 1024 / 1024).toFixed(1)}MB`,
+        forceBatch: settings.forceBatch,
+        forceBatchType: typeof settings.forceBatch
+      });
+
       const recommendation = await apiService.getProcessingRecommendation(file, settings)
       
       setProcessingRecommendations(prev => ({
@@ -311,17 +317,31 @@ const EnhancedUploadForm = () => {
         documentGroups: documentGroups
       }))
 
+      console.log('🚀 Frontend: Starting upload with processing options:', {
+        forceBatch: processingOptions.forceBatch,
+        enableOCR: processingOptions.enableOCR,
+        optionsKeys: Object.keys(processingOptions)
+      });
+
+      const uploadSettings = {
+        ...processingOptions,
+        collectionName,
+        startDate,
+        endDate,
+        description,
+        documentGroups: documentGroups
+      };
+
+      console.log('📤 Frontend: Upload settings being sent:', {
+        forceBatch: uploadSettings.forceBatch,
+        forceBatchType: typeof uploadSettings.forceBatch,
+        settingsKeys: Object.keys(uploadSettings)
+      });
+
       const results = await apiService.uploadBatch(
         filesWithGroupInfo,
         currentUser.user_id,
-        {
-          ...processingOptions,
-          collectionName,
-          startDate,
-          endDate,
-          description,
-          documentGroups: documentGroups
-        },
+        uploadSettings,
         handleUploadProgress
       )
 

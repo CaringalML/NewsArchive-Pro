@@ -61,8 +61,18 @@ class IntelligentOCRRouter {
      * @returns {Object} - Routing decision with reasoning
      */
     async analyzeProcessingRequirements(jobData) {
+        console.log('🔍 Analyzing Processing Requirements:', {
+            job_id: jobData.job_id,
+            forceBatch: jobData.forceBatch,
+            force_batch: jobData.force_batch,
+            file_size: `${(jobData.file_size / 1024 / 1024).toFixed(1)}MB`,
+            force_batch_type: typeof jobData.force_batch,
+            forceBatch_type: typeof jobData.forceBatch
+        });
+        
         // Check for force batch override first
         if (jobData.forceBatch || jobData.force_batch) {
+            console.log('🏭 FORCE BATCH DETECTED! Overriding to AWS Batch processing');
             return {
                 fileSize: jobData.file_size || 0,
                 isMultiPage: jobData.is_multi_page || false,
@@ -72,6 +82,8 @@ class IntelligentOCRRouter {
                 factors: ['User forced AWS Batch processing'],
                 recommendation: 'batch'
             };
+        } else {
+            console.log('⚡ No force batch detected, proceeding with automatic routing');
         }
 
         // Get actual page count for grouped documents

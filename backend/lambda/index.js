@@ -421,9 +421,16 @@ exports.handler = async (event) => {
                 if (fields.ocrSettings) {
                     try {
                         ocrSettings = JSON.parse(fields.ocrSettings);
+                        console.log('📋 Parsed OCR Settings:', {
+                            forceBatch: ocrSettings.forceBatch,
+                            enableOCR: ocrSettings.enableOCR,
+                            settingsKeys: Object.keys(ocrSettings)
+                        });
                     } catch (e) {
-                        console.log('Failed to parse ocrSettings:', e);
+                        console.log('❌ Failed to parse ocrSettings:', e);
                     }
+                } else {
+                    console.log('⚠️ No ocrSettings found in form fields');
                 }
                 
                 // Create OCR job record with multi-page document support
@@ -469,6 +476,14 @@ exports.handler = async (event) => {
                         page_count: jobData.page_count || 1,
                         force_batch: ocrSettings.forceBatch || false
                     };
+                    
+                    console.log('🎯 Routing Data Created:', {
+                        job_id: routingData.job_id,
+                        filename: routingData.filename,
+                        file_size: `${(routingData.file_size / 1024 / 1024).toFixed(1)}MB`,
+                        force_batch: routingData.force_batch,
+                        force_batch_type: typeof routingData.force_batch
+                    });
                     
                     // Route the job intelligently
                     routingResult = await intelligentOCRRouter.routeOCRJob(routingData);
@@ -642,6 +657,13 @@ exports.handler = async (event) => {
                 const requestBody = JSON.parse(event.body || '{}');
                 const { fileSize, isMultiPage, pageCount, filename, forceBatch } = requestBody;
                 
+                console.log('📊 Processing Recommendation Request:', {
+                    fileSize: fileSize ? `${(fileSize / 1024 / 1024).toFixed(1)}MB` : 'undefined',
+                    forceBatch: forceBatch,
+                    forceBatch_type: typeof forceBatch,
+                    filename: filename || 'document.jpg'
+                });
+                
                 if (!fileSize) {
                     return {
                         statusCode: 400,
@@ -660,6 +682,12 @@ exports.handler = async (event) => {
                     filename: filename || 'document.jpg',
                     force_batch: forceBatch || false
                 };
+                
+                console.log('🎯 Mock Job Data for Recommendation:', {
+                    file_size: `${(mockJobData.file_size / 1024 / 1024).toFixed(1)}MB`,
+                    force_batch: mockJobData.force_batch,
+                    force_batch_type: typeof mockJobData.force_batch
+                });
                 
                 const recommendation = await intelligentOCRRouter.getRouteRecommendation(mockJobData);
                 
