@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react'
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import { 
   CloudArrowUpIcon,
   DocumentArrowUpIcon,
@@ -221,7 +221,7 @@ const EnhancedUploadForm = () => {
     ))
   }
 
-  const getProcessingRecommendation = async (file) => {
+  const getProcessingRecommendation = useCallback(async (file) => {
     try {
       // Pure per-file analysis - grouping is for organization only
       // Each file is analyzed individually regardless of grouping
@@ -243,13 +243,13 @@ const EnhancedUploadForm = () => {
       console.error('Error getting processing recommendation:', error)
       return null
     }
-  }
+  }, [processingOptions.forceBatch])
 
-  const analyzeAllFiles = async () => {
+  const analyzeAllFiles = useCallback(async () => {
     setShowProcessingInfo(true)
     const promises = selectedFiles.map(file => getProcessingRecommendation(file))
     await Promise.all(promises)
-  }
+  }, [selectedFiles, getProcessingRecommendation])
 
   // Auto-update analysis when Force Batch toggle changes
   useEffect(() => {
@@ -257,7 +257,7 @@ const EnhancedUploadForm = () => {
       console.log('🔄 Force Batch setting changed, refreshing analysis...')
       analyzeAllFiles()
     }
-  }, [processingOptions.forceBatch])
+  }, [processingOptions.forceBatch, showProcessingInfo, selectedFiles.length, analyzeAllFiles])
 
   const handleUploadProgress = (completed, total, result) => {
     const percentage = Math.round((completed / total) * 100)
