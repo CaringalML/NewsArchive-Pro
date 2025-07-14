@@ -359,51 +359,32 @@ const EnhancedUploadForm = () => {
 
   // Multi-page document management functions
   const toggleFileSelection = (fileId) => {
-    const fileIndex = selectedFiles.findIndex(f => f.id === fileId)
-    if (fileIndex === -1) return
-
-    if (groupingState.firstPage === null) {
-      // First click - select start page (store fileId instead of index)
-      setGroupingState({ firstPage: fileId, lastPage: null })
-      setSelectedFiles(prev => prev.map(f => ({ ...f, selected: f.id === fileId })))
-    } else if (groupingState.lastPage === null && fileId !== groupingState.firstPage) {
-      // Second click - select end page and range
-      const firstFileIndex = selectedFiles.findIndex(f => f.id === groupingState.firstPage)
-      const lastFileIndex = fileIndex
-      const startIdx = Math.min(firstFileIndex, lastFileIndex)
-      const endIdx = Math.max(firstFileIndex, lastFileIndex)
-      
-      setGroupingState(prev => ({ ...prev, lastPage: fileId }))
-      setSelectedFiles(prev => prev.map((f, idx) => 
-        idx >= startIdx && idx <= endIdx ? { ...f, selected: true } : { ...f, selected: false }
-      ))
-
-      // Automatically create the group after a short delay to let UI update
-      setTimeout(() => {
-        createDocumentGroupFromRange(startIdx, endIdx)
-      }, 100)
-    } else {
-      // Reset selection if clicking on already selected range or third click
-      setGroupingState({ firstPage: null, lastPage: null })
-      setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
-    }
+    setSelectedFiles(prev => prev.map(f => 
+      f.id === fileId ? { ...f, selected: !f.selected } : f
+    ))
   }
 
-  const createDocumentGroupFromRange = (startIdx, endIdx) => {
-    // Get files in the selected range
-    const rangeFiles = selectedFiles.slice(startIdx, endIdx + 1)
-    const selectedFileIds = rangeFiles.map(f => f.id)
+  const createDocumentGroup = () => {
+    // Get all selected files
+    const selectedFilesList = selectedFiles.filter(f => f.selected)
     
-    if (selectedFileIds.length < 2) {
+    if (selectedFilesList.length < 2) {
       toast.error('Please select at least 2 files to group as a multi-page document')
       return
     }
+
+    // Sort selected files by their position in the original array to maintain order
+    const selectedWithIndex = selectedFilesList.map(file => ({
+      file,
+      index: selectedFiles.findIndex(f => f.id === file.id)
+    }))
+    selectedWithIndex.sort((a, b) => a.index - b.index)
 
     const groupId = Date.now() + Math.random()
     const newGroup = {
       id: groupId,
       name: `Document ${Object.keys(documentGroups).length + 1}`,
-      fileIds: selectedFileIds,
+      fileIds: selectedWithIndex.map(item => item.file.id),
       createdAt: new Date()
     }
 
@@ -415,22 +396,25 @@ const EnhancedUploadForm = () => {
     // Update files with group info and page numbers
     setSelectedFiles(prev => {
       let pageNum = 1
-      return prev.map((f, idx) => {
-        if (idx >= startIdx && idx <= endIdx) {
-          const updatedFile = {
+      const pageNumberMap = {}
+      selectedWithIndex.forEach(item => {
+        pageNumberMap[item.file.id] = pageNum++
+      })
+
+      return prev.map(f => {
+        if (pageNumberMap[f.id]) {
+          return {
             ...f,
             groupId,
-            pageNumber: pageNum,
+            pageNumber: pageNumberMap[f.id],
             selected: false
           }
-          pageNum++
-          return updatedFile
         }
         return f
       })
     })
 
-    toast.success(`Created multi-page document with ${selectedFileIds.length} pages`)
+    toast.success(`Created multi-page document with ${selectedFilesList.length} pages`)
     setIsGroupingMode(false)
     setGroupingState({ firstPage: null, lastPage: null })
   }
@@ -645,9 +629,7 @@ const EnhancedUploadForm = () => {
                 {isGroupingMode && (
                   <div className="grouping-instructions">
                     <p className="text-sm text-gray-600">
-                      {groupingState.firstPage === null && "Click a checkbox to select the first page"}
-                      {groupingState.firstPage !== null && groupingState.lastPage === null && "Click another checkbox to select the last page and create range"}
-                      {groupingState.lastPage !== null && "Range selected. Click any checkbox to reset."}
+                      Select files using checkboxes, then click "Create Group" to combine them into a multi-page document
                     </p>
                   </div>
                 )}
@@ -662,17 +644,27 @@ const EnhancedUploadForm = () => {
                       Group as Multi-Page
                     </button>
                   ) : (
-                    <button
-                      onClick={() => {
-                        setIsGroupingMode(false)
-                        setGroupingState({ firstPage: null, lastPage: null })
-                        setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
-                      }}
-                      className="cancel-group-btn"
-                    >
-                      <XMarkIcon className="w-4 h-4" />
-                      Cancel Grouping
-                    </button>
+                    <>
+                      <button
+                        onClick={createDocumentGroup}
+                        className="create-group-btn"
+                        disabled={selectedFiles.filter(f => f.selected).length < 2}
+                      >
+                        <CheckCircleIcon className="w-4 h-4" />
+                        Create Group ({selectedFiles.filter(f => f.selected).length} selected)
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsGroupingMode(false)
+                          setGroupingState({ firstPage: null, lastPage: null })
+                          setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
+                        }}
+                        className="cancel-group-btn"
+                      >
+                        <XMarkIcon className="w-4 h-4" />
+                        Cancel
+                      </button>
+                    </>
                   )}
                   <button
                     onClick={clearAllFiles}
@@ -685,25 +677,10 @@ const EnhancedUploadForm = () => {
                 </div>
               </div>
               <div className="files-list">
-                {selectedFiles.map((fileInfo, index) => {
-                  let groupingClass = ''
-                  if (isGroupingMode && groupingState.firstPage !== null) {
-                    if (fileInfo.id === groupingState.firstPage) {
-                      groupingClass = 'first-page'
-                    } else if (fileInfo.id === groupingState.lastPage) {
-                      groupingClass = 'last-page'
-                    } else if (
-                      groupingState.lastPage !== null &&
-                      fileInfo.selected
-                    ) {
-                      groupingClass = 'in-range'
-                    }
-                  }
-                  
-                  return (
+                {selectedFiles.map((fileInfo, index) => (
                   <div
                     key={fileInfo.id}
-                    className={`file-item ${fileInfo.status} ${fileInfo.selected ? 'selected' : ''} ${fileInfo.groupId ? 'grouped' : ''} ${groupingClass}`}
+                    className={`file-item ${fileInfo.status} ${fileInfo.selected ? 'selected' : ''} ${fileInfo.groupId ? 'grouped' : ''}`}
                   >
                     {isGroupingMode && (
                       <div className="file-checkbox">
@@ -723,13 +700,6 @@ const EnhancedUploadForm = () => {
                       />
                       {fileInfo.pageNumber && (
                         <span className="page-badge">Page {fileInfo.pageNumber}</span>
-                      )}
-                      {isGroupingMode && groupingClass && (
-                        <div className="grouping-indicator">
-                          {groupingClass === 'first-page' && <span className="indicator-badge first">Start</span>}
-                          {groupingClass === 'last-page' && <span className="indicator-badge last">End</span>}
-                          {groupingClass === 'in-range' && <span className="indicator-badge range">•</span>}
-                        </div>
                       )}
                     </div>
                     <div className="file-info">
@@ -793,8 +763,7 @@ const EnhancedUploadForm = () => {
                       </button>
                     </div>
                   </div>
-                  )
-                })}
+                ))}
               </div>
             </div>
           )}
