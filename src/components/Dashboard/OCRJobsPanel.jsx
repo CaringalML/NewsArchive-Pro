@@ -8,6 +8,8 @@ import {
   ChartBarIcon,
   FunnelIcon,
   SparklesIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
   DocumentTextIcon,
   PencilIcon,
   TrashIcon,
@@ -271,6 +273,7 @@ const OCRJobsPanel = () => {
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [showJobDetails, setShowJobDetails] = useState(null)
   const [groupedDocuments, setGroupedDocuments] = useState({})
+  const [expandedGroups, setExpandedGroups] = useState(new Set())
   const [editingJob, setEditingJob] = useState(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null)
   const [editFormData, setEditFormData] = useState({
@@ -279,6 +282,18 @@ const OCRJobsPanel = () => {
   })
 
   const stats = getJobStats()
+
+  const toggleGroupExpansion = (groupId) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId)
+      } else {
+        newSet.add(groupId)
+      }
+      return newSet
+    })
+  }
 
   const fetchGroupedDocument = async (groupId) => {
     if (groupedDocuments[groupId]) {
@@ -696,7 +711,7 @@ const OCRJobsPanel = () => {
               <div key={job.is_grouped ? `group-${job.group_id}` : `job-${job.job_id}`} className={`dropdown-row ${job.status} ${job.is_grouped ? 'grouped-job' : ''}`}>
                 
                 {/* Main Row Content */}
-                <div className="dropdown-main-row">
+                <div className={`dropdown-main-row ${job.is_grouped ? 'clickable' : ''}`} onClick={() => job.is_grouped && toggleGroupExpansion(job.group_id)}>
                   <div className="job-status">
                     {getStatusIcon(job.status)}
                   </div>
@@ -761,6 +776,22 @@ const OCRJobsPanel = () => {
                   </div>
 
                   <div className="job-actions">
+                    {job.is_grouped && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleGroupExpansion(job.group_id)
+                        }}
+                        className="expand-btn"
+                        title={expandedGroups.has(job.group_id) ? "Collapse pages" : "Expand pages"}
+                      >
+                        {expandedGroups.has(job.group_id) ? (
+                          <ChevronDownIcon className="w-4 h-4" />
+                        ) : (
+                          <ChevronRightIcon className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
@@ -847,75 +878,118 @@ const OCRJobsPanel = () => {
                   </div>
                 )}
               
-                {/* Single Row Pages Display for Grouped Jobs */}
-                {job.is_grouped && (
-                  <div className="pages-single-row">
-                    <div className="pages-horizontal-container">
-                      {job.pages.map((page, index) => (
-                        <div key={page.job_id} className={`page-item-horizontal ${page.status}`}>
-                          <div className="page-header-horizontal">
-                            <div className="page-status-icon-small">
-                              {getStatusIcon(page.status)}
-                            </div>
-                            <span className="page-number">P{page.page_number || index + 1}</span>
-                          </div>
-                          
-                          <div className="page-content-horizontal">
-                            <div className="page-filename-short">
-                              {page.filename?.split('.')[0]?.substring(0, 12) || `Page ${index + 1}`}
-                              {page.filename?.length > 12 && '...'}
-                            </div>
-                            
-                            <div className="page-stats-horizontal">
-                              {page.confidence_score && (
-                                <span className="confidence-mini">
-                                  {Math.round(page.confidence_score)}%
-                                </span>
-                              )}
-                              <span className={`status-dot ${getStatusColor(page.status)}`} title={page.status}></span>
-                            </div>
-                          </div>
-                          
-                          <div className="page-actions-horizontal">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setShowJobDetails(page.job_id)
-                              }}
-                              className="view-btn-mini"
-                              title="View page details"
-                            >
-                              <EyeIcon className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleEditJob(page)
-                              }}
-                              className="edit-btn-mini"
-                              title="Edit page"
-                            >
-                              <PencilIcon className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleDeleteJob(page)
-                              }}
-                              className="delete-btn-mini"
-                              title="Delete page"
-                            >
-                              <TrashIcon className="w-3 h-3" />
-                            </button>
-                          </div>
-                          
-                          {page.error && (
-                            <div className="page-error-indicator" title={page.error}>
-                              <ExclamationTriangleIcon className="w-3 h-3 text-red-500" />
-                            </div>
+                {/* Expandable Pages Grid for Grouped Jobs */}
+                {job.is_grouped && expandedGroups.has(job.group_id) && (
+                  <div className="pages-dropdown-content">
+                    <div className="pages-header">
+                      <div className="pages-summary">
+                        <span className="total-pages">{job.pages?.length || 0} pages</span>
+                        <div className="status-breakdown">
+                          {job.statusSummary?.completed > 0 && (
+                            <span className="status-pill completed">
+                              ✓ {job.statusSummary.completed} done
+                            </span>
+                          )}
+                          {job.statusSummary?.processing > 0 && (
+                            <span className="status-pill processing">
+                              ⚡ {job.statusSummary.processing} processing
+                            </span>
+                          )}
+                          {job.statusSummary?.pending > 0 && (
+                            <span className="status-pill pending">
+                              ⏳ {job.statusSummary.pending} pending
+                            </span>
+                          )}
+                          {job.statusSummary?.failed > 0 && (
+                            <span className="status-pill failed">
+                              ✗ {job.statusSummary.failed} failed
+                            </span>
                           )}
                         </div>
-                      ))}
+                      </div>
+                    </div>
+                    
+                    <div className="pages-grid-container">
+                      <div className="pages-grid-scrollable">
+                        {job.pages?.map((page, index) => (
+                          <div key={page.job_id} className={`page-card-compact ${page.status}`}>
+                            <div className="page-card-header">
+                              <div className="page-number-badge">
+                                Page {page.page_number || index + 1}
+                              </div>
+                              <div className="page-status-indicator">
+                                {getStatusIcon(page.status)}
+                              </div>
+                            </div>
+                            
+                            <div className="page-card-content">
+                              <div className="page-filename-display">
+                                {page.filename || `page-${index + 1}.jpg`}
+                              </div>
+                              
+                              <div className="page-stats-row">
+                                {page.confidence_score && (
+                                  <div className="confidence-display">
+                                    <span className="confidence-label">Confidence:</span>
+                                    <span className="confidence-value">{Math.round(page.confidence_score)}%</span>
+                                  </div>
+                                )}
+                                <div className="processing-time">
+                                  {page.created_at && formatDate(page.created_at)}
+                                </div>
+                              </div>
+                              
+                              {page.error && (
+                                <div className="page-error-display">
+                                  <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
+                                  <span className="error-message">{page.error}</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="page-card-actions">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setShowJobDetails(page.job_id)
+                                }}
+                                className="page-action-btn view"
+                                title="View page details"
+                              >
+                                <EyeIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleEditJob(page)
+                                }}
+                                className="page-action-btn edit"
+                                title="Edit page"
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeleteJob(page)
+                                }}
+                                className="page-action-btn delete"
+                                title="Delete page"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {job.pages?.length > 20 && (
+                        <div className="pages-grid-footer">
+                          <span className="large-dataset-note">
+                            📄 Large document with {job.pages.length} pages - scroll to view all
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
