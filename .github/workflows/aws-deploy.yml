@@ -8,6 +8,8 @@ on:
 
 env:
   TREAT_WARNINGS_AS_ERRORS: true
+  CI: true
+  NODE_OPTIONS: "--max-old-space-size=4096"
   ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
   ECR_REPOSITORY: newsarchivepro-backend
   IMAGE_TAG: ${{ github.sha }}
@@ -19,6 +21,7 @@ jobs:
     strategy:
       matrix:
         node-version: [20.x]
+      fail-fast: true
 
     outputs:
       build-success: ${{ steps.build-check.outputs.success }}
@@ -46,42 +49,183 @@ jobs:
           echo "REACT_APP_SUPABASE_URL=${{ secrets.REACT_APP_SUPABASE_URL }}" >> $GITHUB_ENV
           echo "REACT_APP_SUPABASE_ANON_KEY=${{ secrets.REACT_APP_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
           echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> $GITHUB_ENV
+          echo "GENERATE_SOURCEMAP=false" >> $GITHUB_ENV
+
+      - name: Verify required secrets
+        run: |
+          echo "🔍 Verifying required environment variables..."
+          missing_vars=""
+          
+          if [ -z "${{ secrets.REACT_APP_SITE_URL }}" ]; then missing_vars="$missing_vars REACT_APP_SITE_URL"; fi
+          if [ -z "${{ secrets.REACT_APP_API_GATEWAY_URL }}" ]; then missing_vars="$missing_vars REACT_APP_API_GATEWAY_URL"; fi
+          if [ -z "${{ secrets.REACT_APP_SUPABASE_URL }}" ]; then missing_vars="$missing_vars REACT_APP_SUPABASE_URL"; fi
+          if [ -z "${{ secrets.REACT_APP_SUPABASE_ANON_KEY }}" ]; then missing_vars="$missing_vars REACT_APP_SUPABASE_ANON_KEY"; fi
+          
+          if [ -n "$missing_vars" ]; then
+            echo "❌ Missing required secrets:$missing_vars"
+            exit 1
+          fi
+          
+          echo "✅ All required environment variables are set"
 
       - name: Install Dependencies
-        run: npm ci
-
-      - name: Check for npm warnings
         run: |
-          echo "Checking for potential issues..."
-          npm audit --audit-level moderate || true
-          echo "Checking outdated packages..."
+          echo "📦 Installing dependencies..."
+          npm ci --prefer-offline --no-audit --progress=false
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ npm ci failed"
+            exit 1
+          fi
+          
+          echo "✅ Dependencies installed successfully"
+
+      - name: Security audit
+        run: |
+          echo "🔐 Running security audit..."
+          npm audit --audit-level high
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ Security vulnerabilities found (high severity or above)"
+            exit 1
+          fi
+          
+          echo "✅ No high-severity security vulnerabilities found"
+
+      - name: Check for outdated packages
+        run: |
+          echo "📋 Checking for outdated packages..."
           npm outdated || true
+          echo "ℹ️ Outdated package check completed (informational only)"
+
+      - name: Lint code
+        run: |
+          echo "🧹 Running ESLint..."
+          if [ -f ".eslintrc.json" ] || [ -f ".eslintrc.js" ] || [ -f "eslint.config.js" ]; then
+            npm run lint 2>&1 | tee lint.log
+            
+            if [ $? -ne 0 ]; then
+              echo "❌ ESLint failed - code quality issues found"
+              cat lint.log
+              exit 1
+            fi
+            
+            echo "✅ ESLint passed"
+          else
+            echo "⚠️ No ESLint configuration found, skipping lint check"
+          fi
+
+      - name: Type check (if TypeScript)
+        run: |
+          if [ -f "tsconfig.json" ]; then
+            echo "🔍 Running TypeScript type check..."
+            npx tsc --noEmit
+            
+            if [ $? -ne 0 ]; then
+              echo "❌ TypeScript type check failed"
+              exit 1
+            fi
+            
+            echo "✅ TypeScript type check passed"
+          else
+            echo "ℹ️ No TypeScript configuration found, skipping type check"
+          fi
+
+      - name: Run tests
+        run: |
+          if npm run test --silent 2>/dev/null; then
+            echo "🧪 Running tests..."
+            npm test -- --coverage --watchAll=false --passWithNoTests
+            
+            if [ $? -ne 0 ]; then
+              echo "❌ Tests failed"
+              exit 1
+            fi
+            
+            echo "✅ All tests passed"
+          else
+            echo "ℹ️ No test script found, skipping tests"
+          fi
 
       - name: Build
         run: |
-          echo "Building React application..."
-          npm run build 2>&1 | tee build.log
+          echo "🏗️ Building React application..."
           
-          if grep -i "warning" build.log; then
-            echo "⚠️ Warnings found during build:"
-            grep -i "warning" build.log
-            
-            if [ "$TREAT_WARNINGS_AS_ERRORS" = "true" ]; then
-              echo "❌ Build failed due to warnings - treating warnings as errors"
-              exit 1
-            else
-              echo "⚠️ Warnings detected but continuing build (TREAT_WARNINGS_AS_ERRORS=false)"
-            fi
-          else
-            echo "✅ Build completed without warnings"
+          # Capture both stdout and stderr, and store exit code
+          set +e
+          npm run build 2>&1 | tee build.log
+          BUILD_EXIT_CODE=$?
+          set -e
+          
+          # Check build exit code first
+          if [ $BUILD_EXIT_CODE -ne 0 ]; then
+            echo "❌ Build command failed with exit code $BUILD_EXIT_CODE"
+            echo "Build output:"
+            cat build.log
+            exit 1
           fi
           
+          # Check for any warnings in the build output
+          if grep -i "warning\|warn" build.log; then
+            echo "⚠️ Warnings found during build:"
+            grep -i "warning\|warn" build.log
+            echo "❌ Build failed due to warnings - treating warnings as errors"
+            exit 1
+          fi
+          
+          # Check for build errors
+          if grep -i "error\|failed\|compilation failed" build.log; then
+            echo "❌ Errors found during build:"
+            grep -i "error\|failed\|compilation failed" build.log
+            exit 1
+          fi
+          
+          # Verify build directory exists and has content
           if [ ! -d "./build" ]; then
             echo "❌ Build directory not found - build failed"
             exit 1
           fi
           
-          echo "✅ Build completed successfully"
+          if [ -z "$(ls -A ./build)" ]; then
+            echo "❌ Build directory is empty - build failed"
+            exit 1
+          fi
+          
+          # Check for essential files
+          if [ ! -f "./build/index.html" ]; then
+            echo "❌ index.html not found in build directory"
+            exit 1
+          fi
+          
+          echo "✅ Build completed successfully without any warnings or errors"
+
+      - name: Verify build integrity
+        run: |
+          echo "🔍 Verifying build integrity..."
+          
+          # Check build size (should not be empty or too small)
+          BUILD_SIZE=$(du -sh ./build | cut -f1)
+          echo "Build size: $BUILD_SIZE"
+          
+          # Count files in build
+          FILE_COUNT=$(find ./build -type f | wc -l)
+          echo "Files in build: $FILE_COUNT"
+          
+          if [ $FILE_COUNT -lt 1 ]; then
+            echo "❌ Build directory contains no files"
+            exit 1
+          fi
+          
+          # Check for common essential files
+          ESSENTIAL_FILES="index.html"
+          for file in $ESSENTIAL_FILES; do
+            if [ ! -f "./build/$file" ]; then
+              echo "❌ Essential file missing: $file"
+              exit 1
+            fi
+          done
+          
+          echo "✅ Build integrity verified"
 
       - name: Set build success
         id: build-check
@@ -102,6 +246,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Verify backend directory exists
+        run: |
+          if [ ! -d "./backend/batch-ocr-app" ]; then
+            echo "❌ Backend directory './backend/batch-ocr-app' not found"
+            exit 1
+          fi
+          
+          if [ ! -f "./backend/batch-ocr-app/Dockerfile" ]; then
+            echo "❌ Dockerfile not found in './backend/batch-ocr-app/'"
+            exit 1
+          fi
+          
+          echo "✅ Backend directory and Dockerfile verified"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -109,20 +267,71 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Verify AWS credentials
+        run: |
+          echo "🔍 Verifying AWS credentials..."
+          aws sts get-caller-identity
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ AWS credentials verification failed"
+            exit 1
+          fi
+          
+          echo "✅ AWS credentials verified"
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Verify ECR repository exists
+        run: |
+          echo "🔍 Verifying ECR repository exists..."
+          aws ecr describe-repositories --repository-names $ECR_REPOSITORY --region ${{ secrets.AWS_REGION }}
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ ECR repository '$ECR_REPOSITORY' not found"
+            echo "Please create the repository first:"
+            echo "aws ecr create-repository --repository-name $ECR_REPOSITORY --region ${{ secrets.AWS_REGION }}"
+            exit 1
+          fi
+          
+          echo "✅ ECR repository verified"
 
       - name: Build, tag, and push image to Amazon ECR
         working-directory: ./backend/batch-ocr-app
         run: |
           echo "🐳 Building Docker image..."
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          
+          # Build with explicit error handling
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . 2>&1 | tee docker_build.log
+          
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "❌ Docker build failed"
+            cat docker_build.log
+            exit 1
+          fi
+          
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:ocr-batch .
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ Docker build (ocr-batch tag) failed"
+            exit 1
+          fi
           
           echo "📤 Pushing image to ECR..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ Docker push (with SHA tag) failed"
+            exit 1
+          fi
+          
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:ocr-batch
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ Docker push (ocr-batch tag) failed"
+            exit 1
+          fi
           
           echo "✅ Image pushed successfully!"
           echo "🔄 ECR-Batch automation will now automatically update AWS Batch job definitions"
@@ -203,12 +412,48 @@ jobs:
           name: build-files
           path: build/
 
+      - name: Verify downloaded artifacts
+        run: |
+          echo "🔍 Verifying downloaded build artifacts..."
+          
+          if [ ! -d "./build" ]; then
+            echo "❌ Build directory not found after download"
+            exit 1
+          fi
+          
+          if [ -z "$(ls -A ./build)" ]; then
+            echo "❌ Build directory is empty after download"
+            exit 1
+          fi
+          
+          FILE_COUNT=$(find ./build -type f | wc -l)
+          echo "Files in downloaded build: $FILE_COUNT"
+          
+          if [ $FILE_COUNT -lt 1 ]; then
+            echo "❌ No files found in downloaded build"
+            exit 1
+          fi
+          
+          echo "✅ Build artifacts verified"
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Verify S3 bucket access
+        run: |
+          echo "🔍 Verifying S3 bucket access..."
+          aws s3 ls s3://caringalfrontend/ >/dev/null
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ Cannot access S3 bucket 'caringalfrontend'"
+            exit 1
+          fi
+          
+          echo "✅ S3 bucket access verified"
 
       - name: Deploy to S3
         run: |
@@ -217,16 +462,42 @@ jobs:
           echo "Path: frontend-build"
           echo "Region: ${{ secrets.AWS_REGION }}"
           
+          echo "📁 Files to deploy:"
           find ./build -type f | head -10
           
-          aws s3 sync ./build s3://caringalfrontend/frontend-build --delete --debug
+          # Sync with explicit error handling
+          aws s3 sync ./build s3://caringalfrontend/frontend-build --delete --exact-timestamps
           
-          echo "✅ S3 deployment completed"
+          if [ $? -ne 0 ]; then
+            echo "❌ S3 sync failed"
+            exit 1
+          fi
+          
+          echo "✅ S3 deployment completed successfully"
+
+      - name: Verify S3 deployment
+        run: |
+          echo "🔍 Verifying S3 deployment..."
+          
+          # Check if index.html exists in S3
+          aws s3 ls s3://caringalfrontend/frontend-build/index.html >/dev/null
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ index.html not found in S3 after deployment"
+            exit 1
+          fi
+          
+          echo "✅ S3 deployment verified"
 
       - name: Invalidate CloudFront
         run: |
           echo "🔄 Starting CloudFront invalidation..."
           echo "Distribution ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}"
+          
+          if [ -z "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
+            echo "❌ CLOUDFRONT_DISTRIBUTION_ID secret not set"
+            exit 1
+          fi
           
           INVALIDATION_ID=$(aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
@@ -234,8 +505,13 @@ jobs:
             --output text \
             --query 'Invalidation.Id')
           
+          if [ $? -ne 0 ]; then
+            echo "❌ CloudFront invalidation failed"
+            exit 1
+          fi
+          
           echo "Invalidation created with ID: $INVALIDATION_ID"
-          echo "✅ CloudFront invalidation initiated"
+          echo "✅ CloudFront invalidation initiated successfully"
 
   notify:
     runs-on: ubuntu-latest
@@ -245,16 +521,38 @@ jobs:
     steps:
       - name: Deployment Status
         run: |
+          echo "📊 Final Deployment Status Report:"
+          echo "=================================="
+          
           if [ "${{ needs.build-and-test.result }}" = "success" ] && [ "${{ needs.build-and-push-backend.result }}" = "success" ] && [ "${{ needs.deploy.result }}" = "success" ]; then
             echo "🎉 Full deployment completed successfully!"
+            echo "✅ Frontend build: SUCCESS"
+            echo "✅ Backend container: SUCCESS" 
+            echo "✅ Frontend deployment: SUCCESS"
           elif [ "${{ needs.build-and-test.result }}" = "failure" ]; then
             echo "❌ Frontend build failed - deployment skipped"
+            echo "❌ Frontend build: FAILED"
+            echo "⏭️ Backend container: SKIPPED"
+            echo "⏭️ Frontend deployment: SKIPPED"
+            exit 1
           elif [ "${{ needs.build-and-push-backend.result }}" = "failure" ]; then
             echo "❌ Backend container build failed"
+            echo "✅ Frontend build: SUCCESS"
+            echo "❌ Backend container: FAILED"
+            echo "⚠️ Frontend deployment: ${{ needs.deploy.result }}"
+            exit 1
           elif [ "${{ needs.deploy.result }}" = "failure" ]; then
             echo "❌ Frontend deployment failed"
+            echo "✅ Frontend build: SUCCESS"
+            echo "✅ Backend container: SUCCESS"
+            echo "❌ Frontend deployment: FAILED"
+            exit 1
           elif [ "${{ needs.deploy.result }}" = "skipped" ]; then
-            echo "⏭️ Deployment skipped (not main branch or PR)"
+            echo "⏭️ Deployment skipped (not main branch or build failed)"
+            echo "ℹ️ This is normal for pull requests"
           else
-            echo "⚠️ Unknown deployment status"
+            echo "⚠️ Unknown deployment status - check individual job results"
+            echo "Frontend build: ${{ needs.build-and-test.result }}"
+            echo "Backend container: ${{ needs.build-and-push-backend.result }}"
+            echo "Frontend deployment: ${{ needs.deploy.result }}"
           fi
