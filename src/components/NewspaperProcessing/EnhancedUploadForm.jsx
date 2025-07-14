@@ -222,12 +222,11 @@ const EnhancedUploadForm = () => {
 
   const getProcessingRecommendation = async (file) => {
     try {
-      const groupId = file.groupId
-      const groupFiles = groupId ? selectedFiles.filter(f => f.groupId === groupId) : [file]
-      
+      // Pure per-file analysis - grouping is for organization only
+      // Each file is analyzed individually regardless of grouping
       const settings = {
-        isMultiPage: groupId ? true : false,
-        pageCount: groupFiles.length
+        isMultiPage: false,  // Individual files are analyzed separately
+        pageCount: 1         // Each file is treated as single unit
       }
 
       const recommendation = await apiService.getProcessingRecommendation(file, settings)

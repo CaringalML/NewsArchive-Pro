@@ -184,7 +184,7 @@ const UploadForm = () => {
                     <DocumentArrowUpIcon className="upload-icon" />
                     <h3 className="upload-zone-title">Drop files here or click to browse</h3>
                     <p className="upload-zone-description">
-                      Supported formats: TIFF, JPEG, PNG, PDF (up to 500MB per file)
+                      Supported formats: TIFF, JPEG, PNG, PDF (files >50MB will use AWS Batch processing)
                     </p>
                     <input
                       type="file"

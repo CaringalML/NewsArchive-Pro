@@ -34,6 +34,11 @@ resource "aws_lambda_function" "newsarchive_lambda" {
       NOTIFICATION_QUEUE_URL = aws_sqs_queue.notification_queue.url
       USERS_TABLE = aws_dynamodb_table.users.name
       OCR_JOBS_TABLE = aws_dynamodb_table.ocr_jobs.name
+      # AWS Batch configuration for intelligent routing
+      BATCH_JOB_QUEUE = aws_batch_job_queue.ocr_job_queue.name
+      BATCH_JOB_DEFINITION = aws_batch_job_definition.ocr_job_definition.name
+      # OCR Processor Lambda for direct invocation
+      OCR_PROCESSOR_FUNCTION_NAME = aws_lambda_function.ocr_processor.function_name
     }
   }
 
@@ -77,22 +82,9 @@ resource "aws_lambda_function" "ocr_processor" {
   })
 }
 
-# SQS Event Source Mapping for OCR processor
-resource "aws_lambda_event_source_mapping" "ocr_queue_trigger" {
-  event_source_arn                        = aws_sqs_queue.ocr_processing_queue.arn
-  function_name                           = aws_lambda_function.ocr_processor.arn
-  batch_size                              = 1  # Process one OCR job at a time
-  enabled                                 = true
-  maximum_batching_window_in_seconds      = 0  # No batching delay - immediate processing
-  
-  # Enable partial batch failure handling
-  function_response_types = ["ReportBatchItemFailures"]
-  
-  # Configure scaling for immediate processing
-  scaling_config {
-    maximum_concurrency = 20  # Increased for better throughput
-  }
-}
+# NOTE: OCR processor is now invoked directly by intelligent routing logic
+# The SQS queue is only consumed by the Batch job submitter for Batch-routed jobs
+# Lambda-routed jobs are processed directly without going through SQS
 
 # Textract Completion Handler Lambda function
 resource "aws_lambda_function" "textract_completion_handler" {

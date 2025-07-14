@@ -65,6 +65,10 @@ resource "aws_dynamodb_table" "ocr_jobs" {
     type = "S"
   }
 
+  attribute {
+    name = "group_id"
+    type = "S"
+  }
 
   # Global secondary index for user_id lookups
   global_secondary_index {
@@ -82,6 +86,13 @@ resource "aws_dynamodb_table" "ocr_jobs" {
     projection_type = "ALL"
   }
 
+  # Global secondary index for group_id lookups (multi-page documents)
+  global_secondary_index {
+    name            = "group-index"
+    hash_key        = "group_id"
+    range_key       = "created_at"
+    projection_type = "ALL"
+  }
 
   # TTL for automatic deletion of old jobs (optional)
   ttl {

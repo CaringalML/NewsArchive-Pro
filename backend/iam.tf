@@ -133,6 +133,26 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "arn:aws:dynamodb:${var.aws_region}:*:table/${var.lambda_function_name}-*/index/*",
           "arn:aws:dynamodb:${var.aws_region}:*:table/${var.lambda_function_name}-*/stream/*"
         ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = [
+          "arn:aws:lambda:${var.aws_region}:*:function:${var.lambda_function_name}-*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "batch:SubmitJob",
+          "batch:DescribeJobs",
+          "batch:DescribeJobQueues",
+          "batch:DescribeJobDefinitions",
+          "batch:ListJobs"
+        ]
+        Resource = "*"
       }
     ]
   })

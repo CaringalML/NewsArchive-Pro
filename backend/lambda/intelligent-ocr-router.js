@@ -6,11 +6,14 @@
 
 const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 const { BatchClient, SubmitJobCommand } = require('@aws-sdk/client-batch');
-const { updateOCRJob } = require('./dynamodb-client');
+const { LambdaClient, InvokeCommand } = require('@aws-sdk/client-lambda');
+const { updateOCRJob, dynamoDb, TABLES } = require('./dynamodb-client');
+const { QueryCommand } = require('@aws-sdk/lib-dynamodb');
 
 const region = process.env.AWS_REGION || 'ap-southeast-2';
 const sqsClient = new SQSClient({ region });
 const batchClient = new BatchClient({ region });
+const lambdaClient = new LambdaClient({ region });
 
 class IntelligentOCRRouter {
     constructor() {
@@ -22,6 +25,34 @@ class IntelligentOCRRouter {
         this.OCR_QUEUE_URL = process.env.OCR_QUEUE_URL;
         this.BATCH_JOB_QUEUE = process.env.BATCH_JOB_QUEUE;
         this.BATCH_JOB_DEFINITION = process.env.BATCH_JOB_DEFINITION;
+        this.OCR_PROCESSOR_FUNCTION_NAME = process.env.OCR_PROCESSOR_FUNCTION_NAME;
+    }
+
+    /**
+     * Get actual page count for grouped multi-page documents
+     * @param {string} groupId - Group ID
+     * @returns {Promise<number>} - Total page count
+     */
+    async getGroupPageCount(groupId) {
+        if (!groupId) return 1;
+        
+        try {
+            const params = {
+                TableName: TABLES.OCR_JOBS,
+                IndexName: 'group-index',
+                KeyConditionExpression: 'group_id = :groupId',
+                ExpressionAttributeValues: {
+                    ':groupId': groupId
+                },
+                ProjectionExpression: 'page_number'
+            };
+            
+            const result = await dynamoDb.send(new QueryCommand(params));
+            return result.Items ? result.Items.length : 1;
+        } catch (error) {
+            console.error('Error getting group page count:', error);
+            return 1; // Fallback to single page
+        }
     }
 
     /**
@@ -29,11 +60,16 @@ class IntelligentOCRRouter {
      * @param {Object} jobData - OCR job data
      * @returns {Object} - Routing decision with reasoning
      */
-    analyzeProcessingRequirements(jobData) {
+    async analyzeProcessingRequirements(jobData) {
+        // Get actual page count for grouped documents
+        const actualPageCount = jobData.group_id ? 
+            await this.getGroupPageCount(jobData.group_id) : 
+            (jobData.page_count || 1);
+            
         const analysis = {
             fileSize: jobData.file_size || 0,
-            isMultiPage: jobData.is_multi_page || false,
-            pageCount: jobData.page_count || 1,
+            isMultiPage: jobData.is_multi_page || !!jobData.group_id,
+            pageCount: actualPageCount,
             estimatedComplexity: 'low',
             estimatedProcessingTime: 0,
             factors: [],
@@ -93,7 +129,7 @@ class IntelligentOCRRouter {
      */
     async routeOCRJob(jobData) {
         try {
-            const analysis = this.analyzeProcessingRequirements(jobData);
+            const analysis = await this.analyzeProcessingRequirements(jobData);
             
             console.log(`🧠 OCR Routing Analysis for job ${jobData.job_id}:`, {
                 recommendation: analysis.recommendation,
@@ -128,67 +164,67 @@ class IntelligentOCRRouter {
     }
 
     /**
-     * Route job to Lambda processing (fast)
+     * Route job to Lambda processing (fast) - Direct invocation
      * @param {Object} jobData - OCR job data
      * @param {Object} analysis - Routing analysis
      * @returns {Object} - Lambda routing result
      */
     async routeToLambda(jobData, analysis) {
         try {
-            const message = {
-                job_id: jobData.job_id,
-                created_at: jobData.created_at,
-                s3_bucket: jobData.s3_bucket,
-                s3_key: jobData.s3_key,
-                user_id: jobData.user_id,
-                filename: jobData.filename,
-                file_size: jobData.file_size,
-                processing_route: 'lambda',
-                routing_analysis: analysis
+            const payload = {
+                Records: [{
+                    body: JSON.stringify({
+                        job_id: jobData.job_id,
+                        created_at: jobData.created_at,
+                        s3_bucket: jobData.s3_bucket,
+                        s3_key: jobData.s3_key,
+                        user_id: jobData.user_id,
+                        filename: jobData.filename,
+                        file_size: jobData.file_size,
+                        processing_route: 'lambda',
+                        routing_analysis: analysis
+                    })
+                }]
             };
 
-            const sqsCommand = new SendMessageCommand({
-                QueueUrl: this.OCR_QUEUE_URL,
-                MessageBody: JSON.stringify(message),
-                MessageAttributes: {
-                    'processing_route': {
-                        StringValue: 'lambda',
-                        DataType: 'String'
-                    },
-                    'priority': {
-                        StringValue: 'high',
-                        DataType: 'String'
-                    },
-                    'job_id': {
-                        StringValue: jobData.job_id,
-                        DataType: 'String'
-                    }
-                }
-            });
-
-            await sqsClient.send(sqsCommand);
-
-            // Update job status
+            // Update job status to processing
             await updateOCRJob(jobData.job_id, jobData.created_at, {
-                status: 'queued',
+                status: 'processing',
                 processing_route: 'lambda',
-                queued_at: new Date().toISOString(),
-                queue_type: 'sqs_lambda'
+                started_at: new Date().toISOString(),
+                queue_type: 'direct_invocation'
             });
 
-            console.log(`🚀 Job ${jobData.job_id} routed to Lambda processing (fast track)`);
+            // Invoke OCR processor Lambda directly (async)
+            const invokeCommand = new InvokeCommand({
+                FunctionName: this.OCR_PROCESSOR_FUNCTION_NAME,
+                InvocationType: 'Event', // Async invocation
+                Payload: JSON.stringify(payload)
+            });
+
+            await lambdaClient.send(invokeCommand);
+
+            console.log(`🚀 Job ${jobData.job_id} routed to Lambda processing (direct invocation)`);
 
             return {
                 success: true,
                 route: 'lambda',
                 processor: 'AWS Lambda',
                 estimatedTime: `${analysis.estimatedProcessingTime}s`,
-                queueType: 'SQS',
-                message: 'Job queued for fast Lambda processing'
+                queueType: 'Direct Invocation',
+                message: 'Job sent to Lambda for immediate processing'
             };
 
         } catch (error) {
             console.error(`❌ Error routing to Lambda:`, error);
+            
+            // Fallback: update job status to failed
+            await updateOCRJob(jobData.job_id, jobData.created_at, {
+                status: 'failed',
+                error: error.message,
+                failed_at: new Date().toISOString()
+            });
+            
             throw new Error(`Failed to route to Lambda: ${error.message}`);
         }
     }
@@ -270,8 +306,8 @@ class IntelligentOCRRouter {
      * @param {Object} jobData - OCR job data
      * @returns {Object} - Route recommendation
      */
-    getRouteRecommendation(jobData) {
-        const analysis = this.analyzeProcessingRequirements(jobData);
+    async getRouteRecommendation(jobData) {
+        const analysis = await this.analyzeProcessingRequirements(jobData);
         return {
             recommendation: analysis.recommendation,
             complexity: analysis.estimatedComplexity,

@@ -659,7 +659,7 @@ exports.handler = async (event) => {
                     filename: filename || 'document.jpg'
                 };
                 
-                const recommendation = intelligentOCRRouter.getRouteRecommendation(mockJobData);
+                const recommendation = await intelligentOCRRouter.getRouteRecommendation(mockJobData);
                 
                 return {
                     statusCode: 200,
