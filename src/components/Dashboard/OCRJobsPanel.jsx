@@ -8,8 +8,6 @@ import {
   ChartBarIcon,
   FunnelIcon,
   SparklesIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
   DocumentTextIcon,
   PencilIcon,
   TrashIcon,
