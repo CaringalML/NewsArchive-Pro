@@ -31,6 +31,7 @@ const EnhancedUploadForm = () => {
   const [isGroupingMode, setIsGroupingMode] = useState(false)
   const [showProcessingInfo, setShowProcessingInfo] = useState(false)
   const [processingRecommendations, setProcessingRecommendations] = useState({})
+  const [selectionOrder, setSelectionOrder] = useState([]) // Track order of selection
   
   // User management
   const { currentUser } = useUserManagement()
@@ -43,8 +44,6 @@ const EnhancedUploadForm = () => {
 
   const fileInputRef = useRef(null)
   const abortControllerRef = useRef(null)
-
-  // No need for location initialization anymore
 
   const MAX_FILE_SIZE = parseInt(process.env.REACT_APP_MAX_FILE_SIZE) || 52428800 // 50MB
   const MAX_BATCH_SIZE = parseInt(process.env.REACT_APP_MAX_BATCH_SIZE) || 100
@@ -159,7 +158,8 @@ const EnhancedUploadForm = () => {
           error: null,
           pageNumber: null,
           groupId: null,
-          selected: false
+          selected: false,
+          selectionIndex: null // Track when this file was selected
         })
       } catch (error) {
         errors.push(`${file.name}: Failed to generate thumbnail`)
@@ -188,11 +188,15 @@ const EnhancedUploadForm = () => {
       delete newProgress[fileId]
       return newProgress
     })
+    
+    // Remove from selection order if it was selected
+    setSelectionOrder(prev => prev.filter(id => id !== fileId))
   }
 
   const clearAllFiles = () => {
     setSelectedFiles([])
     setUploadProgress({})
+    setSelectionOrder([])
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -288,7 +292,6 @@ const EnhancedUploadForm = () => {
         documentGroups: documentGroups
       }))
 
-
       const results = await apiService.uploadBatch(
         filesWithGroupInfo,
         currentUser.user_id,
@@ -330,12 +333,10 @@ const EnhancedUploadForm = () => {
 
   const pauseUpload = () => {
     setIsPaused(true)
-    // Implementation depends on how we handle pause/resume in the API
   }
 
   const resumeUpload = () => {
     setIsPaused(false)
-    // Implementation depends on how we handle pause/resume in the API
   }
 
   const cancelUpload = () => {
@@ -356,34 +357,72 @@ const EnhancedUploadForm = () => {
     toast.success('Upload cancelled')
   }
 
-  // Multi-page document management functions
+  // Fixed checkbox selection logic
   const toggleFileSelection = (fileId) => {
-    setSelectedFiles(prev => prev.map(f => 
-      f.id === fileId ? { ...f, selected: !f.selected } : f
-    ))
+    setSelectedFiles(prev => {
+      const file = prev.find(f => f.id === fileId)
+      if (!file) return prev
+      
+      const isCurrentlySelected = file.selected
+      
+      if (isCurrentlySelected) {
+        // Deselecting - remove from selection order and update all selection indices
+        setSelectionOrder(prevOrder => {
+          const newOrder = prevOrder.filter(id => id !== fileId)
+          return newOrder
+        })
+        
+        return prev.map(f => {
+          if (f.id === fileId) {
+            return { ...f, selected: false, selectionIndex: null }
+          }
+          return f
+        })
+      } else {
+        // Selecting - add to end of selection order
+        setSelectionOrder(prevOrder => {
+          const newOrder = [...prevOrder, fileId]
+          return newOrder
+        })
+        
+        return prev.map(f => {
+          if (f.id === fileId) {
+            return { ...f, selected: true, selectionIndex: selectionOrder.length + 1 }
+          }
+          return f
+        })
+      }
+    })
+  }
+
+  // Get the page number for a file based on selection order
+  const getPageNumberForFile = (fileId) => {
+    const index = selectionOrder.findIndex(id => id === fileId)
+    return index !== -1 ? index + 1 : null
+  }
+
+  // Clear selections when exiting grouping mode
+  const exitGroupingMode = () => {
+    setIsGroupingMode(false)
+    setSelectionOrder([])
+    setSelectedFiles(prev => prev.map(f => ({ 
+      ...f, 
+      selected: false, 
+      selectionIndex: null 
+    })))
   }
 
   const createDocumentGroup = () => {
-    // Get all selected files
-    const selectedFilesList = selectedFiles.filter(f => f.selected)
-    
-    if (selectedFilesList.length < 2) {
+    if (selectionOrder.length < 2) {
       toast.error('Please select at least 2 files to group as a multi-page document')
       return
     }
-
-    // Sort selected files by their position in the original array to maintain order
-    const selectedWithIndex = selectedFilesList.map(file => ({
-      file,
-      index: selectedFiles.findIndex(f => f.id === file.id)
-    }))
-    selectedWithIndex.sort((a, b) => a.index - b.index)
 
     const groupId = Date.now() + Math.random()
     const newGroup = {
       id: groupId,
       name: `Document ${Object.keys(documentGroups).length + 1}`,
-      fileIds: selectedWithIndex.map(item => item.file.id),
+      fileIds: [...selectionOrder], // Use selection order directly
       createdAt: new Date()
     }
 
@@ -392,82 +431,77 @@ const EnhancedUploadForm = () => {
       [groupId]: newGroup
     }))
 
-    // Update files with group info and page numbers
-    setSelectedFiles(prev => {
-      let pageNum = 1
-      const pageNumberMap = {}
-      selectedWithIndex.forEach(item => {
-        pageNumberMap[item.file.id] = pageNum++
-      })
-
-      return prev.map(f => {
-        if (pageNumberMap[f.id]) {
-          return {
-            ...f,
-            groupId,
-            pageNumber: pageNumberMap[f.id],
-            selected: false
-          }
+    // Update files with group info and page numbers based on selection order
+    setSelectedFiles(prev => prev.map(f => {
+      const pageIndex = selectionOrder.indexOf(f.id)
+      if (pageIndex !== -1) {
+        const pageNumber = pageIndex + 1
+        return {
+          ...f,
+          groupId,
+          pageNumber,
+          selected: false,
+          selectionIndex: null
         }
-        return f
-      })
-    })
+      }
+      // Clear selection for non-grouped files too
+      return { ...f, selected: false, selectionIndex: null }
+    }))
 
-    toast.success(`Created multi-page document with ${selectedFilesList.length} pages`)
+    // Clear selection order and exit grouping mode
+    setSelectionOrder([])
     setIsGroupingMode(false)
+    toast.success(`Created multi-page document with ${selectionOrder.length} pages`)
   }
-
 
   const removeFromGroup = (fileId) => {
-    setSelectedFiles(prev => prev.map(f => {
-      if (f.id === fileId) {
-        const groupId = f.groupId
-        if (groupId) {
-          // Update document group
-          setDocumentGroups(prevGroups => {
-            const updatedGroups = { ...prevGroups }
-            if (updatedGroups[groupId]) {
-              updatedGroups[groupId].fileIds = updatedGroups[groupId].fileIds.filter(id => id !== fileId)
-              // Remove group if it has less than 2 files
-              if (updatedGroups[groupId].fileIds.length < 2) {
-                // Reset remaining file's group info
-                setSelectedFiles(prev => prev.map(file => 
-                  updatedGroups[groupId].fileIds.includes(file.id) 
-                    ? { ...file, groupId: null, pageNumber: null }
-                    : file
-                ))
-                delete updatedGroups[groupId]
-              }
+    const fileToRemove = selectedFiles.find(f => f.id === fileId)
+    if (!fileToRemove?.groupId) return
+
+    const groupId = fileToRemove.groupId
+
+    setDocumentGroups(prevGroups => {
+      const updatedGroups = { ...prevGroups }
+      if (updatedGroups[groupId]) {
+        const remainingFileIds = updatedGroups[groupId].fileIds.filter(id => id !== fileId)
+        
+        if (remainingFileIds.length < 2) {
+          // Remove the entire group if less than 2 files remain
+          delete updatedGroups[groupId]
+          
+          // Reset group info for all remaining files in the group
+          setSelectedFiles(prev => prev.map(file => 
+            updatedGroups[groupId]?.fileIds.includes(file.id) || file.id === fileId
+              ? { ...file, groupId: null, pageNumber: null }
+              : file
+          ))
+        } else {
+          // Update the group with remaining files and renumber pages
+          updatedGroups[groupId].fileIds = remainingFileIds
+          
+          // Renumber remaining pages
+          setSelectedFiles(prev => prev.map(file => {
+            if (file.id === fileId) {
+              return { ...file, groupId: null, pageNumber: null }
             }
-            return updatedGroups
-          })
+            if (file.groupId === groupId) {
+              const newPageNumber = remainingFileIds.indexOf(file.id) + 1
+              return { ...file, pageNumber: newPageNumber }
+            }
+            return file
+          }))
         }
-        return { ...f, groupId: null, pageNumber: null }
       }
-      return f
-    }))
+      return updatedGroups
+    })
+
+    // If we're only updating the single file (when group was deleted)
+    if (!documentGroups[groupId]?.fileIds || documentGroups[groupId].fileIds.length < 2) {
+      setSelectedFiles(prev => prev.map(f => 
+        f.id === fileId ? { ...f, groupId: null, pageNumber: null } : f
+      ))
+    }
   }
-
-  // const reorderPages = (groupId, fromIndex, toIndex) => {
-  //   const groupFiles = selectedFiles
-  //     .filter(f => f.groupId === groupId)
-  //     .sort((a, b) => a.pageNumber - b.pageNumber)
-
-  //   const reorderedFiles = [...groupFiles]
-  //   const [movedFile] = reorderedFiles.splice(fromIndex, 1)
-  //   reorderedFiles.splice(toIndex, 0, movedFile)
-
-  //   // Update page numbers
-  //   setSelectedFiles(prev => prev.map(f => {
-  //     if (f.groupId === groupId) {
-  //       const index = reorderedFiles.findIndex(rf => rf.id === f.id)
-  //       if (index !== -1) {
-  //         return { ...f, pageNumber: index + 1 }
-  //       }
-  //     }
-  //     return f
-  //   }))
-  // }
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes'
@@ -627,7 +661,7 @@ const EnhancedUploadForm = () => {
                 {isGroupingMode && (
                   <div className="grouping-instructions">
                     <p className="text-sm text-gray-600">
-                      Select files using checkboxes, then click "Create Group" to combine them into a multi-page document
+                      Click checkboxes in the order you want pages to appear. Selected: {selectionOrder.length} files
                     </p>
                   </div>
                 )}
@@ -646,16 +680,13 @@ const EnhancedUploadForm = () => {
                       <button
                         onClick={createDocumentGroup}
                         className="create-group-btn"
-                        disabled={selectedFiles.filter(f => f.selected).length < 2}
+                        disabled={selectionOrder.length < 2}
                       >
                         <CheckCircleIcon className="w-4 h-4" />
-                        Create Group ({selectedFiles.filter(f => f.selected).length} selected)
+                        Create Group ({selectionOrder.length} selected)
                       </button>
                       <button
-                        onClick={() => {
-                          setIsGroupingMode(false)
-                          setSelectedFiles(prev => prev.map(f => ({ ...f, selected: false })))
-                        }}
+                        onClick={exitGroupingMode}
                         className="cancel-group-btn"
                       >
                         <XMarkIcon className="w-4 h-4" />
@@ -674,93 +705,101 @@ const EnhancedUploadForm = () => {
                 </div>
               </div>
               <div className="files-list">
-                {selectedFiles.map((fileInfo, index) => (
-                  <div
-                    key={fileInfo.id}
-                    className={`file-item ${fileInfo.status} ${fileInfo.selected ? 'selected' : ''} ${fileInfo.groupId ? 'grouped' : ''}`}
-                  >
-                    {isGroupingMode && (
-                      <div className="file-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={fileInfo.selected}
-                          onChange={() => toggleFileSelection(fileInfo.id)}
-                          disabled={uploading || fileInfo.groupId}
-                        />
-                      </div>
-                    )}
-                    <div className="file-thumbnail">
-                      <img
-                        src={fileInfo.thumbnail}
-                        alt={fileInfo.name}
-                        className="thumbnail-img"
-                      />
-                      {fileInfo.pageNumber && (
-                        <span className="page-badge">Page {fileInfo.pageNumber}</span>
-                      )}
-                    </div>
-                    <div className="file-info">
-                      <div className="file-name">{fileInfo.name}</div>
-                      <div className="file-details">
-                        {formatFileSize(fileInfo.size)} • {fileInfo.type}
-                      </div>
-                      {fileInfo.groupId && documentGroups[fileInfo.groupId] && (
-                        <div className="group-info">
-                          <span className="group-label">
-                            {documentGroups[fileInfo.groupId].name} - Page {fileInfo.pageNumber}
-                          </span>
-                        </div>
-                      )}
-                      {showProcessingInfo && processingRecommendations[fileInfo.id] && (
-                        <div className="processing-info">
-                          <div className="processing-route">
-                            <span className={`route-badge ${processingRecommendations[fileInfo.id].recommendation}`}>
-                              {processingRecommendations[fileInfo.id].processor}
-                            </span>
-                            <span className="estimated-time">
-                              ~{processingRecommendations[fileInfo.id].estimated_time}
-                            </span>
-                          </div>
-                          {processingRecommendations[fileInfo.id].factors.length > 0 && (
-                            <div className="processing-factors">
-                              {processingRecommendations[fileInfo.id].factors.slice(0, 2).map((factor, index) => (
-                                <span key={index} className="factor-tag">
-                                  {factor}
-                                </span>
-                              ))}
-                            </div>
+                {selectedFiles.map((fileInfo, index) => {
+                  const pageInSelection = selectionOrder.indexOf(fileInfo.id) + 1
+                  const showSelectionNumber = pageInSelection > 0
+                  
+                  return (
+                    <div
+                      key={fileInfo.id}
+                      className={`file-item ${fileInfo.status} ${fileInfo.selected ? 'selected' : ''} ${fileInfo.groupId ? 'grouped' : ''}`}
+                    >
+                      {isGroupingMode && (
+                        <div className="file-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={fileInfo.selected}
+                            onChange={() => toggleFileSelection(fileInfo.id)}
+                            disabled={uploading || fileInfo.groupId}
+                          />
+                          {showSelectionNumber && (
+                            <span className="selection-order">{pageInSelection}</span>
                           )}
                         </div>
                       )}
-                      {fileInfo.error && (
-                        <div className="file-error">{fileInfo.error}</div>
-                      )}
-                    </div>
-                    <div className="file-status">
-                      {getStatusIcon(fileInfo.status)}
-                    </div>
-                    <div className="file-actions">
-                      {fileInfo.groupId && (
+                      <div className="file-thumbnail">
+                        <img
+                          src={fileInfo.thumbnail}
+                          alt={fileInfo.name}
+                          className="thumbnail-img"
+                        />
+                        {fileInfo.pageNumber && (
+                          <span className="page-badge">Page {fileInfo.pageNumber}</span>
+                        )}
+                      </div>
+                      <div className="file-info">
+                        <div className="file-name">{fileInfo.name}</div>
+                        <div className="file-details">
+                          {formatFileSize(fileInfo.size)} • {fileInfo.type}
+                        </div>
+                        {fileInfo.groupId && documentGroups[fileInfo.groupId] && (
+                          <div className="group-info">
+                            <span className="group-label">
+                              {documentGroups[fileInfo.groupId].name} - Page {fileInfo.pageNumber}
+                            </span>
+                          </div>
+                        )}
+                        {showProcessingInfo && processingRecommendations[fileInfo.id] && (
+                          <div className="processing-info">
+                            <div className="processing-route">
+                              <span className={`route-badge ${processingRecommendations[fileInfo.id].recommendation}`}>
+                                {processingRecommendations[fileInfo.id].processor}
+                              </span>
+                              <span className="estimated-time">
+                                ~{processingRecommendations[fileInfo.id].estimated_time}
+                              </span>
+                            </div>
+                            {processingRecommendations[fileInfo.id].factors.length > 0 && (
+                              <div className="processing-factors">
+                                {processingRecommendations[fileInfo.id].factors.slice(0, 2).map((factor, index) => (
+                                  <span key={index} className="factor-tag">
+                                    {factor}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {fileInfo.error && (
+                          <div className="file-error">{fileInfo.error}</div>
+                        )}
+                      </div>
+                      <div className="file-status">
+                        {getStatusIcon(fileInfo.status)}
+                      </div>
+                      <div className="file-actions">
+                        {fileInfo.groupId && (
+                          <button
+                            onClick={() => removeFromGroup(fileInfo.id)}
+                            className="ungroup-btn"
+                            disabled={uploading}
+                            title="Remove from group"
+                          >
+                            <DocumentArrowUpIcon className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
-                          onClick={() => removeFromGroup(fileInfo.id)}
-                          className="ungroup-btn"
+                          onClick={() => removeFile(fileInfo.id)}
+                          className="remove-btn"
                           disabled={uploading}
-                          title="Remove from group"
+                          title="Remove file"
                         >
-                          <DocumentArrowUpIcon className="w-4 h-4" />
+                          <XMarkIcon className="w-4 h-4" />
                         </button>
-                      )}
-                      <button
-                        onClick={() => removeFile(fileInfo.id)}
-                        className="remove-btn"
-                        disabled={uploading}
-                        title="Remove file"
-                      >
-                        <XMarkIcon className="w-4 h-4" />
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
