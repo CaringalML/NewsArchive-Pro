@@ -941,6 +941,32 @@ body {
   gap: 8px;
 }
 
+.pages-grid.scrollable {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-border) var(--c-bg-tertiary);
+}
+
+.pages-grid.scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pages-grid.scrollable::-webkit-scrollbar-track {
+  background: var(--c-bg-tertiary);
+  border-radius: 3px;
+}
+
+.pages-grid.scrollable::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border-radius: 3px;
+}
+
+.pages-grid.scrollable::-webkit-scrollbar-thumb:hover {
+  background: var(--c-text-tertiary);
+}
+
 .page-row {
   display: flex;
   align-items: center;
@@ -1226,6 +1252,242 @@ body {
 
 .view-btn.small {
   padding: 4px;
+}
+
+/* Edit and Delete Button Styles */
+.edit-btn, .delete-btn {
+  padding: 6px;
+  border: 1px solid var(--c-border);
+  background: var(--c-bg-primary);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.edit-btn {
+  color: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
+.edit-btn:hover {
+  background: var(--c-primary);
+  color: white;
+}
+
+.delete-btn {
+  color: var(--c-danger);
+  border-color: var(--c-danger);
+}
+
+.delete-btn:hover {
+  background: var(--c-danger);
+  color: white;
+}
+
+.edit-btn.small, .delete-btn.small {
+  padding: 4px;
+}
+
+/* Edit Form Styles */
+.edit-form {
+  padding: 16px;
+  background: var(--c-bg-secondary);
+  border-top: 1px solid var(--c-border);
+  margin-top: 0;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.edit-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.edit-form-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--c-text-primary);
+}
+
+.cancel-edit-btn {
+  padding: 4px;
+  background: none;
+  border: none;
+  color: var(--c-text-secondary);
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition-fast);
+}
+
+.cancel-edit-btn:hover {
+  background: var(--c-bg-tertiary);
+  color: var(--c-text-primary);
+}
+
+.edit-form-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.edit-form-fields .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.edit-form-fields label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--c-text-secondary);
+}
+
+.edit-form-fields .form-input {
+  padding: 8px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--c-bg-primary);
+  color: var(--c-text-primary);
+  font-size: 0.875rem;
+  transition: var(--transition-fast);
+}
+
+.edit-form-fields .form-input:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.edit-form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.save-btn {
+  padding: 8px 16px;
+  background: var(--c-brand);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: var(--transition-fast);
+}
+
+.save-btn:hover {
+  background: var(--c-brand-dark);
+}
+
+.cancel-btn {
+  padding: 8px 16px;
+  background: var(--c-bg-primary);
+  color: var(--c-text-secondary);
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: var(--transition-fast);
+}
+
+.cancel-btn:hover {
+  background: var(--c-bg-tertiary);
+  color: var(--c-text-primary);
+}
+
+/* Delete Confirmation Modal */
+.modal-content.small {
+  max-width: 500px;
+  min-width: 400px;
+}
+
+.delete-confirmation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.warning-icon {
+  padding: 16px;
+  background: var(--c-danger-light);
+  border-radius: 50%;
+  margin-bottom: 8px;
+}
+
+.confirmation-text p {
+  margin: 8px 0;
+  color: var(--c-text-primary);
+}
+
+.job-name {
+  font-weight: 600;
+  color: var(--c-text-primary);
+  background: var(--c-bg-tertiary);
+  padding: 8px 12px;
+  border-radius: var(--border-radius-sm);
+  margin: 12px 0;
+}
+
+.warning-text {
+  font-size: 0.875rem;
+  color: var(--c-text-secondary);
+  font-style: italic;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--c-border);
+  background: var(--c-bg-secondary);
+}
+
+.delete-confirm-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--c-danger);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: var(--transition-fast);
+}
+
+.delete-confirm-btn:hover {
+  background: var(--c-danger-dark);
+}
+
+@media (max-width: 768px) {
+  .edit-form-fields {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .modal-content.small {
+    min-width: 0;
+    max-width: calc(100% - 40px);
+  }
+  
+  .delete-confirmation {
+    text-align: left;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
 
 /* Expanded Pages Section */

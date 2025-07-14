@@ -10,12 +10,16 @@ import {
   SparklesIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  PencilIcon,
+  TrashIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 import { useOCRJobs } from '../../hooks/useOCRJobs'
 import { useUserManagement } from '../../hooks/useUserManagement'
 import { apiService } from '../../services/api'
 import MetadataDisplay from '../Common/MetadataDisplay'
+import toast from 'react-hot-toast'
 import './OCRJobsPanel.css'
 
 const JobDetailsModalContent = ({ showJobDetails, jobs, getStatusColor, formatDate, fetchGroupedDocument }) => {
@@ -23,7 +27,11 @@ const JobDetailsModalContent = ({ showJobDetails, jobs, getStatusColor, formatDa
   const [loading, setLoading] = React.useState(false)
 
   // Find the job (could be single job or grouped job)
-  const job = jobs.find(j => j.job_id === showJobDetails || j.group_id === showJobDetails)
+  const job = jobs.find(j => 
+    j.job_id === showJobDetails || 
+    j.group_id === showJobDetails || 
+    (j.is_grouped && j.group_id === showJobDetails)
+  )
   
   React.useEffect(() => {
     const loadGroupedData = async () => {
@@ -34,6 +42,18 @@ const JobDetailsModalContent = ({ showJobDetails, jobs, getStatusColor, formatDa
           setGroupedData(data)
         } catch (error) {
           console.error('Failed to load grouped document:', error)
+          // If API fails, use the local job data as fallback
+          if (job.pages) {
+            setGroupedData({
+              group_id: job.group_id,
+              total_pages: job.pages.length,
+              pages: job.pages,
+              combined_text: job.pages
+                .filter(p => p.corrected_text || p.extracted_text)
+                .map(p => p.corrected_text || p.extracted_text)
+                .join('\n\n')
+            })
+          }
         } finally {
           setLoading(false)
         }
@@ -254,6 +274,12 @@ const OCRJobsPanel = () => {
   const [showJobDetails, setShowJobDetails] = useState(null)
   const [expandedGroups, setExpandedGroups] = useState(new Set())
   const [groupedDocuments, setGroupedDocuments] = useState({})
+  const [editingJob, setEditingJob] = useState(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null)
+  const [editFormData, setEditFormData] = useState({
+    filename: '',
+    collection_name: ''
+  })
 
   const stats = getJobStats()
 
@@ -286,6 +312,64 @@ const OCRJobsPanel = () => {
       console.error('Failed to fetch grouped document:', error)
       return null
     }
+  }
+
+  // Edit functionality
+  const handleEditJob = (job) => {
+    setEditingJob(job.job_id)
+    setEditFormData({
+      filename: job.filename || '',
+      collection_name: job.collection_name || ''
+    })
+  }
+
+  const handleSaveEdit = async (jobId) => {
+    try {
+      // Call API to update job
+      await apiService.updateOCRJob(jobId, editFormData)
+      toast.success('Job updated successfully')
+      setEditingJob(null)
+      fetchJobs() // Refresh the jobs list
+    } catch (error) {
+      console.error('Failed to update job:', error)
+      toast.error('Failed to update job: ' + (error.message || 'Unknown error'))
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingJob(null)
+    setEditFormData({ filename: '', collection_name: '' })
+  }
+
+  // Delete functionality
+  const handleDeleteJob = (job) => {
+    setShowDeleteConfirm(job)
+  }
+
+  const confirmDeleteJob = async () => {
+    if (!showDeleteConfirm) return
+
+    try {
+      if (showDeleteConfirm.is_grouped) {
+        // Delete entire group
+        await apiService.deleteOCRGroup(showDeleteConfirm.group_id)
+        toast.success('Document group deleted successfully')
+      } else {
+        // Delete single job
+        await apiService.deleteOCRJob(showDeleteConfirm.job_id)
+        toast.success('Job deleted successfully')
+      }
+      
+      setShowDeleteConfirm(null)
+      fetchJobs() // Refresh the jobs list
+    } catch (error) {
+      console.error('Failed to delete job:', error)
+      toast.error('Failed to delete job: ' + (error.message || 'Unknown error'))
+    }
+  }
+
+  const cancelDeleteJob = () => {
+    setShowDeleteConfirm(null)
   }
 
   const getStatusIcon = (status) => {
@@ -636,8 +720,7 @@ const OCRJobsPanel = () => {
                     <div className="job-filename">
                       {job.is_grouped ? (
                         <>
-                          <DocumentTextIcon className="w-4 h-4 inline-block mr-2 text-blue-600" />
-                          <span className="font-semibold">📄 {job.collection_name || 'Multi-page Document'}</span>
+                          <span className="font-semibold">{job.collection_name || 'Multi-page Document'}</span>
                           <span className="text-sm text-gray-500 ml-2">({job.pages?.length || 0} pages)</span>
                         </>
                       ) : (
@@ -719,13 +802,86 @@ const OCRJobsPanel = () => {
                     >
                       <EyeIcon className="w-4 h-4" />
                     </button>
+                    {!job.is_grouped && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEditJob(job)
+                        }}
+                        className="edit-btn"
+                        title="Edit job"
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteJob(job)
+                      }}
+                      className="delete-btn"
+                      title={job.is_grouped ? "Delete group" : "Delete job"}
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
+
+                {/* Edit Form - Only shows when editing this specific job */}
+                {!job.is_grouped && editingJob === job.job_id && (
+                  <div className="edit-form">
+                    <div className="edit-form-header">
+                      <h4>Edit Job</h4>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="cancel-edit-btn"
+                      >
+                        <XMarkIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="edit-form-fields">
+                      <div className="form-group">
+                        <label htmlFor="edit-filename">Filename:</label>
+                        <input
+                          id="edit-filename"
+                          type="text"
+                          value={editFormData.filename}
+                          onChange={(e) => setEditFormData(prev => ({ ...prev, filename: e.target.value }))}
+                          className="form-input"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="edit-collection">Collection:</label>
+                        <input
+                          id="edit-collection"
+                          type="text"
+                          value={editFormData.collection_name}
+                          onChange={(e) => setEditFormData(prev => ({ ...prev, collection_name: e.target.value }))}
+                          className="form-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="edit-form-actions">
+                      <button
+                        onClick={() => handleSaveEdit(job.job_id)}
+                        className="save-btn"
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="cancel-btn"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               
                 {/* Dropdown Content - Only shows for grouped jobs when expanded */}
                 {job.is_grouped && expandedGroups.has(job.group_id) && (
                   <div className="dropdown-content">
-                    <div className="pages-grid">
+                    <div className={`pages-grid ${job.pages.length > 2 ? 'scrollable' : ''}`}>
                       {job.pages.map((page, index) => (
                         <div key={page.job_id} className={`page-row ${page.status}`}>
                           <div className="page-left">
@@ -758,6 +914,26 @@ const OCRJobsPanel = () => {
                               title="View page details"
                             >
                               <EyeIcon className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditJob(page)
+                              }}
+                              className="edit-btn small"
+                              title="Edit page"
+                            >
+                              <PencilIcon className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteJob(page)
+                              }}
+                              className="delete-btn small"
+                              title="Delete page"
+                            >
+                              <TrashIcon className="w-4 h-4" />
                             </button>
                           </div>
                           {page.error && (
@@ -792,11 +968,60 @@ const OCRJobsPanel = () => {
             
             <JobDetailsModalContent 
               showJobDetails={showJobDetails}
-              jobs={jobs}
+              jobs={[...jobs, ...filteredJobs]}
               getStatusColor={getStatusColor}
               formatDate={formatDate}
               fetchGroupedDocument={fetchGroupedDocument}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="modal-overlay" onClick={cancelDeleteJob}>
+          <div className="modal-content small" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Confirm Delete</h3>
+              <button 
+                onClick={cancelDeleteJob}
+                className="close-btn"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="delete-confirmation">
+                <div className="warning-icon">
+                  <ExclamationTriangleIcon className="w-12 h-12 text-red-500" />
+                </div>
+                <div className="confirmation-text">
+                  <p>Are you sure you want to delete this {showDeleteConfirm.is_grouped ? 'document group' : 'job'}?</p>
+                  <p className="job-name">
+                    <strong>
+                      {showDeleteConfirm.is_grouped 
+                        ? `${showDeleteConfirm.collection_name || 'Multi-page Document'} (${showDeleteConfirm.pages?.length || 0} pages)`
+                        : showDeleteConfirm.filename
+                      }
+                    </strong>
+                  </p>
+                  <p className="warning-text">
+                    This action cannot be undone. All associated data will be permanently deleted.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button onClick={cancelDeleteJob} className="cancel-btn">
+                Cancel
+              </button>
+              <button onClick={confirmDeleteJob} className="delete-confirm-btn">
+                <TrashIcon className="w-4 h-4" />
+                Delete {showDeleteConfirm.is_grouped ? 'Group' : 'Job'}
+              </button>
+            </div>
           </div>
         </div>
       )}
